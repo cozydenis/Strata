@@ -1,0 +1,26 @@
+{
+  "name": "strata",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spatial intelligence platform for the Zurich housing market",
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "format": "prettier --check ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cozydenis/Strata.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cozydenis/Strata/issues"
+  },
+  "homepage": "https://github.com/cozydenis/Strata#readme"
+}

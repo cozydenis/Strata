@@ -1,0 +1,31 @@
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+  },
+  "permissions": {
+    "allowedTools": [
+      "Read",
+      "Write(apps/**)",
+      "Write(packages/**)",
+      "Write(CLAUDE.md)",
+      "Bash(cd apps/api && pytest:*)",
+      "Bash(cd apps/web && npm test:*)",
+      "Bash(cd apps/web && npm run:*)",
+      "Bash(git *)",
+      "Bash(python *)",
+      "Bash(pip *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(ruff *)",
+      "Bash(uvicorn *)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Write(.env*)",
+      "Bash(rm -rf *)",
+      "Bash(sudo *)"
+    ]
+  }
+}

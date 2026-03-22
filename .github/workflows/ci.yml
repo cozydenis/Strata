@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  frontend:
+    name: Frontend & Shared Types
+    runs-on: ubuntu-latest
+
+    # Path filter: only run when these files change
+    # Uses a separate paths-filter step pattern — GitHub natively supports
+    # path filtering at the workflow level via `on.pull_request.paths`,
+    # but per-job filtering requires a filter step.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint shared package
+        run: npm run lint --workspace=packages/shared
+
+      - name: Test shared package
+        run: npm run test --workspace=packages/shared
+
+      - name: Lint web app
+        run: npm run lint --workspace=apps/web
+
+      - name: Test web app
+        run: npm run test --workspace=apps/web
+
+  backend:
+    name: Backend API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv pip install -e ".[dev]" --system
+        working-directory: apps/api
+
+      - name: Lint with ruff
+        run: uv run --directory apps/api ruff check .
+
+      - name: Run tests
+        run: uv run --directory apps/api pytest
