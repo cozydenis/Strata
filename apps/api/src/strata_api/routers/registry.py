@@ -6,6 +6,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from strata_api.db.models.building import Building
+from strata_api.db.models.entrance import Entrance
 from strata_api.db.models.unit import Unit
 from strata_api.db.session import get_engine
 
@@ -61,6 +62,35 @@ def get_building(egid: int) -> dict:
     if b is None:
         raise HTTPException(status_code=404, detail=f"Building {egid} not found.")
     return _building_dict(b)
+
+
+@router.get("/buildings/{egid}/summary")
+def get_building_summary(egid: int) -> dict:
+    """Return building fields + first entrance address — used by map popups."""
+    engine = get_engine()
+    with Session(engine) as s:
+        b = s.get(Building, egid)
+        if b is None:
+            raise HTTPException(status_code=404, detail=f"Building {egid} not found.")
+        entrance = s.execute(
+            select(Entrance)
+            .where(Entrance.egid == egid)
+            .order_by(Entrance.edid)
+            .limit(1)
+        ).scalar_one_or_none()
+    return {
+        "egid": b.egid,
+        "gbauj": b.gbauj,
+        "gkat": b.gkat,
+        "gastw": b.gastw,
+        "ganzwhg": b.ganzwhg,
+        "lat": b.lat,
+        "lon": b.lon,
+        "strname": entrance.strname if entrance else None,
+        "deinr": entrance.deinr if entrance else None,
+        "dplz4": entrance.dplz4 if entrance else None,
+        "dplzname": entrance.dplzname if entrance else None,
+    }
 
 
 @router.get("/buildings/{egid}/units")

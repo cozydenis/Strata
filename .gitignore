@@ -56,3 +56,6 @@ npm-debug.log*
 # SQLite Databases
 *.db
 *.sqlite
+
+# Generated map data (regenerate with: DATABASE_URL=... python -m strata_api.scripts.export_buildings_geojson > apps/web/public/data/buildings.geojson)
+apps/web/public/data/buildings.geojson
