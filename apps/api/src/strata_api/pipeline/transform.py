@@ -22,15 +22,38 @@ def lv95_to_wgs84(
 
 
 def parse_optional_int(value: object) -> int | None:
-    """Coerce *value* to int, returning None for empty / non-numeric input."""
+    """Coerce *value* to int, returning None for empty / non-numeric input.
+
+    Handles scientific notation strings (e.g. '1e+05' → 100000).
+    """
     if value is None:
         return None
     if isinstance(value, int):
         return value
-    try:
-        return int(str(value).strip())
-    except (ValueError, TypeError):
+    s = str(value).strip()
+    if not s:
         return None
+    try:
+        return int(s)
+    except ValueError:
+        try:
+            return int(float(s))
+        except (ValueError, TypeError):
+            return None
+
+
+def parse_required_int(value: object) -> int:
+    """Coerce *value* to int; raises ValueError if not parseable.
+
+    Handles scientific notation strings (e.g. '1e+05' → 100000).
+    """
+    if isinstance(value, int):
+        return value
+    s = str(value).strip()
+    try:
+        return int(s)
+    except ValueError:
+        return int(float(s))
 
 
 def parse_optional_float(value: object) -> float | None:

@@ -9,7 +9,7 @@ import csv
 from typing import IO, Iterator
 
 from strata_api.pipeline.schemas import BuildingRecord, EntranceRecord, UnitRecord
-from strata_api.pipeline.transform import lv95_to_wgs84, parse_optional_int
+from strata_api.pipeline.transform import lv95_to_wgs84, parse_optional_int, parse_required_int
 
 _SOURCE = "kanton"
 
@@ -23,7 +23,7 @@ def parse_buildings_csv(file: IO[str]) -> Iterator[BuildingRecord]:
         lat, lon = lv95_to_wgs84(e_coord, n_coord)
 
         yield BuildingRecord(
-            egid=int(row["Eidgenoessischer_Gebaeudeidentifikator"]),
+            egid=parse_required_int(row["Eidgenoessischer_Gebaeudeidentifikator"]),
             data_source=_SOURCE,
             gstat=parse_optional_int(row.get("Gebaeudestatus_Code")),
             gkat=parse_optional_int(row.get("Gebaeudekategorie_Code")),
@@ -51,8 +51,8 @@ def parse_entrances_csv(file: IO[str]) -> Iterator[EntranceRecord]:
 
         deinr_raw = row.get("Eingangsnummer_Gebaeude")
         yield EntranceRecord(
-            egid=int(row["Eidgenoessischer_Gebaeudeidentifikator"]),
-            edid=int(row["Eidgenoessischer_Eingangsidentifikator"]),
+            egid=parse_required_int(row["Eidgenoessischer_Gebaeudeidentifikator"]),
+            edid=parse_required_int(row["Eidgenoessischer_Eingangsidentifikator"]),
             data_source=_SOURCE,
             strname=row.get("Strassenbezeichnung") or None,
             deinr=str(deinr_raw) if deinr_raw else None,
@@ -68,8 +68,8 @@ def parse_units_csv(file: IO[str]) -> Iterator[UnitRecord]:
     reader = csv.DictReader(file)
     for row in reader:
         yield UnitRecord(
-            egid=int(row["Eidgenoessischer_Gebaeudeidentifikator"]),
-            ewid=int(row["Eidgenoessischer_Wohnungsidentifikator"]),
+            egid=parse_required_int(row["Eidgenoessischer_Gebaeudeidentifikator"]),
+            ewid=parse_required_int(row["Eidgenoessischer_Wohnungsidentifikator"]),
             data_source=_SOURCE,
             edid=parse_optional_int(row.get("Eidgenoessischer_Eingangsidentifikator")),
             wstwk=parse_optional_int(row.get("Stockwerk_Code")),

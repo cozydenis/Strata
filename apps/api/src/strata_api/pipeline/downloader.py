@@ -18,18 +18,19 @@ STADT_GEBAEUDE_URL = f"{_WFS_BASE}&typeName=gwr_stzh_gebaeude"
 STADT_EINGAENGE_URL = f"{_WFS_BASE}&typeName=gwr_stzh_gebaeudeeingaenge"
 STADT_WOHNUNGEN_URL = f"{_WFS_BASE}&typeName=gwr_stzh_wohnungen"
 
-# Kanton Zürich open data CSV downloads
+# Kanton Zürich open data CSV downloads (dataset KTZH_00002022, updated quarterly)
+# Source: https://opendata.swiss/de/dataset/gebaude-und-wohnungen-im-kanton-zurich
 KANTON_GEBAEUDE_URL = (
-    "https://www.web.statistik.zh.ch/ogd/daten/ressourcen/"
-    "KTZH_00000124_00001783.csv"
-)
-KANTON_EINGAENGE_URL = (
-    "https://www.web.statistik.zh.ch/ogd/daten/ressourcen/"
-    "KTZH_00000124_00001784.csv"
+    "https://daten.statistik.zh.ch/ogd/daten/ressourcen/"
+    "KTZH_00002022_00004064.csv"
 )
 KANTON_WOHNUNGEN_URL = (
-    "https://www.web.statistik.zh.ch/ogd/daten/ressourcen/"
-    "KTZH_00000124_00001785.csv"
+    "https://daten.statistik.zh.ch/ogd/daten/ressourcen/"
+    "KTZH_00002022_00004065.csv"
+)
+KANTON_EINGAENGE_URL = (
+    "https://daten.statistik.zh.ch/ogd/daten/ressourcen/"
+    "KTZH_00002022_00004066.csv"
 )
 
 
