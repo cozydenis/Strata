@@ -1,0 +1,104 @@
+"""Tests for the admin pipeline trigger endpoints."""
+import pytest
+from httpx import ASGITransport, AsyncClient
+from unittest.mock import patch, MagicMock
+
+from strata_api.pipeline.runner import PipelineResult
+
+
+@pytest.fixture
+def mock_stadt_result() -> PipelineResult:
+    return PipelineResult(
+        run_id=1,
+        run_type="stadt",
+        status="completed",
+        buildings_upserted=100,
+        entrances_upserted=80,
+        units_upserted=200,
+    )
+
+
+@pytest.fixture
+def mock_kanton_result() -> PipelineResult:
+    return PipelineResult(
+        run_id=2,
+        run_type="kanton",
+        status="completed",
+        buildings_upserted=500,
+        entrances_upserted=400,
+        units_upserted=1000,
+    )
+
+
+@pytest.fixture
+def mock_failed_result() -> PipelineResult:
+    return PipelineResult(
+        run_id=3,
+        run_type="stadt",
+        status="failed",
+        error_message="network error",
+    )
+
+
+@pytest.mark.asyncio
+async def test_trigger_stadt_pipeline_returns_result(mock_stadt_result):
+    from strata_api.main import app
+
+    with patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", return_value=mock_stadt_result), \
+         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post("/admin/pipeline/run/stadt")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["run_id"] == 1
+    assert data["run_type"] == "stadt"
+    assert data["status"] == "completed"
+    assert data["buildings_upserted"] == 100
+    assert data["entrances_upserted"] == 80
+    assert data["units_upserted"] == 200
+    assert data["error_message"] is None
+
+
+@pytest.mark.asyncio
+async def test_trigger_kanton_pipeline_returns_result(mock_kanton_result):
+    from strata_api.main import app
+
+    with patch("strata_api.routers.admin_pipeline.run_kanton_pipeline", return_value=mock_kanton_result), \
+         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post("/admin/pipeline/run/kanton")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["run_id"] == 2
+    assert data["run_type"] == "kanton"
+    assert data["status"] == "completed"
+    assert data["buildings_upserted"] == 500
+
+
+@pytest.mark.asyncio
+async def test_trigger_stadt_pipeline_failed_run_returns_200(mock_failed_result):
+    """A failed pipeline run is still a successful API call — result contains error info."""
+    from strata_api.main import app
+
+    with patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", return_value=mock_failed_result), \
+         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post("/admin/pipeline/run/stadt")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "failed"
+    assert data["error_message"] == "network error"
+    assert data["buildings_upserted"] == 0
+
+
+@pytest.mark.asyncio
+async def test_trigger_unknown_pipeline_returns_404():
+    from strata_api.main import app
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post("/admin/pipeline/run/unknown_source")
+
+    assert response.status_code == 404

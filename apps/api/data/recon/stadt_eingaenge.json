@@ -1,0 +1,8 @@
+{"type": "FeatureCollection",
+ "bbox": [ -25.083885, 32.124486, 8.623334, 47.431318],
+ "features": [
+  {"geometry":{"coordinates":[8.591809,47.365145],"type":"Point"},"id":"gwr_stzh_gebaeudeeingaenge.1","properties":{"deinr":"42","dexpdat":"2026-03-20T00:00:00.000","dkode":2687107.035,"dkodn":1246673.238,"doffadr":1,"doffadrlang":"Ja","dplz4":8053,"dplzname":"Zürich","edid":0,"egaid":0,"egid":158269,"esid":"10118223","geometrie_gdo":null,"objectid":1,"strname":"Eschenhaustrasse","stroffiziel":1,"stroffiziellang":"Ja","strsp":9901,"strsplang":"Deutsch"},"type":"Feature"}
+ ,{"geometry":{"coordinates":[8.510555,47.391637],"type":"Point"},"id":"gwr_stzh_gebaeudeeingaenge.2","properties":{"deinr":"185","dexpdat":"2026-03-20T00:00:00.000","dkode":2680929.586,"dkodn":1249531.401,"doffadr":0,"doffadrlang":"Nein","dplz4":8005,"dplzname":"Zürich","edid":0,"egaid":0,"egid":150656,"esid":"10004209","geometrie_gdo":null,"objectid":2,"strname":"Förrlibuckstrasse","stroffiziel":1,"stroffiziellang":"Ja","strsp":9901,"strsplang":"Deutsch"},"type":"Feature"}
+ ,{"geometry":{"coordinates":[8.552903,47.369596],"type":"Point"},"id":"gwr_stzh_gebaeudeeingaenge.3","properties":{"deinr":"30","dexpdat":"2026-03-20T00:00:00.000","dkode":2684161.388,"dkodn":1247125.548,"doffadr":1,"doffadrlang":"Ja","dplz4":8032,"dplzname":"Zürich","edid":0,"egaid":0,"egid":156014,"esid":"10006633","geometrie_gdo":null,"objectid":3,"strname":"Hottingerstrasse","stroffiziel":1,"stroffiziellang":"Ja","strsp":9901,"strsplang":"Deutsch"},"type":"Feature"}
+ ]
+}

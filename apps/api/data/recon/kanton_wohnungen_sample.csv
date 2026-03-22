@@ -1,0 +1,35 @@
+"Eidgenoessischer_Gebaeudeidentifikator","Eidgenoessischer_Wohnungsidentifikator","Eidgenoessischer_Eingangsidentifikator","Administrative_Wohnungsnummer","Physische_Wohnungsnummer","Stockwerk_Code","Stockwerk_Bezeichnung","Lage_auf_dem_Stockwerk","Mehrgeschossige_Wohnung_Code","Mehrgeschossige_Wohnung_Bezeichnung","Baujahr_der_Wohnung","Abbruchjahr_der_Wohnung","Wohnungsstatus_Code","Wohnungsstatus_Bezeichnung","Wohnungsflaeche","Anzahl_Zimmer","Kocheinrichtung_Code","Kocheinrichtung_Bezeichnung","Stichtag"
+4711,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,2017,3007,"Wohnung aufgehoben",144,5,1,"Ja",2025-12-31
+4713,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",110,5,1,"Ja",2025-12-31
+4717,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",130,4,1,"Ja",2025-12-31
+4718,1,0,"11",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",125,4,1,"Ja",2025-12-31
+4718,3,0,"103",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,4,0,"102",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,5,0,"106",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,12,0,"104",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,13,0,"111",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,17,0,"109",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,19,0,"101",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,20,0,"108",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,21,0,"107",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,27,0,"9",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,22,0,"105",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,23,0,"110",,3101,"1. Stock",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,24,0,"6",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,25,0,"10",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,26,0,"1",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,28,0,"7",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,29,0,"3",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,30,0,"8",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4718,31,0,"2",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,32,0,"5",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",63,2,1,"Ja",2025-12-31
+4718,33,0,"4",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",38,1,1,"Ja",2025-12-31
+4719,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",150,4,1,"Ja",2025-12-31
+4722,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",200,5,1,"Ja",2025-12-31
+317,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",140,5,1,"Ja",2025-12-31
+318,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",180,5,1,"Ja",2025-12-31
+320,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",145,6,1,"Ja",2025-12-31
+321,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",90,5,1,"Ja",2025-12-31
+322,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,3004,"Wohnung bestehend",220,5,1,"Ja",2025-12-31
+323,1,0,"1",,3100,"Parterre inkl. Hochparterre",,0,"Nein",1999,,3004,"Wohnung bestehend",120,6,1,"Ja",2025-12-31
+3544,1,0,,,3100,"Parterre inkl. Hochparterre",,1,"Ja",1999,,

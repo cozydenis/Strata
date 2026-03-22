@@ -1,0 +1,8 @@
+{"type": "FeatureCollection",
+ "bbox": [ 8.465453, 47.322289, 8.607148, 47.432491],
+ "features": [
+  {"geometry":{"coordinates":[8.544487,47.375898],"type":"Point"},"id":"gwr_stzh_wohnungen.1","properties":{"deinr":"39","dexpdat":"2026-03-20T00:00:00.000","dkode":2683515.911,"dkodn":1247817.181,"dplz4":8001,"dplzname":"Zürich","edid":0,"egid":140002,"ewid":1,"objectid":1,"strname":"Zähringerstrasse","wabbj":null,"warea":66,"wazim":4,"wbauj":1999,"wbez":"","whgnr":"101","wkche":1,"wkchelang":"Ja","wmehrg":0,"wmehrglang":"Nein","wstat":3004,"wstatlang":"Bestehend","wstwk":3101,"wstwklang":"1. Stock"},"type":"Feature"}
+ ,{"geometry":{"coordinates":[8.544487,47.375898],"type":"Point"},"id":"gwr_stzh_wohnungen.2","properties":{"deinr":"39","dexpdat":"2026-03-20T00:00:00.000","dkode":2683515.911,"dkodn":1247817.181,"dplz4":8001,"dplzname":"Zürich","edid":0,"egid":140002,"ewid":3,"objectid":2,"strname":"Zähringerstrasse","wabbj":null,"warea":66,"wazim":3,"wbauj":1999,"wbez":"","whgnr":"301","wkche":1,"wkchelang":"Ja","wmehrg":0,"wmehrglang":"Nein","wstat":3004,"wstatlang":"Bestehend","wstwk":3103,"wstwklang":"3. Stock"},"type":"Feature"}
+ ,{"geometry":{"coordinates":[8.544487,47.375898],"type":"Point"},"id":"gwr_stzh_wohnungen.3","properties":{"deinr":"39","dexpdat":"2026-03-20T00:00:00.000","dkode":2683515.911,"dkodn":1247817.181,"dplz4":8001,"dplzname":"Zürich","edid":0,"egid":140002,"ewid":4,"objectid":3,"strname":"Zähringerstrasse","wabbj":null,"warea":30,"wazim":1,"wbauj":1999,"wbez":"","whgnr":"401","wkche":1,"wkchelang":"Ja","wmehrg":0,"wmehrglang":"Nein","wstat":3004,"wstatlang":"Bestehend","wstwk":3104,"wstwklang":"4. Stock"},"type":"Feature"}
+ ]
+}

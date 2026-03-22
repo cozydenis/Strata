@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from strata_api.config import settings
+from strata_api.routers import admin_pipeline, registry
 
 app = FastAPI(title="Strata API", version="0.1.0")
 
@@ -12,6 +13,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(admin_pipeline.router)
+app.include_router(registry.router)
 
 
 @app.get("/health")

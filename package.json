@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/cozydenis/Strata/issues"
   },
-  "homepage": "https://github.com/cozydenis/Strata#readme"
+  "homepage": "https://github.com/cozydenis/Strata#readme",
+  "dependencies": {
+    "lightningcss-darwin-arm64": "^1.32.0"
+  }
 }
