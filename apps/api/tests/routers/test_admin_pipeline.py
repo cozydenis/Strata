@@ -5,6 +5,16 @@ from unittest.mock import patch, MagicMock
 
 from strata_api.pipeline.runner import PipelineResult
 
+_TEST_API_KEY = "test-secret-key"
+_AUTH_HEADERS = {"X-API-Key": _TEST_API_KEY}
+
+
+@pytest.fixture(autouse=True)
+def patch_api_key(monkeypatch):
+    """Set pipeline_api_key for all tests in this module."""
+    import strata_api.routers.admin_pipeline as mod
+    monkeypatch.setattr(mod.settings, "pipeline_api_key", _TEST_API_KEY)
+
 
 @pytest.fixture
 def mock_stadt_result() -> PipelineResult:
@@ -47,7 +57,7 @@ async def test_trigger_stadt_pipeline_returns_result(mock_stadt_result):
     with patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", return_value=mock_stadt_result), \
          patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-            response = await client.post("/admin/pipeline/run/stadt")
+            response = await client.post("/admin/pipeline/run/stadt", headers=_AUTH_HEADERS)
 
     assert response.status_code == 200
     data = response.json()
@@ -67,7 +77,7 @@ async def test_trigger_kanton_pipeline_returns_result(mock_kanton_result):
     with patch("strata_api.routers.admin_pipeline.run_kanton_pipeline", return_value=mock_kanton_result), \
          patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-            response = await client.post("/admin/pipeline/run/kanton")
+            response = await client.post("/admin/pipeline/run/kanton", headers=_AUTH_HEADERS)
 
     assert response.status_code == 200
     data = response.json()
@@ -85,7 +95,7 @@ async def test_trigger_stadt_pipeline_failed_run_returns_200(mock_failed_result)
     with patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", return_value=mock_failed_result), \
          patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-            response = await client.post("/admin/pipeline/run/stadt")
+            response = await client.post("/admin/pipeline/run/stadt", headers=_AUTH_HEADERS)
 
     assert response.status_code == 200
     data = response.json()
@@ -99,6 +109,26 @@ async def test_trigger_unknown_pipeline_returns_404():
     from strata_api.main import app
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        response = await client.post("/admin/pipeline/run/unknown_source")
+        response = await client.post("/admin/pipeline/run/unknown_source", headers=_AUTH_HEADERS)
 
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_missing_api_key_returns_401():
+    from strata_api.main import app
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post("/admin/pipeline/run/stadt")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_wrong_api_key_returns_401():
+    from strata_api.main import app
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post("/admin/pipeline/run/stadt", headers={"X-API-Key": "wrong-key"})
+
+    assert response.status_code == 401

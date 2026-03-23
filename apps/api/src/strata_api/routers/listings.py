@@ -31,8 +31,7 @@ def _listing_dict(l: Listing) -> dict:
         "images": [
             {
                 "id": img.id,
-                "url": f"/media/{img.local_path}" if img.local_path else img.url,
-                "local_path": img.local_path,
+                "url": img.url,
                 "caption": img.caption,
                 "ordering": img.ordering,
                 "image_type": img.image_type,
@@ -43,7 +42,6 @@ def _listing_dict(l: Listing) -> dict:
             {
                 "id": doc.id,
                 "url": doc.url,
-                "local_path": doc.local_path,
                 "caption": doc.caption,
                 "doc_type": doc.doc_type,
             }
