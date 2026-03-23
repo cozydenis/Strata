@@ -66,3 +66,52 @@ describe('fetchBuildingSummary', () => {
     expect(mockFetch).toHaveBeenCalledWith('/registry/buildings/1/summary');
   });
 });
+
+describe('fetchBuildingListings', () => {
+  it('fetches from the correct URL', async () => {
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000';
+    const { fetchBuildingListings } = await import('./api');
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ egid: 12345, listings: [] }),
+    });
+
+    await fetchBuildingListings(12345);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8000/registry/buildings/12345/listings'
+    );
+  });
+
+  it('returns listings array on success', async () => {
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000';
+    const { fetchBuildingListings } = await import('./api');
+
+    const listings = [{ id: 1, source: 'flatfox', source_id: 'L-1', rent_net: 2000, rent_gross: 2200, rooms: 3.5, area_m2: 80, street: 'Teststr', house_number: '1', plz: 8001, city: 'Zürich', source_url: 'https://flatfox.ch/test', first_seen: '2026-01-01', last_seen: '2026-03-01' }];
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ egid: 12345, listings }),
+    });
+
+    const result = await fetchBuildingListings(12345);
+    expect(result).toEqual(listings);
+  });
+
+  it('throws on non-ok response', async () => {
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000';
+    const { fetchBuildingListings } = await import('./api');
+
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+    await expect(fetchBuildingListings(1)).rejects.toThrow('500');
+  });
+
+  it('throws on malformed response', async () => {
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000';
+    const { fetchBuildingListings } = await import('./api');
+
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ bad: 'data' }) });
+
+    await expect(fetchBuildingListings(1)).rejects.toThrow('Unexpected response shape');
+  });
+});

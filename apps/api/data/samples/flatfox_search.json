@@ -1,0 +1,113 @@
+{
+  "count": 33698,
+  "next": "https://flatfox.ch/api/v1/public-listing/?limit=1&object_category=APARTMENT&offset=2",
+  "previous": "https://flatfox.ch/api/v1/public-listing/?limit=1&object_category=APARTMENT",
+  "results": [
+    {
+      "pk": 51159,
+      "slug": "8005-zurich",
+      "url": "/en/flat/8005-zurich/51159/",
+      "short_url": "/51159/",
+      "submit_url": "/en/listing/51159/submit/",
+      "status": "act",
+      "created": "2018-10-07T12:13:24.307367+02:00",
+      "offer_type": "RENT",
+      "object_category": "SHARED",
+      "object_type": "SHARED_FLAT",
+      "reference": "",
+      "ref_property": "",
+      "ref_house": "",
+      "ref_object": "",
+      "alternative_reference": null,
+      "price_display": 1740,
+      "price_display_type": "TOTAL",
+      "price_unit": "monthly",
+      "published": "2018-10-07T12:13:24.436383+02:00",
+      "rent_net": null,
+      "rent_charges": null,
+      "rent_gross": 1740,
+      "short_title": "Room in a shared flat",
+      "public_title": "8005 Zürich - CHF 2’740 incl. utilities per month",
+      "pitch_title": "Rent a room in a shared flat in Zürich",
+      "description_title": "FURNISHED ROOM WITH MORNING SUN",
+      "description": "**Bright and cozy furnished room (9m2) with huge window, in the new trend quarter Westside on Eschwerwyssplatz. Very centric and yet surprisingly quiet.**  \n  \nOur beautiful and very spacious duplex-apartment is located on the 5th floor (with elevator) and is spread over 277m2. You enter the apartment in the 5th flor where you will find the living room, kitchen, dining area, terrace and a guest toilet (with washing machine and tumble dryer). On the lower floor are the 4 bedrooms, 2 bathroom with bathtub, 2 bathroom with shower and also storage room. A huge roof terrace can be reached via an external staircase.  \n  \n**WHAT WE ARE LOOKING FOR...**  \nA person who fits in with us, shares similar values and is not looking for a functional flat share, but a home. Gender and age are not so important to us, but fairness, respect and warm-hearted interaction do. To share what the day was like while cooking some nice food...  \n  \nWe mainly are vegetarians or vegans. Sustainability is important to us, although we are aware that our household is not (yet) completely organic. If you are one step ahead of us, we happily learn from you. Even though we have a cleaning lady come in once a week, we all feel responsible for keeping the place clean and homely.  \n  \nWe all have jobs and are otherwise very busy and committed. Finding a quiet and harmonious home where we can relax from the hustle and bustle outside is therefore important to us all.  \n  \n**ABOUT US**  \n**Minou:** is our 4-year-old shared flat cat. Nobody can get past him! Because he loves jumping on your legs, being stroked and getting attention. And at some point he melts everyone's heart...  \n  \n**Sil**: I've lived in this apartment for half an eternity and could tell so many stories about the different people from different nations and languages who have lived here with me and my daughter Luna over the last 9 years, bringing the spirit and culinary recipes of the world with them. I am an open minded and curious person, both professionally and personally. As a filmmaker and depth psychology hypnotherapist, I am equally fascinated by journeys into the outer and inner worlds and am a passionate explorer of all things metaphysical. I love cooking and eating together with loved ones, chatting, laughing and exchanging ideas just as much. I also love to immerse myself in a good book, go to the movies or do some crafts in the rustico in Ticino.  \n  \n**Luna:** I was lucky enough to grow up in this beautiful apartment. I'll be 29 this year and I have a lot on my plate at the moment, as I'm currently working as a trainee in a daycare center, practicing driving and also enjoy meeting up with friends. I'm also a bit of an introvert some times and love having my own room as a quiet retreat. In my free time, I like to dance, do yoga and Pilates and occasionally also love to cook something (hopefully) tasty. I'll be traveling for four months from April, but I'm looking forward to hopefully getting to know you a bit before.  \n  \n**Savina:** Even though I'm not quite young anymore (47 years old), I'm the baby of the flat share. I've lived here since I moved to Zurich in November 2024 and have felt welcome and at home from day one.I am a trained psychiatric nurse and kinesiologist, but I am also in a \"reorientation phase\" professionally.  \n  \nI would describe myself as a down-to-earth and spiritual person. Open, honest and respectful communication is very important to me.I enjoy moments of retreat.But I also really enjoy spontaneous conversations, having a coffee (or something else) together or eating together from time to time. It's not forced, but because my flatmates have a similar idea of living together.  \nI also love doing sports (hiking, climbing, jogging, cycling, dancing....), being out in the fresh air and enjoying all that Zurich has to offer.  \n  \n**Does this appeal to you?**  \nThen we would be delighted if you could write us a few lines telling us more about yourself and what is important to you in living together.",
+      "surface_living": 9,
+      "surface_property": null,
+      "surface_usable": null,
+      "surface_usable_minimum": null,
+      "volume": null,
+      "space_display": 9,
+      "number_of_rooms": "2.0",
+      "floor": 5,
+      "attributes": [
+        {
+          "name": "lift"
+        },
+        {
+          "name": "balconygarden"
+        },
+        {
+          "name": "tumbler"
+        },
+        {
+          "name": "parquetflooring"
+        },
+        {
+          "name": "washingmachine"
+        },
+        {
+          "name": "broadbandinternet"
+        },
+        {
+          "name": "cable"
+        },
+        {
+          "name": "dishwasher"
+        }
+      ],
+      "is_furnished": true,
+      "is_temporary": false,
+      "is_selling_furniture": false,
+      "is_swap": false,
+      "street": null,
+      "zipcode": 8005,
+      "city": "Zürich",
+      "public_address": "8005 Zürich",
+      "latitude": 47.38930334254736,
+      "longitude": 8.51320025320775,
+      "year_built": 2004,
+      "year_renovated": null,
+      "moving_date_type": "dat",
+      "moving_date": "2025-02-01",
+      "video_url": "",
+      "tour_url": "",
+      "website_url": "",
+      "live_viewing_url": null,
+      "cover_image": 557032,
+      "images": [
+        557032,
+        557031,
+        557033,
+        557035,
+        557036
+      ],
+      "documents": [],
+      "agency": {
+        "name": "",
+        "name_2": null,
+        "street": null,
+        "zipcode": null,
+        "city": null,
+        "country": null,
+        "logo": null
+      },
+      "reserved": false,
+      "state": null,
+      "country": "CH",
+      "smg_id": "",
+      "flatfox_priority_exclusive_until": null,
+      "rent_title": "Rent a room in a shared flat in Zürich",
+      "livingspace": 9
+    }
+  ]
+}

@@ -53,6 +53,10 @@ htmlcov/
 *.log
 npm-debug.log*
 
+# Images
+*.jpg
+*.jpeg
+
 # SQLite Databases
 *.db
 *.sqlite

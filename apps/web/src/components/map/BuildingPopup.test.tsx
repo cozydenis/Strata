@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BuildingPopup } from './BuildingPopup';
-import type { BuildingSummary } from '@/lib/api';
+import type { BuildingSummary, ListingSummary } from '@/lib/api';
 
 const fullSummary: BuildingSummary = {
   egid: 12345,
@@ -52,5 +52,28 @@ describe('BuildingPopup', () => {
     render(<BuildingPopup summary={{ ...fullSummary, strname: null, deinr: null, dplz4: null, dplzname: null }} />);
     // Should not throw; address row shows dash or fallback
     expect(screen.getByTestId('popup-address')).toBeTruthy();
+  });
+
+  it('renders listing cards when listings provided', () => {
+    const listings: ListingSummary[] = [{
+      id: 1, source: 'flatfox', source_id: 'L-1',
+      rent_net: 2000, rent_gross: 2200, rooms: 3.5, area_m2: 80,
+      street: 'Langstrasse', house_number: '42', plz: 8004, city: 'Zürich',
+      source_url: 'https://flatfox.ch/test', first_seen: '2026-01-01', last_seen: '2026-03-01',
+      description: null, images: [], documents: [],
+    }];
+    render(<BuildingPopup summary={fullSummary} listings={listings} />);
+    expect(screen.getByTestId('listing-cards')).toBeTruthy();
+    expect(screen.getByText('Active listings')).toBeTruthy();
+  });
+
+  it('does not render listing section when listings is empty', () => {
+    render(<BuildingPopup summary={fullSummary} listings={[]} />);
+    expect(screen.queryByTestId('listing-cards')).toBeNull();
+  });
+
+  it('does not render listing section when listings is undefined', () => {
+    render(<BuildingPopup summary={fullSummary} />);
+    expect(screen.queryByTestId('listing-cards')).toBeNull();
   });
 });

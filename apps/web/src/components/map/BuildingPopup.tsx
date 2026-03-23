@@ -1,11 +1,13 @@
-import type { BuildingSummary } from '@/lib/api';
+import type { BuildingSummary, ListingSummary } from '@/lib/api';
 import { eraForYear } from '@/lib/map/era-colors';
+import { ListingCards } from './ListingCards';
 
 interface Props {
   summary: BuildingSummary;
+  listings?: ListingSummary[];
 }
 
-export function BuildingPopup({ summary }: Props) {
+export function BuildingPopup({ summary, listings }: Props) {
   const era = eraForYear(summary.gbauj ?? undefined);
 
   const address =
@@ -40,6 +42,7 @@ export function BuildingPopup({ summary }: Props) {
         <dt className="text-gray-500">Dwellings</dt>
         <dd className="font-medium">{summary.ganzwhg ?? '—'}</dd>
       </dl>
+      {listings && listings.length > 0 && <ListingCards listings={listings} />}
     </div>
   );
 }

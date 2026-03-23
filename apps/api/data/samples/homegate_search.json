@@ -1,0 +1,125 @@
+{
+  "_note": "Synthetic sample based on reverse-engineered __INITIAL_STATE__ structure. Real site uses DataDome CAPTCHA. See recon notes.",
+  "_source": "github.com/landomo-com/landomo-switzerland-homegate (TypeScript parser + real field names)",
+  "_path": "window.__INITIAL_STATE__.resultList.search.fullSearch.result",
+  "resultList": {
+    "search": {
+      "fullSearch": {
+        "result": {
+          "totalCount": 847,
+          "pageCount": 28,
+          "start": 0,
+          "listings": [
+            {
+              "id": "4002154320",
+              "accountId": 12345,
+              "externalId": "HG-2154320",
+              "listing": {
+                "address": {
+                  "street": "Birchlenstrasse 37",
+                  "postalCode": "8600",
+                  "locality": "Dübendorf",
+                  "region": "ZH",
+                  "country": "CH",
+                  "geoCoordinates": {
+                    "latitude": 47.3989497,
+                    "longitude": 8.6118828
+                  }
+                },
+                "categories": ["APARTMENT"],
+                "characteristics": {
+                  "numberOfRooms": 3.5,
+                  "livingSpace": 80,
+                  "floor": 2,
+                  "yearBuilt": 1998,
+                  "hasBalcony": true,
+                  "hasElevator": false,
+                  "hasParking": true
+                },
+                "localization": {
+                  "de": {
+                    "title": "Helle 3.5-Zimmer-Wohnung mit Balkon",
+                    "text": "Schöne Wohnung in ruhiger Lage..."
+                  },
+                  "primary": "de"
+                },
+                "offerType": "RENT",
+                "prices": {
+                  "rent": {
+                    "net": 1850,
+                    "gross": 2050,
+                    "extra": 200
+                  },
+                  "currency": "CHF"
+                }
+              },
+              "listingType": {
+                "type": "APARTMENT"
+              },
+              "meta": {
+                "createdAt": "2024-01-15T09:30:00Z"
+              },
+              "pictures": [
+                {
+                  "url": "https://static.homegate.ch/listing/4002154320/image1.jpg",
+                  "description": "Wohnzimmer"
+                }
+              ]
+            },
+            {
+              "id": "4001987654",
+              "accountId": 67890,
+              "externalId": null,
+              "listing": {
+                "address": {
+                  "street": "Rämistrasse 12",
+                  "postalCode": "8001",
+                  "locality": "Zürich",
+                  "region": "ZH",
+                  "country": "CH",
+                  "geoCoordinates": {
+                    "latitude": 47.3751,
+                    "longitude": 8.5471
+                  }
+                },
+                "categories": ["APARTMENT"],
+                "characteristics": {
+                  "numberOfRooms": 2.5,
+                  "livingSpace": 58,
+                  "floor": 3,
+                  "yearBuilt": 1920,
+                  "hasBalcony": false,
+                  "hasElevator": true,
+                  "hasParking": false
+                },
+                "localization": {
+                  "de": {
+                    "title": "Zentrale 2.5-Zimmer-Altbau-Wohnung",
+                    "text": "Charaktervolle Altbauswohnung im Hochparterre..."
+                  },
+                  "primary": "de"
+                },
+                "offerType": "RENT",
+                "prices": {
+                  "rent": {
+                    "net": 2100,
+                    "gross": 2350,
+                    "extra": 250
+                  },
+                  "currency": "CHF"
+                }
+              },
+              "listingType": {
+                "type": "APARTMENT"
+              },
+              "meta": {
+                "createdAt": "2024-02-01T14:15:00Z"
+              },
+              "pictures": []
+            }
+          ]
+        }
+      }
+    }
+  }
+}
