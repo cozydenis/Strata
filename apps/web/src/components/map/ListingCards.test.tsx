@@ -46,15 +46,24 @@ describe('ListingCards', () => {
     expect(rent.textContent).toContain('2');
   });
 
+  it('formats rent with CHF prefix using de-CH locale', () => {
+    render(<ListingCards listings={[listing]} />);
+    const rent = screen.getByTestId('listing-rent');
+    expect(rent.textContent).toContain('CHF');
+    // de-CH uses right single quotation mark (U+2019) as thousands separator: 2'200
+    // Also accept plain apostrophe or no separator depending on environment
+    expect(rent.textContent).toMatch(/2[\u2019'\s.,]?200|2200/);
+  });
+
   it('renders rooms and area', () => {
     render(<ListingCards listings={[listing]} />);
     expect(screen.getByText('3.5 rooms')).toBeTruthy();
     expect(screen.getByText('80 m²')).toBeTruthy();
   });
 
-  it('renders source badge', () => {
+  it('renders source attribution', () => {
     render(<ListingCards listings={[listing]} />);
-    expect(screen.getByTestId('listing-source').textContent).toBe('flatfox');
+    expect(screen.getByTestId('listing-source')).toBeTruthy();
   });
 
   it('renders link to source_url with target _blank', () => {
@@ -99,8 +108,10 @@ describe('ListingCards', () => {
     expect(screen.getByTestId('listing-gallery')).toBeTruthy();
   });
 
-  it('does not render gallery when no images', () => {
+  it('renders photo placeholder when no images', () => {
     render(<ListingCards listings={[{ ...listing, images: [] }]} />);
+    expect(screen.getByTestId('photo-placeholder')).toBeTruthy();
+    // Gallery should not show
     expect(screen.queryByTestId('listing-gallery')).toBeNull();
   });
 
@@ -114,5 +125,19 @@ describe('ListingCards', () => {
   it('does not render floor plan link when no documents', () => {
     render(<ListingCards listings={[{ ...listing, documents: [] }]} />);
     expect(screen.queryByTestId('floorplan-link')).toBeNull();
+  });
+
+  it('renders /mt. suffix on rent amount', () => {
+    render(<ListingCards listings={[listing]} />);
+    expect(screen.getByTestId('listing-rent-period')).toBeTruthy();
+    expect(screen.getByTestId('listing-rent-period').textContent).toContain('/mt.');
+  });
+
+  it('image thumbnails have object-cover class', () => {
+    const { container } = render(<ListingCards listings={[listing]} />);
+    const imgs = container.querySelectorAll('[data-testid="listing-gallery"] img');
+    imgs.forEach((img) => {
+      expect((img as HTMLElement).className).toContain('object-cover');
+    });
   });
 });

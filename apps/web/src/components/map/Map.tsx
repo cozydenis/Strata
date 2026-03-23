@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { createElement } from 'react';
 import { Legend } from './Legend';
+import { TopBar } from './TopBar';
 import { BuildingPopup } from './BuildingPopup';
+import { MapLoadingOverlay } from './MapLoadingOverlay';
+import { PopupSkeleton } from './Skeleton';
 import { eraColorExpression } from '@/lib/map/era-colors';
 import {
   fetchBuildingSummary,
@@ -17,8 +20,8 @@ const ZURICH_CENTER: [number, number] = [8.54, 47.38];
 const INITIAL_ZOOM = 12;
 const GEOJSON_URL = '/data/buildings.geojson';
 const LISTINGS_GEOJSON_URL = '/data/listings.geojson';
-const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
-const LISTING_COLOR = '#E53935';
+const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+const LISTING_COLOR = '#D4915A';
 
 export function MapView() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,10 +33,12 @@ export function MapView() {
   const [popupListings, setPopupListings] = useState<ListingSummary[] | null>(null);
   const [popupCoords, setPopupCoords] = useState<[number, number] | null>(null);
   const [listingsVisible, setListingsVisible] = useState(true);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Handle building click — fetch summary + listings in parallel
+  // Handle building click — show skeleton immediately, then fetch real data
   async function handleBuildingClick(egid: number, coords: [number, number]) {
     try {
+      await showSkeletonPopup(coords);
       const [summary, listings] = await Promise.all([
         fetchBuildingSummary(egid),
         fetchBuildingListings(egid).catch(() => []),
@@ -44,6 +49,38 @@ export function MapView() {
     } catch (err) {
       console.error('[Strata] Failed to load building data:', err);
     }
+  }
+
+  async function showSkeletonPopup(coords: [number, number]) {
+    if (!mapRef.current) return;
+
+    // Clean up previous popup
+    popupRootRef.current?.unmount();
+    popupRootRef.current = null;
+    const prev = popupRef.current as { remove: () => void } | null;
+    prev?.remove();
+
+    const mod = await import('maplibre-gl');
+    const maplibregl = mod.default ?? mod;
+
+    const el = document.createElement('div');
+    const root = createRoot(el);
+    popupRootRef.current = root;
+    root.render(createElement(PopupSkeleton));
+
+    const PopupClass = maplibregl.Popup ?? (mod as unknown as { Popup: unknown }).Popup;
+    const mp = new PopupClass({ closeOnClick: true, maxWidth: '340px' })
+      .setLngLat(coords)
+      .setDOMContent(el)
+      .addTo(mapRef.current as Parameters<typeof mp.addTo>[0]);
+
+    mp.on('close', () => {
+      popupRootRef.current?.unmount();
+      popupRootRef.current = null;
+      setPopup(null);
+      setPopupListings(null);
+    });
+    popupRef.current = mp;
   }
 
   useEffect(() => {
@@ -71,6 +108,8 @@ export function MapView() {
         map.addControl(new NavControl(), 'top-right');
 
         map.on('load', () => {
+          setMapLoaded(true);
+
           // ── Buildings source + layers ──────────────────────────────────
           map.addSource('buildings', {
             type: 'geojson',
@@ -86,7 +125,7 @@ export function MapView() {
             source: 'buildings',
             filter: ['has', 'point_count'],
             paint: {
-              'circle-color': '#4682B4',
+              'circle-color': '#504C47',
               'circle-radius': ['step', ['get', 'point_count'], 8, 50, 12, 200, 16],
               'circle-opacity': 0.7,
             },
@@ -101,7 +140,7 @@ export function MapView() {
               'text-field': '{point_count_abbreviated}',
               'text-size': 10,
             },
-            paint: { 'text-color': '#fff' },
+            paint: { 'text-color': '#FAF7F2' },
           });
 
           map.addLayer({
@@ -112,8 +151,8 @@ export function MapView() {
             paint: {
               'circle-color': eraColorExpression() as unknown as string,
               'circle-radius': 4,
-              'circle-stroke-width': 1,
-              'circle-stroke-color': '#fff',
+              'circle-stroke-width': 0.5,
+              'circle-stroke-color': 'rgba(250,247,242,0.3)',
               'circle-opacity': 0.85,
             },
           });
@@ -186,27 +225,63 @@ export function MapView() {
     };
   }, []);
 
-  // Toggle listings layer visibility
+  // Toggle listings layer visibility with opacity fade
   useEffect(() => {
-    const map = mapRef.current as { setLayoutProperty?: (layer: string, prop: string, val: string) => void; getLayer?: (id: string) => unknown } | null;
+    const map = mapRef.current as {
+      setPaintProperty?: (layer: string, prop: string, val: number) => void;
+      setLayoutProperty?: (layer: string, prop: string, val: string) => void;
+      getLayer?: (id: string) => unknown;
+      getPaintProperty?: (layer: string, prop: string) => number;
+    } | null;
     if (!map?.setLayoutProperty || !map?.getLayer?.('listings-markers')) return;
-    map.setLayoutProperty('listings-markers', 'visibility', listingsVisible ? 'visible' : 'none');
+
+    const FADE_DURATION = 300;
+    const START_OPACITY = listingsVisible ? 0 : 0.9;
+    const END_OPACITY = listingsVisible ? 0.9 : 0;
+    const startTime = performance.now();
+
+    if (listingsVisible) {
+      map.setLayoutProperty('listings-markers', 'visibility', 'visible');
+    }
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / FADE_DURATION, 1);
+      const opacity = START_OPACITY + (END_OPACITY - START_OPACITY) * progress;
+      map?.setPaintProperty?.('listings-markers', 'circle-opacity', opacity);
+
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else if (!listingsVisible) {
+        map?.setLayoutProperty?.('listings-markers', 'visibility', 'none');
+      }
+    }
+
+    requestAnimationFrame(tick);
   }, [listingsVisible]);
 
-  // Popup rendering
+  // Popup rendering — re-render with real data once fetched
   useEffect(() => {
     if (!mapRef.current || !popup || !popupCoords) return;
 
-    // Clean up previous popup root and popup
-    popupRootRef.current?.unmount();
-    popupRootRef.current = null;
-    const prev = popupRef.current as { remove: () => void } | null;
-    prev?.remove();
-
-    async function showPopup() {
+    // Re-use existing popup DOM element if present, otherwise it was already set up
+    async function updatePopup() {
       const mod = await import('maplibre-gl');
       const maplibregl = mod.default ?? mod;
 
+      // If there's an existing popup root (skeleton), update it in-place
+      const existingRoot = popupRootRef.current;
+      if (existingRoot) {
+        existingRoot.render(
+          createElement(BuildingPopup, {
+            summary: popup!,
+            listings: popupListings ?? undefined,
+          })
+        );
+        return;
+      }
+
+      // Fallback: create fresh popup (skeleton was never shown)
       const el = document.createElement('div');
       const root = createRoot(el);
       popupRootRef.current = root;
@@ -218,10 +293,10 @@ export function MapView() {
       );
 
       const PopupClass = maplibregl.Popup ?? (mod as unknown as { Popup: unknown }).Popup;
-      const mp = new PopupClass({ closeOnClick: true, maxWidth: '320px' })
+      const mp = new PopupClass({ closeOnClick: true, maxWidth: '340px' })
         .setLngLat(popupCoords!)
         .setDOMContent(el)
-        .addTo(mapRef.current!);
+        .addTo(mapRef.current as Parameters<typeof mp.addTo>[0]);
 
       mp.on('close', () => {
         popupRootRef.current?.unmount();
@@ -232,12 +307,12 @@ export function MapView() {
       popupRef.current = mp;
     }
 
-    showPopup();
+    updatePopup();
   }, [popup, popupCoords, popupListings]);
 
   if (error) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-red-50 text-red-600">
+      <div className="flex h-screen w-screen items-center justify-center bg-strata-slate-900 text-strata-terracotta">
         <p>Map failed to load: {error}</p>
       </div>
     );
@@ -246,10 +321,12 @@ export function MapView() {
   return (
     <div className="relative h-screen w-screen" data-testid="map-container">
       <div ref={containerRef} className="absolute inset-0" />
+      <TopBar />
       <Legend
         listingsVisible={listingsVisible}
         onToggleListings={() => setListingsVisible((v) => !v)}
       />
+      <MapLoadingOverlay visible={!mapLoaded} />
     </div>
   );
 }

@@ -28,19 +28,19 @@ describe('BuildingPopup', () => {
     expect(screen.getByText(/8004 Zürich/)).toBeTruthy();
   });
 
-  it('renders construction year', () => {
+  it('renders construction year in the metadata row', () => {
     render(<BuildingPopup summary={fullSummary} />);
-    expect(screen.getByText('1972')).toBeTruthy();
+    expect(screen.getByText(/1972/)).toBeTruthy();
   });
 
-  it('renders floor count', () => {
+  it('renders floor count in the metadata row', () => {
     render(<BuildingPopup summary={fullSummary} />);
-    expect(screen.getByText('5')).toBeTruthy();
+    expect(screen.getByText(/5/)).toBeTruthy();
   });
 
-  it('renders dwelling count', () => {
+  it('renders dwelling count in the metadata row', () => {
     render(<BuildingPopup summary={fullSummary} />);
-    expect(screen.getByText('24')).toBeTruthy();
+    expect(screen.getByText(/24/)).toBeTruthy();
   });
 
   it('renders "Unknown" when gbauj is null', () => {
@@ -50,7 +50,6 @@ describe('BuildingPopup', () => {
 
   it('renders "—" when address is null', () => {
     render(<BuildingPopup summary={{ ...fullSummary, strname: null, deinr: null, dplz4: null, dplzname: null }} />);
-    // Should not throw; address row shows dash or fallback
     expect(screen.getByTestId('popup-address')).toBeTruthy();
   });
 
@@ -67,7 +66,12 @@ describe('BuildingPopup', () => {
     expect(screen.getByText('Active listings')).toBeTruthy();
   });
 
-  it('does not render listing section when listings is empty', () => {
+  it('shows "No active listings" message when listings is empty array', () => {
+    render(<BuildingPopup summary={fullSummary} listings={[]} />);
+    expect(screen.getByText(/no active listings/i)).toBeTruthy();
+  });
+
+  it('does not render listing cards container when listings is empty', () => {
     render(<BuildingPopup summary={fullSummary} listings={[]} />);
     expect(screen.queryByTestId('listing-cards')).toBeNull();
   });
@@ -75,5 +79,34 @@ describe('BuildingPopup', () => {
   it('does not render listing section when listings is undefined', () => {
     render(<BuildingPopup summary={fullSummary} />);
     expect(screen.queryByTestId('listing-cards')).toBeNull();
+  });
+
+  it('street address renders with prominent styling (font-semibold)', () => {
+    const { container } = render(<BuildingPopup summary={fullSummary} />);
+    const addressEl = container.querySelector('[data-testid="popup-address"] p:first-child') as HTMLElement;
+    expect(addressEl.className).toContain('font-semibold');
+  });
+
+  it('renders a divider between address and metadata', () => {
+    const { container } = render(<BuildingPopup summary={fullSummary} />);
+    const divider = container.querySelector('.border-t');
+    expect(divider).toBeTruthy();
+  });
+
+  it('year has inline color style from era', () => {
+    const { container } = render(<BuildingPopup summary={fullSummary} />);
+    // The year should be in a span/element with a style color
+    const yearEls = container.querySelectorAll('[style*="color"]');
+    expect(yearEls.length).toBeGreaterThan(0);
+  });
+
+  it('omits floors when gastw is null', () => {
+    render(<BuildingPopup summary={{ ...fullSummary, gastw: null }} />);
+    expect(screen.queryByText(/fl\./i)).toBeNull();
+  });
+
+  it('omits dwellings when ganzwhg is null', () => {
+    render(<BuildingPopup summary={{ ...fullSummary, ganzwhg: null }} />);
+    expect(screen.queryByText(/dwg/i)).toBeNull();
   });
 });

@@ -4,8 +4,115 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Warm-toned dark palette */
+  --strata-slate-900: #1C1A18;
+  --strata-slate-800: #2A2724;
+  --strata-slate-700: #383431;
+  --strata-slate-600: #46423E;
+  --strata-slate-500: #605B56;
+  --strata-slate-400: #7A756F;
+  --strata-slate-300: #9E9890;
+  --strata-slate-200: #C8C2BA;
+  --strata-slate-100: #F0EDE8;
+
+  /* Stone shades */
+  --strata-stone-900: #2C2825;
+  --strata-stone-800: #3D3A36;
+  --strata-stone-700: #504C47;
+  --strata-stone-600: #6B6660;
+
+  /* Accent colors */
+  --strata-terracotta: #C4785B;
+  --strata-amber: #D4915A;
+  --strata-cream: #FAF7F2;
+  --strata-ink: #2C2825;
+  --strata-muted: #8A8580;
+  --strata-border: rgba(250, 247, 242, 0.1);
+  --strata-shadow: rgba(28, 26, 24, 0.5);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px var(--strata-shadow);
+  --shadow-md: 0 4px 12px var(--strata-shadow);
+  --shadow-lg: 0 8px 24px var(--strata-shadow);
+}
+
+/* Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 html,
 body {
   height: 100%;
   margin: 0;
+}
+
+/* MapLibre popup overrides */
+.maplibregl-popup-content {
+  background: var(--strata-slate-900);
+  border: 1px solid var(--strata-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 0;
+  color: var(--strata-cream);
+}
+
+.maplibregl-popup-close-button {
+  color: var(--strata-muted);
+  font-size: 18px;
+  padding: 8px 10px;
+  line-height: 1;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: var(--strata-cream);
+  background: transparent;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: var(--strata-slate-900) !important;
+}
+
+/* MapLibre control overrides */
+.maplibregl-ctrl-group {
+  background: rgba(28, 26, 24, 0.85) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--strata-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.maplibregl-ctrl-group button {
+  color: var(--strata-cream) !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: rgba(250, 247, 242, 0.1) !important;
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+  opacity: 0.4;
 }

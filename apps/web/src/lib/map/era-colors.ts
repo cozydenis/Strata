@@ -6,13 +6,13 @@ export interface Era {
 }
 
 export const ERA_COLORS: Era[] = [
-  { label: 'Unknown', color: '#9E9E9E' },
-  { label: 'Pre-1900', color: '#8B0000', maxYear: 1899 },
-  { label: '1900–1945', color: '#D2691E', minYear: 1900, maxYear: 1945 },
-  { label: '1946–1970', color: '#DAA520', minYear: 1946, maxYear: 1970 },
-  { label: '1971–1990', color: '#6B8E23', minYear: 1971, maxYear: 1990 },
-  { label: '1991–2010', color: '#4682B4', minYear: 1991, maxYear: 2010 },
-  { label: '2011+', color: '#1E3A5F', minYear: 2011 },
+  { label: 'Unknown', color: '#8A8580' },
+  { label: 'Pre-1900', color: '#7A5C4F', maxYear: 1899 },
+  { label: '1900–1945', color: '#A67C5B', minYear: 1900, maxYear: 1945 },
+  { label: '1946–1970', color: '#C4A35A', minYear: 1946, maxYear: 1970 },
+  { label: '1971–1990', color: '#7A9A6D', minYear: 1971, maxYear: 1990 },
+  { label: '1991–2010', color: '#5A7D8A', minYear: 1991, maxYear: 2010 },
+  { label: '2011+', color: '#3D5A6E', minYear: 2011 },
 ];
 
 const UNKNOWN_ERA = ERA_COLORS[0];

@@ -37,10 +37,23 @@ describe('Legend', () => {
     expect(screen.getByText('Active listings')).toBeTruthy();
   });
 
-  it('checkbox reflects listingsVisible state', () => {
+  it('renders a checkbox input for the toggle', () => {
+    render(<Legend listingsVisible={true} onToggleListings={() => {}} />);
+    const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+    expect(checkbox).toBeTruthy();
+    expect(checkbox.type).toBe('checkbox');
+  });
+
+  it('checkbox reflects listingsVisible=false state', () => {
     render(<Legend listingsVisible={false} onToggleListings={() => {}} />);
     const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
     expect(checkbox.checked).toBe(false);
+  });
+
+  it('checkbox reflects listingsVisible=true state', () => {
+    render(<Legend listingsVisible={true} onToggleListings={() => {}} />);
+    const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
   });
 
   it('calls onToggleListings when checkbox clicked', () => {
@@ -50,9 +63,29 @@ describe('Legend', () => {
     expect(toggle).toHaveBeenCalledTimes(1);
   });
 
-  it('renders a red listing swatch', () => {
-    render(<Legend listingsVisible={true} onToggleListings={() => {}} />);
-    const swatch = screen.getByTestId('listings-swatch') as HTMLElement;
-    expect(swatch.style.backgroundColor).toBeTruthy();
+  it('renders the "Construction era" heading', () => {
+    render(<Legend />);
+    expect(screen.getByText(/construction era/i)).toBeTruthy();
+  });
+
+  it('era swatches use rounded-full class for circular appearance', () => {
+    const { container } = render(<Legend />);
+    const swatches = container.querySelectorAll('[data-testid="era-swatch"]');
+    swatches.forEach((swatch) => {
+      expect((swatch as HTMLElement).className).toContain('rounded-full');
+    });
+  });
+
+  it('renders a divider between era list and listings toggle', () => {
+    const { container } = render(<Legend listingsVisible={true} onToggleListings={() => {}} />);
+    const divider = container.querySelector('.border-t');
+    expect(divider).toBeTruthy();
+  });
+
+  it('toggle has a track and knob structure for custom switch', () => {
+    const { container } = render(<Legend listingsVisible={true} onToggleListings={() => {}} />);
+    // The custom toggle should have a label wrapping the checkbox
+    const label = container.querySelector('label[data-testid="listings-toggle"]');
+    expect(label).toBeTruthy();
   });
 });
