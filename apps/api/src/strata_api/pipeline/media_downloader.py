@@ -33,6 +33,16 @@ _FLOORPLAN_RE = re.compile(
 _OG_IMAGE_RE = re.compile(
     r'<meta\s+property="og:image"\s+content="([^"]+)"',
 )
+# Matches the Documents table row; captures everything up to the closing </tr>
+_DOCUMENTS_SECTION_RE = re.compile(
+    r"<td>Documents:</td>\s*<td>(.*?)</td>",
+    re.DOTALL | re.IGNORECASE,
+)
+# Matches /media/ff/... href links (pdf, jpg, png)
+_DOCUMENT_HREF_RE = re.compile(
+    r'href="(/media/ff/[^"]+\.(?:pdf|jpg|jpeg|png))"',
+    re.IGNORECASE,
+)
 _USER_AGENT = "Strata-Pipeline/1.0 (research; contact: hello@strata.ch)"
 
 
@@ -96,6 +106,20 @@ def extract_floorplan_urls_from_html(html: str) -> list[str]:
     return _dedup(urls)
 
 
+def extract_document_urls_from_html(html: str) -> list[str]:
+    """Extract document URLs from the Documents table row in a Flatfox listing page.
+
+    Finds the <td>Documents:</td> section and returns all /media/ff/... href links
+    as absolute URLs. Returns a deduplicated list; empty list if no section found.
+    """
+    section_match = _DOCUMENTS_SECTION_RE.search(html)
+    if not section_match:
+        return []
+    section = section_match.group(1)
+    hrefs = _DOCUMENT_HREF_RE.findall(section)
+    return _dedup([f"https://flatfox.ch{href}" for href in hrefs])
+
+
 def _url_read(url: str) -> bytes:
     """Fetch raw bytes from a URL."""
     req = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
@@ -126,16 +150,17 @@ def scrape_listing_images(slug: str, pk: int) -> list[str]:
 
 
 def scrape_listing_media(slug: str, pk: int) -> dict[str, list[str]]:
-    """Scrape a Flatfox listing page and return both photos and floor plans.
+    """Scrape a Flatfox listing page and return photos, floor plans, and documents.
 
-    Returns {"photos": [...], "floorplans": [...]} with absolute URLs.
+    Returns {"photos": [...], "floorplans": [...], "documents": [...]} with absolute URLs.
     """
     html = _fetch_page_html(slug, pk)
     if html is None:
-        return {"photos": [], "floorplans": []}
+        return {"photos": [], "floorplans": [], "documents": []}
     return {
         "photos": extract_image_urls_from_html(html, include_og=True),
         "floorplans": extract_floorplan_urls_from_html(html),
+        "documents": extract_document_urls_from_html(html),
     }
 
 
@@ -148,12 +173,13 @@ def save_listing_media(
     """Download media files and persist ListingImage rows for a listing.
 
     Skips listings that already have images (idempotent).
-    Returns {"photos_saved": N, "floorplans_saved": N}.
+    Returns {"photos_saved": N, "floorplans_saved": N, "documents_saved": N}.
     """
     from strata_api.db.models.listing import ListingImage
 
     photos_saved = 0
     floorplans_saved = 0
+    documents_saved = 0
 
     for ordering, url in enumerate(media.get("photos", [])):
         fname = _url_to_filename(url)
@@ -181,7 +207,24 @@ def save_listing_media(
         ))
         floorplans_saved += 1
 
-    return {"photos_saved": photos_saved, "floorplans_saved": floorplans_saved}
+    for ordering, url in enumerate(media.get("documents", [])):
+        fname = _url_to_filename(url)
+        dest = media_dir / "documents" / fname
+        ok = download_file(url, dest)
+        db.add(ListingImage(
+            listing_id=listing_id,
+            url=url,
+            local_path=str(dest) if ok else None,
+            ordering=ordering,
+            image_type="document",
+        ))
+        documents_saved += 1
+
+    return {
+        "photos_saved": photos_saved,
+        "floorplans_saved": floorplans_saved,
+        "documents_saved": documents_saved,
+    }
 
 
 def _url_to_filename(url: str) -> str:

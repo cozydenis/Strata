@@ -22,7 +22,7 @@ async def run_listing_pipeline(
     """Run the full listing ingestion pipeline for all sources.
 
     Returns stats per source: {source: {inserted, updated, unchanged, deactivated,
-                                         photos_saved, floorplans_saved}}
+                                         photos_saved, floorplans_saved, documents_saved}}
     """
     stats: dict[str, dict[str, int]] = {}
 
@@ -39,6 +39,7 @@ async def run_listing_pipeline(
     media_stats = _download_media_for_new_listings(db, listings, media_dir)
     source_stats["photos_saved"] = media_stats["photos_saved"]
     source_stats["floorplans_saved"] = media_stats["floorplans_saved"]
+    source_stats["documents_saved"] = media_stats["documents_saved"]
 
     stats["flatfox"] = source_stats
 
@@ -63,12 +64,12 @@ def _download_media_for_new_listings(
 
     needs_media = {row.source_id: row.id for row in rows_without_media}
     if not needs_media:
-        return {"photos_saved": 0, "floorplans_saved": 0}
+        return {"photos_saved": 0, "floorplans_saved": 0, "documents_saved": 0}
 
     # Build lookup: source_id → FlatfoxListing (for slug)
     listing_by_source_id = {lst.source_id: lst for lst in listings}
 
-    totals = {"photos_saved": 0, "floorplans_saved": 0}
+    totals = {"photos_saved": 0, "floorplans_saved": 0, "documents_saved": 0}
     for source_id, listing_id in needs_media.items():
         ff = listing_by_source_id.get(source_id)
         if ff is None or not ff.slug:
@@ -81,5 +82,6 @@ def _download_media_for_new_listings(
         counts = save_listing_media(db, listing_id, media, media_dir)
         totals["photos_saved"] += counts["photos_saved"]
         totals["floorplans_saved"] += counts["floorplans_saved"]
+        totals["documents_saved"] += counts["documents_saved"]
 
     return totals

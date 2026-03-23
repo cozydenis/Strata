@@ -3,11 +3,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import re
+import time
 import urllib.request
 from typing import Any
 
 from pydantic import BaseModel, computed_field
+
+logger = logging.getLogger(__name__)
 
 # Kanton Zürich PLZ whitelist — derived from GWR entrances (255 PLZs).
 # Excludes other cantons sharing the 8xxx range (Thurgau, St.Gallen, Schwyz, Glarus, etc.).
@@ -181,8 +185,18 @@ class FlatfoxConnector:
                 "User-Agent": "Strata-Pipeline/1.0 (research; contact: hello@strata.ch)",
             },
         )
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read())
+        for attempt in range(1, 4):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    return json.loads(resp.read())
+            except Exception as exc:
+                if attempt == 3:
+                    raise
+                wait = 5 * attempt
+                logger.warning(
+                    "Fetch failed (attempt %d/3): %s — retrying in %ds", attempt, exc, wait
+                )
+                time.sleep(wait)
 
     async def fetch_page(
         self, offset: int = 0, limit: int | None = None
@@ -210,6 +224,7 @@ class FlatfoxConnector:
         while True:
             listings, has_more = await self.fetch_page(offset=offset)
             all_listings.extend(listings)
+            logger.info("Flatfox offset=%d fetched=%d zh_total=%d", offset, len(listings), len(all_listings))
             if not has_more:
                 break
             offset += self._limit

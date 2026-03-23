@@ -252,13 +252,14 @@ class TestMediaDownloadInRunner:
             mock_instance = MagicMock()
             mock_instance.fetch_all_zurich = AsyncMock(return_value=listings)
             MockConnector.return_value = mock_instance
-            mock_scrape.return_value = {"photos": [], "floorplans": []}
-            mock_save.return_value = {"photos_saved": 0, "floorplans_saved": 0}
+            mock_scrape.return_value = {"photos": [], "floorplans": [], "documents": []}
+            mock_save.return_value = {"photos_saved": 0, "floorplans_saved": 0, "documents_saved": 0}
 
             stats = await run_listing_pipeline(db, media_dir=tmp_path)
 
         assert "photos_saved" in stats["flatfox"]
         assert "floorplans_saved" in stats["flatfox"]
+        assert "documents_saved" in stats["flatfox"]
 
     @pytest.mark.asyncio
     async def test_media_scraped_for_new_listings_with_slug(self, db, tmp_path):
@@ -272,8 +273,8 @@ class TestMediaDownloadInRunner:
             mock_instance = MagicMock()
             mock_instance.fetch_all_zurich = AsyncMock(return_value=listings)
             MockConnector.return_value = mock_instance
-            mock_scrape.return_value = {"photos": [], "floorplans": []}
-            mock_save.return_value = {"photos_saved": 0, "floorplans_saved": 0}
+            mock_scrape.return_value = {"photos": [], "floorplans": [], "documents": []}
+            mock_save.return_value = {"photos_saved": 0, "floorplans_saved": 0, "documents_saved": 0}
 
             await run_listing_pipeline(db, media_dir=tmp_path)
 
@@ -342,8 +343,8 @@ class TestMediaDownloadInRunner:
             mock_instance = MagicMock()
             mock_instance.fetch_all_zurich = AsyncMock(return_value=listings)
             MockConnector.return_value = mock_instance
-            mock_scrape.return_value = {"photos": ["u1", "u2"], "floorplans": ["fp1"]}
-            mock_save.return_value = {"photos_saved": 2, "floorplans_saved": 1}
+            mock_scrape.return_value = {"photos": ["u1", "u2"], "floorplans": ["fp1"], "documents": []}
+            mock_save.return_value = {"photos_saved": 2, "floorplans_saved": 1, "documents_saved": 0}
 
             stats = await run_listing_pipeline(db, media_dir=tmp_path)
 

@@ -11,6 +11,7 @@ from strata_api.db.models.listing import Listing, ListingImage
 from strata_api.pipeline.media_downloader import (
     _url_to_filename,
     download_file,
+    extract_document_urls_from_html,
     extract_floorplan_urls_from_html,
     extract_image_urls_from_html,
     save_listing_media,
@@ -229,7 +230,7 @@ class TestScrapeListingMedia:
             mock_fetch.return_value = None
             result = scrape_listing_media("test-slug", 99999)
 
-        assert result == {"photos": [], "floorplans": []}
+        assert result == {"photos": [], "floorplans": [], "documents": []}
 
     def test_photos_and_floorplans_are_independent(self):
         """Photos list should not include floorplan URLs and vice versa."""
@@ -352,8 +353,10 @@ class TestSaveListingMedia:
         assert [r.ordering for r in rows] == [0, 1, 2]
 
     def test_returns_zero_counts_for_empty_media(self, db, listing_id, tmp_path):
-        counts = save_listing_media(db, listing_id, {"photos": [], "floorplans": []}, tmp_path)
-        assert counts == {"photos_saved": 0, "floorplans_saved": 0}
+        counts = save_listing_media(
+            db, listing_id, {"photos": [], "floorplans": [], "documents": []}, tmp_path
+        )
+        assert counts == {"photos_saved": 0, "floorplans_saved": 0, "documents_saved": 0}
 
     def test_photo_stored_in_photos_subdir(self, db, listing_id, tmp_path):
         media = {
@@ -396,3 +399,256 @@ class TestSaveListingMedia:
             save_listing_media(db, listing_id, media, tmp_path)
 
         assert all("floorplans" in str(p) for p in captured_paths)
+
+
+# ── extract_document_urls_from_html ──────────────────────────────────────────
+
+
+_DOCUMENTS_HTML = """
+<table>
+  <tr>
+    <td>Photos:</td>
+    <td>
+      <img src="/thumb/ff/2026/03/photo.jpg?alias=listing_gallery_l&amp;signature=P"/>
+    </td>
+  </tr>
+  <tr>
+    <td>Documents:</td>
+    <td>
+      <a href="/media/ff/2025/07/abc123/muel-whg-12.pdf"
+         target="_blank" rel="nofollow">Grundriss</a><br />
+      <a href="/media/ff/2024/07/xyz456/waffenplatz_typ1.jpg"
+         target="_blank" rel="nofollow">Download</a><br />
+    </td>
+  </tr>
+</table>
+"""
+
+_NO_DOCUMENTS_HTML = """
+<table>
+  <tr>
+    <td>Photos:</td>
+    <td>
+      <img src="/thumb/ff/2026/03/photo.jpg?alias=listing_gallery_l&amp;signature=P"/>
+    </td>
+  </tr>
+</table>
+"""
+
+_EMPTY_DOCUMENTS_HTML = """
+<table>
+  <tr>
+    <td>Documents:</td>
+    <td></td>
+  </tr>
+</table>
+"""
+
+
+class TestExtractDocumentUrls:
+    def test_extracts_pdf_links_from_documents_section(self):
+        urls = extract_document_urls_from_html(_DOCUMENTS_HTML)
+        assert any(u.endswith(".pdf") for u in urls)
+
+    def test_extracts_image_links_from_documents_section(self):
+        urls = extract_document_urls_from_html(_DOCUMENTS_HTML)
+        assert any(u.endswith(".jpg") for u in urls)
+
+    def test_returns_absolute_urls_with_flatfox_prefix(self):
+        urls = extract_document_urls_from_html(_DOCUMENTS_HTML)
+        assert all(u.startswith("https://flatfox.ch/media/ff/") for u in urls)
+
+    def test_returns_both_links_from_section(self):
+        urls = extract_document_urls_from_html(_DOCUMENTS_HTML)
+        assert len(urls) == 2
+
+    def test_deduplicates_urls(self):
+        html = """
+        <tr>
+          <td>Documents:</td>
+          <td>
+            <a href="/media/ff/2025/07/abc/plan.pdf" target="_blank">Grundriss</a><br />
+            <a href="/media/ff/2025/07/abc/plan.pdf" target="_blank">Grundriss</a><br />
+          </td>
+        </tr>
+        """
+        urls = extract_document_urls_from_html(html)
+        assert len(urls) == 1
+
+    def test_returns_empty_list_when_no_documents_section(self):
+        urls = extract_document_urls_from_html(_NO_DOCUMENTS_HTML)
+        assert urls == []
+
+    def test_returns_empty_list_when_documents_section_is_empty(self):
+        urls = extract_document_urls_from_html(_EMPTY_DOCUMENTS_HTML)
+        assert urls == []
+
+    def test_does_not_capture_links_from_other_sections(self):
+        html = """
+        <tr>
+          <td>Photos:</td>
+          <td>
+            <a href="/media/ff/2025/07/other/photo.jpg" target="_blank">Photo</a>
+          </td>
+        </tr>
+        <tr>
+          <td>Documents:</td>
+          <td>
+            <a href="/media/ff/2025/07/abc/plan.pdf" target="_blank">Grundriss</a>
+          </td>
+        </tr>
+        """
+        urls = extract_document_urls_from_html(html)
+        assert len(urls) == 1
+        assert urls[0].endswith("plan.pdf")
+
+    def test_handles_html_with_no_media_links_at_all(self):
+        urls = extract_document_urls_from_html("<html><body>No content</body></html>")
+        assert urls == []
+
+    def test_handles_png_links(self):
+        html = """
+        <tr>
+          <td>Documents:</td>
+          <td>
+            <a href="/media/ff/2025/07/abc/floorplan.png" target="_blank">Plan</a>
+          </td>
+        </tr>
+        """
+        urls = extract_document_urls_from_html(html)
+        assert len(urls) == 1
+        assert urls[0].endswith(".png")
+
+
+# ── scrape_listing_media (documents) ─────────────────────────────────────────
+
+
+class TestScrapeListingMediaDocuments:
+    def test_result_includes_documents_key(self):
+        html = """
+        <img src="/thumb/ff/2026/03/img1.jpg?alias=listing_gallery_l&amp;signature=A"/>
+        <tr>
+          <td>Documents:</td>
+          <td>
+            <a href="/media/ff/2025/07/abc/plan.pdf" target="_blank">Grundriss</a>
+          </td>
+        </tr>
+        """
+        with patch("strata_api.pipeline.media_downloader._fetch_page_html") as mock_fetch:
+            mock_fetch.return_value = html
+            result = scrape_listing_media("slug", 1)
+
+        assert "documents" in result
+
+    def test_documents_populated_from_documents_section(self):
+        html = """
+        <tr>
+          <td>Documents:</td>
+          <td>
+            <a href="/media/ff/2025/07/abc/plan.pdf" target="_blank">Grundriss</a>
+            <a href="/media/ff/2025/07/xyz/img.jpg" target="_blank">Download</a>
+          </td>
+        </tr>
+        """
+        with patch("strata_api.pipeline.media_downloader._fetch_page_html") as mock_fetch:
+            mock_fetch.return_value = html
+            result = scrape_listing_media("slug", 1)
+
+        assert len(result["documents"]) == 2
+        assert all(u.startswith("https://flatfox.ch/media/ff/") for u in result["documents"])
+
+    def test_documents_empty_when_no_documents_section(self):
+        html = '<img src="/thumb/ff/2026/03/img1.jpg?alias=listing_gallery_l&amp;signature=A"/>'
+        with patch("strata_api.pipeline.media_downloader._fetch_page_html") as mock_fetch:
+            mock_fetch.return_value = html
+            result = scrape_listing_media("slug", 1)
+
+        assert result["documents"] == []
+
+
+# ── save_listing_media (documents) ───────────────────────────────────────────
+
+
+class TestSaveListingMediaDocuments:
+    def test_creates_document_rows_with_correct_image_type(self, db, listing_id, tmp_path):
+        media = {
+            "photos": [],
+            "floorplans": [],
+            "documents": [
+                "https://flatfox.ch/media/ff/2025/07/abc/plan.pdf",
+                "https://flatfox.ch/media/ff/2025/07/xyz/img.jpg",
+            ],
+        }
+        with patch("strata_api.pipeline.media_downloader.download_file", return_value=True):
+            counts = save_listing_media(db, listing_id, media, tmp_path)
+
+        assert counts["documents_saved"] == 2
+
+        rows = db.execute(
+            select(ListingImage).where(
+                ListingImage.listing_id == listing_id,
+                ListingImage.image_type == "document",
+            )
+        ).scalars().all()
+        assert len(rows) == 2
+        assert all(r.image_type == "document" for r in rows)
+
+    def test_documents_saved_count_in_return_value(self, db, listing_id, tmp_path):
+        media = {
+            "photos": [],
+            "floorplans": [],
+            "documents": [
+                "https://flatfox.ch/media/ff/2025/07/abc/plan.pdf",
+            ],
+        }
+        with patch("strata_api.pipeline.media_downloader.download_file", return_value=True):
+            counts = save_listing_media(db, listing_id, media, tmp_path)
+
+        assert "documents_saved" in counts
+        assert counts["documents_saved"] == 1
+
+    def test_document_stored_in_documents_subdir(self, db, listing_id, tmp_path):
+        media = {
+            "photos": [],
+            "floorplans": [],
+            "documents": [
+                "https://flatfox.ch/media/ff/2025/07/abc/plan.pdf",
+            ],
+        }
+        captured_paths: list[Path] = []
+
+        def capture_download(url: str, dest: Path) -> bool:
+            captured_paths.append(dest)
+            return True
+
+        with patch(
+            "strata_api.pipeline.media_downloader.download_file",
+            side_effect=capture_download,
+        ):
+            save_listing_media(db, listing_id, media, tmp_path)
+
+        assert all("documents" in str(p) for p in captured_paths)
+
+    def test_document_local_path_none_on_download_failure(self, db, listing_id, tmp_path):
+        media = {
+            "photos": [],
+            "floorplans": [],
+            "documents": [
+                "https://flatfox.ch/media/ff/2025/07/abc/plan.pdf",
+            ],
+        }
+        with patch("strata_api.pipeline.media_downloader.download_file", return_value=False):
+            save_listing_media(db, listing_id, media, tmp_path)
+
+        rows = db.execute(
+            select(ListingImage).where(
+                ListingImage.listing_id == listing_id,
+                ListingImage.image_type == "document",
+            )
+        ).scalars().all()
+        assert any(r.local_path is None for r in rows)
+
+    def test_zero_documents_saved_when_no_documents(self, db, listing_id, tmp_path):
+        media = {"photos": [], "floorplans": [], "documents": []}
+        counts = save_listing_media(db, listing_id, media, tmp_path)
+        assert counts["documents_saved"] == 0
