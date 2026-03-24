@@ -37,6 +37,13 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
+      fontSize: {
+        '2xs': ['10px', { lineHeight: '1.4' }],
+        'xs-11': ['11px', { lineHeight: '1.4' }],
+        'sm-12': ['12px', { lineHeight: '1.5' }],
+        'base-13': ['13px', { lineHeight: '1.5' }],
+        'lg-15': ['15px', { lineHeight: '1.3' }],
+      },
       borderRadius: {
         sm: 'var(--radius-sm)',
         md: 'var(--radius-md)',

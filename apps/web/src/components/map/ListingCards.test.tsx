@@ -55,6 +55,17 @@ describe('ListingCards', () => {
     expect(rent.textContent).toMatch(/2[\u2019'\s.,]?200|2200/);
   });
 
+  it('shows net amount alongside gross when both available', () => {
+    render(<ListingCards listings={[listing]} />);
+    expect(screen.getByTestId('listing-rent-net')).toBeTruthy();
+    expect(screen.getByTestId('listing-rent-net').textContent).toContain('net');
+  });
+
+  it('does not show net label when only gross is available', () => {
+    render(<ListingCards listings={[{ ...listing, rent_net: null }]} />);
+    expect(screen.queryByTestId('listing-rent-net')).toBeNull();
+  });
+
   it('renders rooms and area', () => {
     render(<ListingCards listings={[listing]} />);
     expect(screen.getByText('3.5 rooms')).toBeTruthy();
@@ -113,6 +124,13 @@ describe('ListingCards', () => {
     expect(screen.getByTestId('photo-placeholder')).toBeTruthy();
     // Gallery should not show
     expect(screen.queryByTestId('listing-gallery')).toBeNull();
+  });
+
+  it('shows broken-image fallback when an image fails to load', () => {
+    render(<ListingCards listings={[listing]} />);
+    const imgs = screen.getAllByRole('img');
+    fireEvent.error(imgs[0]);
+    expect(screen.getByTestId('img-error-fallback')).toBeTruthy();
   });
 
   it('renders floor plan link when documents exist', () => {
