@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from strata_api.config import settings
 from strata_api.routers import admin_pipeline, listings, registry
+from strata_api.routers import neighborhoods
 
 app = FastAPI(title="Strata API", version="0.1.0")
 
@@ -20,6 +21,7 @@ app.add_middleware(
 app.include_router(admin_pipeline.router)
 app.include_router(listings.router)
 app.include_router(registry.router)
+app.include_router(neighborhoods.router)
 
 
 # Serve downloaded images/documents at /media/images/{egid}/...

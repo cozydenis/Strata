@@ -6,7 +6,8 @@ from pathlib import Path
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
-from strata_api.db.models.listing import Listing, ListingImage
+from strata_api.db.models.listing import Listing, ListingImage, ListingUnitMatch
+from strata_api.pipeline.address_matcher import match_listing
 from strata_api.pipeline.connectors.flatfox import FlatfoxConnector, FlatfoxListing
 from strata_api.pipeline.listing_loader import deactivate_missing, upsert_listings
 from strata_api.pipeline.media_downloader import save_listing_media, scrape_listing_media
@@ -35,6 +36,11 @@ async def run_listing_pipeline(
     deactivated = deactivate_missing(db, source="flatfox", seen_source_ids=seen_ids)
     source_stats["deactivated"] = deactivated
 
+    # ── Address matching (listings → GWR buildings/units) ────────────────────
+    match_stats = _match_unmatched_listings(db)
+    source_stats["matched"] = match_stats["matched"]
+    source_stats["unmatched"] = match_stats["unmatched"]
+
     # ── Media (photos + floor plans) ─────────────────────────────────────────
     media_stats = _download_media_for_new_listings(db, listings, media_dir)
     source_stats["photos_saved"] = media_stats["photos_saved"]
@@ -44,6 +50,47 @@ async def run_listing_pipeline(
     stats["flatfox"] = source_stats
 
     return stats
+
+
+def _match_unmatched_listings(db: Session) -> dict[str, int]:
+    """Run address matching for active listings that have no GWR match yet.
+
+    Returns {matched, unmatched} counts.
+    """
+    unmatched_rows = db.execute(
+        select(Listing).where(
+            Listing.is_active.is_(True),
+            ~exists().where(ListingUnitMatch.listing_id == Listing.id),
+        )
+    ).scalars().all()
+
+    matched = 0
+    unmatched = 0
+    for listing in unmatched_rows:
+        results = match_listing(
+            db,
+            street=listing.street,
+            house_number=listing.house_number,
+            plz=listing.plz,
+            rooms=listing.rooms,
+            area_m2=listing.area_m2,
+            lat=listing.lat,
+            lng=listing.lng,
+        )
+        if results:
+            for result in results:
+                db.add(ListingUnitMatch(
+                    listing_id=listing.id,
+                    egid=result.egid,
+                    ewid=result.ewid,
+                    match_confidence=result.confidence,
+                    matched_egid=result.egid,
+                ))
+            matched += 1
+        else:
+            unmatched += 1
+
+    return {"matched": matched, "unmatched": unmatched}
 
 
 def _download_media_for_new_listings(

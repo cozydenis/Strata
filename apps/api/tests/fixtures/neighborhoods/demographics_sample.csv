@@ -1,0 +1,27 @@
+StichtagDatJahr,AlterVSort,AlterVCd,AlterV05Sort,AlterV05Cd,AlterV05Kurz,AlterV10Cd,AlterV10Kurz,AlterV20Cd,AlterV20Kurz,SexCd,SexLang,SexKurz,KreisCd,KreisLang,QuarSort,QuarCd,QuarLang,HerkunftSort,HerkunftCd,HerkunftLang,AnzBestWir
+2023,0,"0",1,"0","0-4","0","0-9","0","0-19","1","männlich","M","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",50
+2023,0,"0",1,"0","0-4","0","0-9","0","0-19","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",40
+2023,0,"0",1,"0","0-4","0","0-9","0","0-19","1","männlich","M","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",10
+2023,0,"0",1,"0","0-4","0","0-9","0","0-19","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",8
+2023,20,1,5,1,"20-24","2","20-29","20","20-39","1","männlich","M","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",100
+2023,20,1,5,1,"20-24","2","20-29","20","20-39","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",90
+2023,20,1,5,1,"20-24","2","20-29","20","20-39","1","männlich","M","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",30
+2023,20,1,5,1,"20-24","2","20-29","20","20-39","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",25
+2023,40,2,9,2,"40-44","4","40-49","40","40-59","1","männlich","M","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",80
+2023,40,2,9,2,"40-44","4","40-49","40","40-59","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",70
+2023,40,2,9,2,"40-44","4","40-49","40","40-59","1","männlich","M","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",20
+2023,40,2,9,2,"40-44","4","40-49","40","40-59","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",15
+2023,80,4,17,4,"80-84","8","80+","80","80+","1","männlich","M","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",60
+2023,80,4,17,4,"80-84","8","80+","80","80+","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",55
+2023,80,4,17,4,"80-84","8","80+","80","80+","1","männlich","M","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",12
+2023,80,4,17,4,"80-84","8","80+","80","80+","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",2,"2","Ausländer*in",10
+2022,0,"0",1,"0","0-4","0","0-9","0","0-19","1","männlich","M","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",45
+2022,0,"0",1,"0","0-4","0","0-9","0","0-19","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",38
+2022,20,1,5,1,"20-24","2","20-29","20","20-39","1","männlich","M","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",95
+2022,20,1,5,1,"20-24","2","20-29","20","20-39","2","weiblich","W","1","Kreis 1",11,"011","Rathaus",1,"1","Schweizer*in",85
+2023,0,"0",1,"0","0-4","0","0-9","0","0-19","1","männlich","M","7","Kreis 7",73,"073","Hirslanden",1,"1","Schweizer*in",20
+2023,0,"0",1,"0","0-4","0","0-9","0","0-19","2","weiblich","W","7","Kreis 7",73,"073","Hirslanden",1,"1","Schweizer*in",15
+2023,20,1,5,1,"20-24","2","20-29","20","20-39","1","männlich","M","7","Kreis 7",73,"073","Hirslanden",1,"1","Schweizer*in",60
+2023,20,1,5,1,"20-24","2","20-29","20","20-39","2","weiblich","W","7","Kreis 7",73,"073","Hirslanden",1,"1","Schweizer*in",55
+2023,80,4,17,4,"80-84","8","80+","80","80+","1","männlich","M","7","Kreis 7",73,"073","Hirslanden",1,"1","Schweizer*in",40
+2023,80,4,17,4,"80-84","8","80+","80","80+","2","weiblich","W","7","Kreis 7",73,"073","Hirslanden",1,"1","Schweizer*in",35

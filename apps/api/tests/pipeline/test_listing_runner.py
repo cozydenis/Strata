@@ -237,6 +237,144 @@ class TestSecondPipelineRun:
         assert history == []
 
 
+class TestAddressMatchingInRunner:
+    """Tests for the GWR address matching step in run_listing_pipeline."""
+
+    @pytest.mark.asyncio
+    async def test_pipeline_matches_listing_to_gwr_entrance(self, db):
+        """Listings with a matching GWR entrance should get a ListingUnitMatch row."""
+        import datetime
+        from strata_api.db.models.entrance import Entrance
+        from strata_api.db.models.listing import ListingUnitMatch
+
+        # Seed a GWR entrance
+        entrance = Entrance(
+            egid=999001,
+            edid=1,
+            strname="Teststrasse",
+            deinr="1",
+            dplz4=8001,
+            dplzname="Zürich",
+            data_source="stadt",
+        )
+        db.add(entrance)
+        db.flush()
+
+        # No rooms/area so _narrow_to_units returns base "exact" confidence
+        listing = FlatfoxListing(
+            source="flatfox",
+            source_id="F-MATCH-1",
+            slug="",
+            street="Teststrasse",
+            house_number="1",
+            plz=8001,
+            city="Zürich",
+            status="active",
+            offer_type="RENT",
+            source_url="https://flatfox.ch/en/flat/test/F-MATCH-1/",
+        )
+
+        with patch("strata_api.pipeline.listing_runner.FlatfoxConnector") as MockConnector:
+            mock = MagicMock()
+            mock.fetch_all_zurich = AsyncMock(return_value=[listing])
+            MockConnector.return_value = mock
+            stats = await run_listing_pipeline(db)
+
+        row = db.execute(select(Listing).where(Listing.source_id == "F-MATCH-1")).scalar_one()
+        matches = db.execute(
+            select(ListingUnitMatch).where(ListingUnitMatch.listing_id == row.id)
+        ).scalars().all()
+
+        assert len(matches) == 1
+        assert matches[0].egid == 999001
+        assert matches[0].match_confidence == "exact"
+        assert stats["flatfox"]["matched"] == 1
+
+    @pytest.mark.asyncio
+    async def test_pipeline_unmatched_when_no_gwr_entrance(self, db):
+        """Listings with no GWR entrance are counted as unmatched, no error raised."""
+        from strata_api.db.models.listing import ListingUnitMatch
+
+        listing = _make_flatfox_listing("F-NOMATCH-1", plz=9999)
+
+        with patch("strata_api.pipeline.listing_runner.FlatfoxConnector") as MockConnector:
+            mock = MagicMock()
+            mock.fetch_all_zurich = AsyncMock(return_value=[listing])
+            MockConnector.return_value = mock
+            stats = await run_listing_pipeline(db)
+
+        row = db.execute(select(Listing).where(Listing.source_id == "F-NOMATCH-1")).scalar_one()
+        matches = db.execute(
+            select(ListingUnitMatch).where(ListingUnitMatch.listing_id == row.id)
+        ).scalars().all()
+
+        assert matches == []
+        assert stats["flatfox"]["unmatched"] >= 1
+
+    @pytest.mark.asyncio
+    async def test_pipeline_does_not_rematch_already_matched_listing(self, db):
+        """Second run should not create duplicate ListingUnitMatch rows."""
+        import datetime
+        from strata_api.db.models.entrance import Entrance
+        from strata_api.db.models.listing import ListingUnitMatch
+
+        entrance = Entrance(
+            egid=999002,
+            edid=1,
+            strname="Bahnhofstrasse",
+            deinr="5",
+            dplz4=8001,
+            dplzname="Zürich",
+            data_source="stadt",
+        )
+        db.add(entrance)
+        db.flush()
+
+        listing = FlatfoxListing(
+            source="flatfox",
+            source_id="F-REMATCH-1",
+            slug="",
+            rent_net=3000,
+            rent_gross=3200,
+            rooms=2.5,
+            area_m2=60.0,
+            address_raw="Bahnhofstrasse 5, 8001 Zürich",
+            street="Bahnhofstrasse",
+            house_number="5",
+            plz=8001,
+            city="Zürich",
+            status="active",
+            offer_type="RENT",
+            source_url="https://flatfox.ch/en/flat/test/F-REMATCH-1/",
+        )
+
+        for _ in range(2):
+            with patch("strata_api.pipeline.listing_runner.FlatfoxConnector") as MockConnector:
+                mock = MagicMock()
+                mock.fetch_all_zurich = AsyncMock(return_value=[listing])
+                MockConnector.return_value = mock
+                await run_listing_pipeline(db)
+
+        row = db.execute(select(Listing).where(Listing.source_id == "F-REMATCH-1")).scalar_one()
+        matches = db.execute(
+            select(ListingUnitMatch).where(ListingUnitMatch.listing_id == row.id)
+        ).scalars().all()
+
+        assert len(matches) == 1  # not duplicated on second run
+
+    @pytest.mark.asyncio
+    async def test_pipeline_stats_include_matched_and_unmatched(self, db):
+        """Stats dict should include 'matched' and 'unmatched' keys."""
+        with patch("strata_api.pipeline.listing_runner.FlatfoxConnector") as MockConnector:
+            mock = MagicMock()
+            mock.fetch_all_zurich = AsyncMock(return_value=[])
+            MockConnector.return_value = mock
+            stats = await run_listing_pipeline(db)
+
+        assert "matched" in stats["flatfox"]
+        assert "unmatched" in stats["flatfox"]
+
+
 class TestMediaDownloadInRunner:
     """Tests for the photo + floor plan download step in run_listing_pipeline."""
 

@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[8.53, 47.37], [8.54, 47.37], [8.54, 47.38], [8.53, 47.38], [8.53, 47.37]]]
+      },
+      "properties": {
+        "objectid": 1,
+        "qnr": 11,
+        "qname": "Rathaus",
+        "knr": 1,
+        "kname": "Kreis 1",
+        "geometrie_gdo": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[8.55, 47.38], [8.56, 47.38], [8.56, 47.39], [8.55, 47.39], [8.55, 47.38]]]
+      },
+      "properties": {
+        "objectid": 2,
+        "qnr": 12,
+        "qname": "Hochschulen",
+        "knr": 1,
+        "kname": "Kreis 1",
+        "geometrie_gdo": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[8.57, 47.39], [8.58, 47.39], [8.58, 47.40], [8.57, 47.40], [8.57, 47.39]]]
+      },
+      "properties": {
+        "objectid": 3,
+        "qnr": 73,
+        "qname": "Hirslanden",
+        "knr": 7,
+        "kname": "Kreis 7",
+        "geometrie_gdo": null
+      }
+    }
+  ]
+}
