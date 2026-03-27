@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from strata_api.pipeline.neighborhoods.quartier_parser import QuartierRecord
 from strata_api.pipeline.neighborhoods.demographics_parser import QuartierDemographics
-
+from strata_api.pipeline.neighborhoods.quartier_parser import QuartierRecord
 
 POLYGON_GEOM = {"type": "Polygon", "coordinates": [[[8.53, 47.37], [8.54, 47.37], [8.54, 47.38], [8.53, 47.37]]]}
 
@@ -46,7 +45,9 @@ class TestAggregateQuartierGeojson:
     """Tests for aggregate_quartier_geojson."""
 
     def test_function_is_importable(self):
-        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson  # noqa: F401
+        from strata_api.pipeline.neighborhoods.aggregator import (
+            aggregate_quartier_geojson,  # noqa: F401
+        )
 
     def test_returns_feature_collection(self):
         from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson

@@ -54,7 +54,7 @@ def test_building_record_is_frozen():
     from strata_api.pipeline.schemas import BuildingRecord
 
     b = BuildingRecord(egid=1, data_source="stadt")
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         b.egid = 99  # type: ignore
 
 
@@ -87,7 +87,7 @@ def test_entrance_record_is_frozen():
     from strata_api.pipeline.schemas import EntranceRecord
 
     e = EntranceRecord(egid=1, edid=0, data_source="kanton")
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         e.egid = 2  # type: ignore
 
 
@@ -129,7 +129,7 @@ def test_unit_record_is_frozen():
     from strata_api.pipeline.schemas import UnitRecord
 
     u = UnitRecord(egid=1, ewid=1, data_source="kanton")
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         u.egid = 2  # type: ignore
 
 

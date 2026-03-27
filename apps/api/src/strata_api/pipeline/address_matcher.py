@@ -107,12 +107,15 @@ def _narrow_to_units(
 
     candidates: list[MatchResult] = []
     for unit in units:
-        if rooms is not None and unit.wazim is not None:
-            if abs(unit.wazim - rooms) > _ROOM_TOLERANCE:
-                continue
-        if area_m2 is not None and area_m2 > 0 and unit.warea is not None:
-            if abs(unit.warea - area_m2) / area_m2 > _AREA_TOLERANCE_PCT:
-                continue
+        if rooms is not None and unit.wazim is not None and abs(unit.wazim - rooms) > _ROOM_TOLERANCE:
+            continue
+        if (
+            area_m2 is not None
+            and area_m2 > 0
+            and unit.warea is not None
+            and abs(unit.warea - area_m2) / area_m2 > _AREA_TOLERANCE_PCT
+        ):
+            continue
         candidates.append(MatchResult(egid=egid, ewid=unit.ewid, confidence=base_confidence))
 
     if not candidates:

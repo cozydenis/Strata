@@ -26,16 +26,16 @@ def client(fixture_geojson_data, tmp_path):
     geojson_path.write_text(json.dumps(fixture_geojson_data), encoding="utf-8")
 
     from fastapi import FastAPI
-    from strata_api.routers.neighborhoods import router, _reset_cache
+
+    from strata_api.routers.neighborhoods import _reset_cache, router
 
     _reset_cache()
 
     app = FastAPI()
     app.include_router(router)
 
-    with patch("strata_api.routers.neighborhoods._QUARTIERE_PATH", geojson_path):
-        with TestClient(app) as c:
-            yield c
+    with patch("strata_api.routers.neighborhoods._QUARTIERE_PATH", geojson_path), TestClient(app) as c:
+        yield c
 
     _reset_cache()
 

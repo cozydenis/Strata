@@ -6,8 +6,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from strata_api.db.base import Base
-from strata_api.db.models import Building, Entrance, Unit  # registers all models
-from strata_api.db.models.listing import Listing, ListingHistory, ListingUnitMatch
+from strata_api.db.models.listing import Listing, ListingHistory
 from strata_api.pipeline.connectors.flatfox import FlatfoxListing
 from strata_api.pipeline.listing_loader import deactivate_missing, upsert_listings
 

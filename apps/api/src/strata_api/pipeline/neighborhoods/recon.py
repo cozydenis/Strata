@@ -128,7 +128,6 @@ def recon_noise() -> None:
             name = r.get("name", "")
             fmt = r.get("format", "")
             url = r.get("url", "")
-            desc = r.get("description", "")
             line = f"[{fmt}] {name!r} -> {url}"
             print(f"  {line}")
             notes.append(line)

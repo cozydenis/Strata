@@ -51,7 +51,7 @@ def _null_demo_props() -> dict:
     }
 
 
-def _demo_props(demo: "QuartierDemographics", area_km2: float | None) -> dict:
+def _demo_props(demo: QuartierDemographics, area_km2: float | None) -> dict:
     """Compute all demographic properties from a QuartierDemographics record."""
     total = demo.total_population
 
@@ -75,8 +75,8 @@ def _demo_props(demo: "QuartierDemographics", area_km2: float | None) -> dict:
 
 
 def aggregate_quartier_geojson(
-    quartier_records: "dict[int, QuartierRecord]",
-    demographics: "dict[int, QuartierDemographics]",
+    quartier_records: dict[int, QuartierRecord],
+    demographics: dict[int, QuartierDemographics],
 ) -> dict:
     """Produce an enriched GeoJSON FeatureCollection.
 
@@ -95,10 +95,7 @@ def aggregate_quartier_geojson(
         }
 
         demo = demographics.get(qid)
-        if demo is not None:
-            demo_p = _demo_props(demo, rec.area_km2)
-        else:
-            demo_p = _null_demo_props()
+        demo_p = _demo_props(demo, rec.area_km2) if demo is not None else _null_demo_props()
 
         features.append({
             "type": "Feature",

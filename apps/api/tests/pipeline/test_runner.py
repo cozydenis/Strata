@@ -1,19 +1,18 @@
 """Tests for pipeline/runner.py — end-to-end orchestration with mocked I/O."""
 import io
-import json
-import datetime
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import MagicMock, patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from strata_api.pipeline.schemas import BuildingRecord, EntranceRecord, UnitRecord
+from strata_api.pipeline.schemas import BuildingRecord
 
 
 @pytest.fixture(scope="module")
 def engine():
-    from strata_api.db.base import Base
     from strata_api.db import models  # noqa: F401
+    from strata_api.db.base import Base
 
     eng = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(eng)
@@ -105,11 +104,10 @@ def test_run_stadt_pipeline_loads_data(engine):
 
 
 def test_run_kanton_pipeline_excludes_stadt_overlap(engine):
-    from strata_api.pipeline.runner import run_kanton_pipeline
-    from strata_api.db.models.building import Building
 
     # First ensure egid 99001 is in DB from Stadt (loaded by previous test or insert directly)
     from strata_api.pipeline.loader import upsert_buildings
+    from strata_api.pipeline.runner import run_kanton_pipeline
     upsert_buildings(engine, [BuildingRecord(egid=99001, data_source="stadt")])
 
     downloads = {
@@ -135,8 +133,8 @@ def test_run_kanton_pipeline_excludes_stadt_overlap(engine):
 
 
 def test_run_stadt_pipeline_records_pipeline_run(engine):
-    from strata_api.pipeline.runner import run_stadt_pipeline
     from strata_api.db.models.pipeline_run import PipelineRun
+    from strata_api.pipeline.runner import run_stadt_pipeline
 
     with patch("strata_api.pipeline.runner.download_geojson", return_value={"features": []}):
         result = run_stadt_pipeline(engine)

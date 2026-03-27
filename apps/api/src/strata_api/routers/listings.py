@@ -11,23 +11,23 @@ from strata_api.db.session import get_engine
 router = APIRouter(prefix="/registry", tags=["listings"])
 
 
-def _listing_dict(l: Listing) -> dict:
+def _listing_dict(listing: Listing) -> dict:
     return {
-        "id": l.id,
-        "source": l.source,
-        "source_id": l.source_id,
-        "rent_net": l.rent_net,
-        "rent_gross": l.rent_gross,
-        "rooms": l.rooms,
-        "area_m2": l.area_m2,
-        "street": l.street,
-        "house_number": l.house_number,
-        "plz": l.plz,
-        "city": l.city,
-        "source_url": l.source_url,
-        "first_seen": l.first_seen.isoformat() if l.first_seen else None,
-        "last_seen": l.last_seen.isoformat() if l.last_seen else None,
-        "description": l.description,
+        "id": listing.id,
+        "source": listing.source,
+        "source_id": listing.source_id,
+        "rent_net": listing.rent_net,
+        "rent_gross": listing.rent_gross,
+        "rooms": listing.rooms,
+        "area_m2": listing.area_m2,
+        "street": listing.street,
+        "house_number": listing.house_number,
+        "plz": listing.plz,
+        "city": listing.city,
+        "source_url": listing.source_url,
+        "first_seen": listing.first_seen.isoformat() if listing.first_seen else None,
+        "last_seen": listing.last_seen.isoformat() if listing.last_seen else None,
+        "description": listing.description,
         "images": [
             {
                 "id": img.id,
@@ -36,7 +36,7 @@ def _listing_dict(l: Listing) -> dict:
                 "ordering": img.ordering,
                 "image_type": img.image_type,
             }
-            for img in sorted(l.images, key=lambda x: x.ordering)
+            for img in sorted(listing.images, key=lambda x: x.ordering)
         ],
         "documents": [
             {
@@ -45,7 +45,7 @@ def _listing_dict(l: Listing) -> dict:
                 "caption": doc.caption,
                 "doc_type": doc.doc_type,
             }
-            for doc in l.documents
+            for doc in listing.documents
         ],
     }
 
@@ -63,4 +63,4 @@ def get_building_listings(egid: int) -> dict:
             .distinct()
         )
         listings = s.execute(stmt).scalars().all()
-    return {"egid": egid, "listings": [_listing_dict(l) for l in listings]}
+    return {"egid": egid, "listings": [_listing_dict(listing) for listing in listings]}

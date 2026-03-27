@@ -3,10 +3,10 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from strata_api.db import models  # noqa: F401 — registers all ORM models
 
 # Load all models so autogenerate can see them
 from strata_api.db.base import Base
-from strata_api.db import models  # noqa: F401 — registers all ORM models
 
 config = context.config
 

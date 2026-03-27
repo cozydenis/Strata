@@ -28,7 +28,6 @@ import csv
 import io
 from dataclasses import dataclass
 
-
 # Maps AlterV20Cd -> our output bucket key
 # Codes are the start of each 20-year band (0, 20, 40, 60, 80, 100)
 _AGE_BUCKET_MAP: dict[str, str] = {

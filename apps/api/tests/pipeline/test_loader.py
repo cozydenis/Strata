@@ -1,5 +1,4 @@
 """Tests for pipeline/loader.py — bulk upsert into the database."""
-import datetime
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
@@ -9,8 +8,8 @@ from strata_api.pipeline.schemas import BuildingRecord, EntranceRecord, UnitReco
 
 @pytest.fixture(scope="module")
 def engine():
-    from strata_api.db.base import Base
     from strata_api.db import models  # noqa: F401
+    from strata_api.db.base import Base
 
     eng = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(eng)
@@ -19,8 +18,8 @@ def engine():
 
 
 def test_upsert_buildings_inserts_new_rows(engine):
-    from strata_api.pipeline.loader import upsert_buildings
     from strata_api.db.models.building import Building
+    from strata_api.pipeline.loader import upsert_buildings
 
     records = [
         BuildingRecord(egid=1001, data_source="stadt", gstat=1004, lat=47.37, lon=8.54),
@@ -35,8 +34,8 @@ def test_upsert_buildings_inserts_new_rows(engine):
 
 
 def test_upsert_buildings_updates_existing_row(engine):
-    from strata_api.pipeline.loader import upsert_buildings
     from strata_api.db.models.building import Building
+    from strata_api.pipeline.loader import upsert_buildings
 
     # Insert initial
     upsert_buildings(engine, [BuildingRecord(egid=2001, data_source="kanton", gbauj=1950)])
@@ -65,8 +64,8 @@ def test_upsert_buildings_empty_list(engine):
 
 
 def test_upsert_entrances_inserts_new_rows(engine):
-    from strata_api.pipeline.loader import upsert_entrances
     from strata_api.db.models.entrance import Entrance
+    from strata_api.pipeline.loader import upsert_entrances
 
     records = [
         EntranceRecord(egid=1001, edid=0, data_source="stadt", strname="Testgasse", dplz4=8001),
@@ -81,8 +80,8 @@ def test_upsert_entrances_inserts_new_rows(engine):
 
 
 def test_upsert_entrances_updates_existing_row(engine):
-    from strata_api.pipeline.loader import upsert_entrances
     from strata_api.db.models.entrance import Entrance
+    from strata_api.pipeline.loader import upsert_entrances
 
     upsert_entrances(engine, [EntranceRecord(egid=4001, edid=0, data_source="kanton", dplz4=8400)])
     upsert_entrances(engine, [EntranceRecord(egid=4001, edid=0, data_source="stadt", dplz4=8001)])
@@ -93,8 +92,8 @@ def test_upsert_entrances_updates_existing_row(engine):
 
 
 def test_upsert_units_inserts_new_rows(engine):
-    from strata_api.pipeline.loader import upsert_units
     from strata_api.db.models.unit import Unit
+    from strata_api.pipeline.loader import upsert_units
 
     records = [
         UnitRecord(egid=1001, ewid=1, data_source="stadt", wazim=3, warea=75),
@@ -109,8 +108,8 @@ def test_upsert_units_inserts_new_rows(engine):
 
 
 def test_upsert_units_updates_existing_row(engine):
-    from strata_api.pipeline.loader import upsert_units
     from strata_api.db.models.unit import Unit
+    from strata_api.pipeline.loader import upsert_units
 
     upsert_units(engine, [UnitRecord(egid=5001, ewid=1, data_source="kanton", warea=80)])
     upsert_units(engine, [UnitRecord(egid=5001, ewid=1, data_source="stadt", warea=95)])

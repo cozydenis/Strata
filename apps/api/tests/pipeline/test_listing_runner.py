@@ -243,7 +243,6 @@ class TestAddressMatchingInRunner:
     @pytest.mark.asyncio
     async def test_pipeline_matches_listing_to_gwr_entrance(self, db):
         """Listings with a matching GWR entrance should get a ListingUnitMatch row."""
-        import datetime
         from strata_api.db.models.entrance import Entrance
         from strata_api.db.models.listing import ListingUnitMatch
 
@@ -314,7 +313,6 @@ class TestAddressMatchingInRunner:
     @pytest.mark.asyncio
     async def test_pipeline_does_not_rematch_already_matched_listing(self, db):
         """Second run should not create duplicate ListingUnitMatch rows."""
-        import datetime
         from strata_api.db.models.entrance import Entrance
         from strata_api.db.models.listing import ListingUnitMatch
 

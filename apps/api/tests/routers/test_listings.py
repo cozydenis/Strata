@@ -1,15 +1,15 @@
 """Tests for the listings API endpoint."""
 import datetime
+from unittest.mock import patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
-from unittest.mock import patch
 
-from strata_api.db.base import Base
 from strata_api.db import models  # noqa: F401
+from strata_api.db.base import Base
 from strata_api.db.models.building import Building
 from strata_api.db.models.listing import Listing, ListingUnitMatch
 
@@ -97,7 +97,7 @@ async def test_get_listings_returns_active_only(listings_engine):
     data = response.json()
     assert data["egid"] == 20001
     assert len(data["listings"]) == 2
-    source_ids = {l["source_id"] for l in data["listings"]}
+    source_ids = {listing["source_id"] for listing in data["listings"]}
     assert "L-1001" in source_ids
     assert "L-1002" in source_ids
     assert "L-1003" not in source_ids  # inactive

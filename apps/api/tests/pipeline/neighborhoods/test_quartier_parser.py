@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "neighborhoods" / "quartier_sample.json"
 
@@ -47,7 +48,7 @@ class TestQuartierRecord:
             area_km2=1.23,
             geometry={"type": "Polygon", "coordinates": [[]]},
         )
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             rec.quartier_id = 99  # type: ignore[misc]
 
     def test_record_area_km2_accepts_float(self):
@@ -67,7 +68,9 @@ class TestParseQuartierGeojson:
     """Unit tests for parse_quartier_geojson function."""
 
     def test_function_is_importable(self):
-        from strata_api.pipeline.neighborhoods.quartier_parser import parse_quartier_geojson  # noqa: F401
+        from strata_api.pipeline.neighborhoods.quartier_parser import (
+            parse_quartier_geojson,  # noqa: F401
+        )
 
     def test_returns_dict_keyed_by_quartier_id(self, geojson_data):
         from strata_api.pipeline.neighborhoods.quartier_parser import parse_quartier_geojson

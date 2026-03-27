@@ -7,8 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
-from strata_api.db.base import Base
 from strata_api.db import models  # noqa: F401
+from strata_api.db.base import Base
 from strata_api.db.models.building import Building
 from strata_api.db.models.listing import Listing, ListingUnitMatch
 

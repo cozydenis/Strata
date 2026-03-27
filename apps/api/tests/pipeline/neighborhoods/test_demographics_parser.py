@@ -39,7 +39,9 @@ class TestQuartierDemographics:
     """Unit tests for the QuartierDemographics dataclass."""
 
     def test_is_importable(self):
-        from strata_api.pipeline.neighborhoods.demographics_parser import QuartierDemographics  # noqa: F401
+        from strata_api.pipeline.neighborhoods.demographics_parser import (
+            QuartierDemographics,  # noqa: F401
+        )
 
     def test_has_required_fields(self):
         from strata_api.pipeline.neighborhoods.demographics_parser import QuartierDemographics
@@ -79,7 +81,9 @@ class TestParseDemographicsCSV:
     """Unit tests for parse_demographics_csv function."""
 
     def test_is_importable(self):
-        from strata_api.pipeline.neighborhoods.demographics_parser import parse_demographics_csv  # noqa: F401
+        from strata_api.pipeline.neighborhoods.demographics_parser import (
+            parse_demographics_csv,  # noqa: F401
+        )
 
     def test_returns_dict_keyed_by_quartier_id(self, csv_text):
         from strata_api.pipeline.neighborhoods.demographics_parser import parse_demographics_csv

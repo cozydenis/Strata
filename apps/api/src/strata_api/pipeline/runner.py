@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import datetime
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
@@ -10,17 +10,16 @@ from sqlalchemy.orm import Session
 from strata_api.db.models.building import Building
 from strata_api.db.models.pipeline_run import PipelineRun
 from strata_api.pipeline.dedup import (
-    extract_stadt_egids,
     filter_kanton_buildings,
     filter_kanton_entrances,
     filter_kanton_units,
 )
 from strata_api.pipeline.downloader import (
-    KANTON_GEBAEUDE_URL,
     KANTON_EINGAENGE_URL,
+    KANTON_GEBAEUDE_URL,
     KANTON_WOHNUNGEN_URL,
-    STADT_GEBAEUDE_URL,
     STADT_EINGAENGE_URL,
+    STADT_GEBAEUDE_URL,
     STADT_WOHNUNGEN_URL,
     download_csv_stream,
     download_geojson,
@@ -33,7 +32,11 @@ from strata_api.pipeline.parsers.kanton_parser import (
 )
 from strata_api.pipeline.parsers.stadt_parser import (
     parse_buildings as parse_stadt_buildings,
+)
+from strata_api.pipeline.parsers.stadt_parser import (
     parse_entrances as parse_stadt_entrances,
+)
+from strata_api.pipeline.parsers.stadt_parser import (
     parse_units as parse_stadt_units,
 )
 

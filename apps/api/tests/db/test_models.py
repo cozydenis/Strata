@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 @pytest.fixture(scope="module")
 def engine():
-    from strata_api.db.base import Base
     from strata_api.db import models  # noqa: F401 — register all models
+    from strata_api.db.base import Base
 
     eng = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(eng)

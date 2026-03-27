@@ -5,8 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from strata_api.config import settings
-from strata_api.routers import admin_pipeline, listings, registry
-from strata_api.routers import neighborhoods
+from strata_api.routers import admin_pipeline, listings, neighborhoods, registry
 
 app = FastAPI(title="Strata API", version="0.1.0")
 

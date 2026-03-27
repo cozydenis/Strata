@@ -2,11 +2,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from unittest.mock import patch
-
-import pytest
-
 
 NOISE_GEOJSON: dict = {"type": "FeatureCollection", "features": []}
 
