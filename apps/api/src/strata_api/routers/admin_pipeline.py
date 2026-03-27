@@ -37,8 +37,8 @@ def trigger_pipeline(source: str) -> dict:
             result: PipelineResult = run_stadt_pipeline(engine)
         else:
             result = run_kanton_pipeline(engine)
-    except Exception:
+    except Exception as err:
         logger.exception("Pipeline run failed for source=%s", source)
-        raise HTTPException(status_code=500, detail="Pipeline run failed — check server logs.")
+        raise HTTPException(status_code=500, detail="Pipeline run failed — check server logs.") from err
 
     return asdict(result)

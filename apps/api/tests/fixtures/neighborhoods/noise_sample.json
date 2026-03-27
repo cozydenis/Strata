@@ -1,0 +1,79 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.5401, 47.3769]
+      },
+      "properties": {
+        "objectid": 2674241,
+        "egid": 175053,
+        "lr_day": 43.3,
+        "lr_night": 36.7,
+        "pod_typ": "Fassadenpunkt",
+        "address_pod": "N/A",
+        "operation_status": "N/A",
+        "exposure_limit_value_d": "<PW",
+        "exposure_limit_value_n": "<PW",
+        "lbk_id": "SLBK_STZH_2024-12-31"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.5412, 47.3775]
+      },
+      "properties": {
+        "objectid": 2674242,
+        "egid": 175054,
+        "lr_day": 62.5,
+        "lr_night": 54.1,
+        "pod_typ": "Fassadenpunkt",
+        "address_pod": "Bahnhofstrasse 1",
+        "operation_status": "N/A",
+        "exposure_limit_value_d": "ES II",
+        "exposure_limit_value_n": "ES II",
+        "lbk_id": "SLBK_STZH_2024-12-31"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.5420, 47.3780]
+      },
+      "properties": {
+        "objectid": 2674243,
+        "egid": 175055,
+        "lr_day": 73.8,
+        "lr_night": 65.2,
+        "pod_typ": "Fassadenpunkt",
+        "address_pod": "Hauptbahnhof 1",
+        "operation_status": "N/A",
+        "exposure_limit_value_d": "ES I",
+        "exposure_limit_value_n": "ES I",
+        "lbk_id": "SLBK_STZH_2024-12-31"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.5430, 47.3785]
+      },
+      "properties": {
+        "objectid": 2674244,
+        "egid": null,
+        "lr_day": null,
+        "lr_night": 50.0,
+        "pod_typ": "Fassadenpunkt",
+        "address_pod": "N/A",
+        "operation_status": "N/A",
+        "lbk_id": "SLBK_STZH_2024-12-31"
+      }
+    }
+  ]
+}

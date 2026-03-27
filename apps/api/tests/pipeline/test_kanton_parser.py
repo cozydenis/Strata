@@ -1,7 +1,5 @@
 """Tests for the Kanton Zürich CSV parser."""
 import io
-import csv
-import pytest
 from pathlib import Path
 
 RECON_DIR = Path(__file__).parent.parent.parent / "data" / "recon"

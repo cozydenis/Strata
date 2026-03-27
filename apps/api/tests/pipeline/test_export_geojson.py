@@ -1,13 +1,14 @@
 """Tests for the GeoJSON buildings export script."""
 import datetime
 import json
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
-from strata_api.db.base import Base
 from strata_api.db import models  # noqa: F401
+from strata_api.db.base import Base
 from strata_api.db.models.building import Building
 
 

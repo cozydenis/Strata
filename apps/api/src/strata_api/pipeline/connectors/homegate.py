@@ -109,8 +109,6 @@ def parse_homegate_listing(raw: dict[str, Any]) -> HomogateListing:
     rent_net = rent.get("net")
     rent_gross = rent.get("gross")
     rent_charges = rent.get("extra")
-    currency = prices.get("currency")
-
     offer_type = listing.get("offerType")
     categories = listing.get("categories", [])
     object_type = categories[0] if categories else None

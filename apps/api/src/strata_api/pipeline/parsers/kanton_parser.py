@@ -6,7 +6,8 @@ Streams rows to avoid loading large files into memory.
 from __future__ import annotations
 
 import csv
-from typing import IO, Iterator
+from collections.abc import Iterator
+from typing import IO
 
 from strata_api.pipeline.schemas import BuildingRecord, EntranceRecord, UnitRecord
 from strata_api.pipeline.transform import lv95_to_wgs84, parse_optional_int, parse_required_int

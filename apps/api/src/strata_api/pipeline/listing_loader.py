@@ -163,7 +163,6 @@ def deactivate_missing(
     active_listings = db.execute(stmt).scalars().all()
 
     deactivated = 0
-    now = datetime.datetime.utcnow()
     for listing in active_listings:
         if listing.source_id not in seen_source_ids:
             listing.is_active = False

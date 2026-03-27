@@ -5,7 +5,6 @@ import io
 import urllib.request
 from typing import IO
 
-
 # Stadt Zürich WFS endpoint (WFS 1.1.0, GeoJSON output)
 # Layer names are lowercase; outputFormat must be the MIME type accepted by this server.
 _WFS_BASE = (

@@ -1,0 +1,9 @@
+[CSV] 'Strassenlaermkataster_der_Stadt_Zuerich.csv' -> https://www.stadt-zuerich.ch/geodaten/download/Strassenlaermkataster_der_Stadt_Zuerich?format=10008
+[gpkg] 'Strassenlaermkataster_der_Stadt_Zuerich.gpkg' -> https://www.stadt-zuerich.ch/geodaten/download/Strassenlaermkataster_der_Stadt_Zuerich?format=10005
+[JSON] 'Strassenlaermkataster_der_Stadt_Zuerich.json' -> https://www.stadt-zuerich.ch/geodaten/download/Strassenlaermkataster_der_Stadt_Zuerich?format=10009
+[JSON] 'Strassenlaermkataster_der_Stadt_Zuerich.json (GeoJSON-Services)' -> https://www.stadt-zuerich.ch/geodaten/download/Strassenlaermkataster_der_Stadt_Zuerich?format=geojson_link
+[WFS] 'Web Feature Service' -> https://www.ogd.stadt-zuerich.ch/wfs/geoportal/Strassenlaermkataster_der_Stadt_Zuerich?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0
+[WMS] 'Web Map Service' -> https://www.ogd.stadt-zuerich.ch/wms/geoportal/Strassenlaermkataster_der_Stadt_Zuerich?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
+[WMTS] 'Web Map Tile Service' -> https://www.ogd.stadt-zuerich.ch/mapproxy/wmts/1.0.0/WMTSCapabilities.xml
+[gdb] 'Strassenlaermkataster_der_Stadt_Zuerich.gdb' -> https://www.stadt-zuerich.ch/geodaten/download/Strassenlaermkataster_der_Stadt_Zuerich?format=10011
+WFS fetch failed: HTTP Error 500: Internal Server Error

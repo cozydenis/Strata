@@ -43,6 +43,8 @@ Thumbs.db
 *.swp
 *.swo
 
+.claude/worktrees/ 
+
 # Testing / Coverage
 coverage/
 .coverage

@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[8.53, 47.37], [8.54, 47.37], [8.54, 47.38], [8.53, 47.37]]]
+      },
+      "properties": {
+        "quartier_id": 11,
+        "quartier_name": "Rathaus",
+        "kreis": 1,
+        "total_population": 4200,
+        "population_density": 12000.0,
+        "swiss_pct": 68.5,
+        "foreign_pct": 31.5,
+        "yoy_change": 50,
+        "growth_rate": 1.2,
+        "trend": "growing",
+        "age_0_17_pct": 12.3,
+        "age_18_29_pct": 18.7,
+        "age_30_44_pct": 28.1,
+        "age_45_64_pct": 25.4,
+        "age_65plus_pct": 15.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[8.55, 47.38], [8.56, 47.38], [8.56, 47.39], [8.55, 47.38]]]
+      },
+      "properties": {
+        "quartier_id": 12,
+        "quartier_name": "Hochschulen",
+        "kreis": 1,
+        "total_population": null,
+        "population_density": null,
+        "swiss_pct": null,
+        "foreign_pct": null,
+        "yoy_change": null,
+        "growth_rate": null,
+        "trend": null,
+        "age_0_17_pct": null,
+        "age_18_29_pct": null,
+        "age_30_44_pct": null,
+        "age_45_64_pct": null,
+        "age_65plus_pct": null
+      }
+    }
+  ]
+}

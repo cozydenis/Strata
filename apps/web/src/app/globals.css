@@ -40,6 +40,24 @@
   --shadow-sm: 0 1px 3px var(--strata-shadow);
   --shadow-md: 0 4px 12px var(--strata-shadow);
   --shadow-lg: 0 8px 24px var(--strata-shadow);
+
+  /* Typography scale */
+  --font-size-2xs: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-lg: 15px;
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 2px var(--strata-amber);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeSlideUp,
+  .animate-shimmer {
+    animation: none !important;
+  }
 }
 
 /* Animations */
@@ -110,6 +128,15 @@ body {
 
 .maplibregl-ctrl-group button:hover {
   background: rgba(250, 247, 242, 0.1) !important;
+}
+
+.maplibregl-ctrl-group button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring) !important;
+}
+
+.maplibregl-ctrl-group button:active {
+  background: rgba(250, 247, 242, 0.15) !important;
 }
 
 .maplibregl-ctrl-attrib {

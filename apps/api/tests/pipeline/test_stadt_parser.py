@@ -1,7 +1,8 @@
 """Tests for the Stadt Zürich GeoJSON parser."""
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 RECON_DIR = Path(__file__).parent.parent.parent / "data" / "recon"
 

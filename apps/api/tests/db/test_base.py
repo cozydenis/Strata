@@ -1,7 +1,6 @@
 """Tests for db/base.py — Base declarative and TimestampMixin."""
 import datetime
 
-import pytest
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import Session
 
@@ -27,10 +26,9 @@ def test_timestamp_mixin_has_created_at_and_updated_at():
 
 def test_timestamp_mixin_columns_are_datetime():
     """Verify TimestampMixin column types via a concrete mapped model."""
-    from sqlalchemy import DateTime, inspect
+    from sqlalchemy import Column, DateTime, Integer, create_engine, inspect
 
     from strata_api.db.base import Base, TimestampMixin
-    from sqlalchemy import Column, Integer, create_engine
 
     class TypeCheckModel(TimestampMixin, Base):
         __tablename__ = "type_check_model_test"

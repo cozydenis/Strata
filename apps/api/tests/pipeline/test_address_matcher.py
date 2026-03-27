@@ -6,7 +6,6 @@ Matching strategy:
   3. Building-only: geo nearest-entrance fallback → confidence "building_only"
   4. Unit narrowing: within matched egid, filter by wazim (±0.5 rooms) and warea (±10%)
 """
-import math
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -15,8 +14,8 @@ from strata_api.db.base import Base
 from strata_api.db.models import Building, Entrance, Unit  # noqa: F401 (registers all models)
 from strata_api.pipeline.address_matcher import (
     MatchResult,
-    normalize_street,
     match_listing,
+    normalize_street,
 )
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────

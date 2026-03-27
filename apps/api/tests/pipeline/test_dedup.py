@@ -1,5 +1,4 @@
 """Tests for pipeline/dedup.py — Stadt Zürich wins deduplication."""
-import pytest
 
 from strata_api.pipeline.schemas import BuildingRecord, EntranceRecord, UnitRecord
 

@@ -30,10 +30,7 @@ def main(args: list[str] | None = None) -> int:
 
     for source in sources:
         print(f"[pipeline] starting {source} run…")
-        if source == "stadt":
-            result = run_stadt_pipeline(engine)
-        else:
-            result = run_kanton_pipeline(engine)
+        result = run_stadt_pipeline(engine) if source == "stadt" else run_kanton_pipeline(engine)
 
         if result.status == "completed":
             print(

@@ -1,7 +1,8 @@
 """Tests for the admin pipeline trigger endpoints."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import patch, MagicMock
 
 from strata_api.pipeline.runner import PipelineResult
 

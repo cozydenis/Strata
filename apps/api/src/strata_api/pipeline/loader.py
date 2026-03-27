@@ -8,7 +8,7 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
-from sqlalchemy import Engine, text
+from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 from strata_api.pipeline.schemas import BuildingRecord, EntranceRecord, UnitRecord
@@ -55,15 +55,15 @@ def _upsert_row(session: Session, table: str, pk: dict[str, Any], row: dict[str,
     full_row = {**pk, **row}
 
     if dialect == "postgresql":
+        from sqlalchemy import column
+        from sqlalchemy import table as sa_table
         from sqlalchemy.dialects.postgresql import insert as pg_insert
-        from sqlalchemy import table as sa_table, column
 
         stmt = pg_insert(sa_table(table, *(column(k) for k in full_row))).values(**full_row)
         stmt = stmt.on_conflict_do_update(index_elements=list(pk), set_=row)
         session.execute(stmt)
     else:
         # SQLite and others — use session.merge via a mapped class lookup
-        mapper = session.get_bind().dialect  # type: ignore[assignment]
         _merge_row(session, table, pk, full_row)
 
 

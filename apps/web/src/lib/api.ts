@@ -49,6 +49,28 @@ export interface ListingSummary {
   documents: ListingDocument[];
 }
 
+export interface AgeBucket {
+  bucket: string;
+  pct: number;
+}
+
+export interface QuartierPopulation {
+  total: number;
+  density_per_km2: number | null;
+  swiss_pct: number | null;
+  foreign_pct: number | null;
+  growth_rate: number | null;
+  trend: 'growing' | 'stable' | 'declining';
+}
+
+export interface QuartierProfile {
+  quartier_id: number;
+  quartier_name: string;
+  kreis: number;
+  population: QuartierPopulation | null;
+  age_distribution: AgeBucket[];
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 /** Prefix a relative media path (e.g. /media/images/...) with the API base URL. */
@@ -68,6 +90,22 @@ export async function fetchBuildingSummary(egid: number): Promise<BuildingSummar
     throw new Error('Unexpected response shape: missing egid');
   }
   return data as BuildingSummary;
+}
+
+export async function fetchQuartierProfile(quartierId: number): Promise<QuartierProfile> {
+  const res = await fetch(`${BASE_URL}/neighborhoods/${quartierId}/profile`);
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (
+    typeof data !== 'object' ||
+    data === null ||
+    typeof (data as Record<string, unknown>).quartier_id !== 'number'
+  ) {
+    throw new Error('Unexpected response shape: missing quartier_id');
+  }
+  return data as QuartierProfile;
 }
 
 export async function fetchBuildingListings(egid: number): Promise<ListingSummary[]> {

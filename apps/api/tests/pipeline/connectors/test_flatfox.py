@@ -1,7 +1,6 @@
 """Tests for Flatfox API connector (TDD — RED phase)."""
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -455,7 +454,7 @@ class TestFlatfoxConnector:
         listings, _ = await connector.fetch_page(offset=0, limit=96)
         # Only Zürich (8001) and Winterthur (8400) should pass
         assert len(listings) == 2
-        plzs = {l.plz for l in listings}
+        plzs = {listing.plz for listing in listings}
         assert 3000 not in plzs  # Bern excluded
 
     @pytest.mark.asyncio
@@ -501,7 +500,7 @@ class TestFlatfoxConnector:
         listings, _ = await connector.fetch_page(offset=0, limit=96)
         # APARTMENT and SHARED pass, PARK and INDUSTRY excluded
         assert len(listings) == 2
-        types = {l.object_type for l in listings}
+        types = {listing.object_type for listing in listings}
         assert "APARTMENT" in types
         assert "SHARED" in types
         assert "PARK" not in types

@@ -13,11 +13,11 @@ function TruncatedDescription({ text }: { text: string }) {
   const MAX_LEN = 120;
 
   if (text.length <= MAX_LEN) {
-    return <p className="mt-1 text-[11px] text-strata-cream/60">{text}</p>;
+    return <p className="mt-1 text-xs-11 text-strata-cream/60">{text}</p>;
   }
 
   return (
-    <p className="mt-1 text-[11px] text-strata-cream/60">
+    <p className="mt-1 text-xs-11 text-strata-cream/60">
       {expanded ? text : `${text.slice(0, MAX_LEN)}…`}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -30,6 +30,57 @@ function TruncatedDescription({ text }: { text: string }) {
   );
 }
 
+function ImageThumb({ img }: { img: ListingSummary['images'][0] }) {
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div
+        data-testid="img-error-fallback"
+        className="h-14 w-[72px] flex-shrink-0 rounded-md bg-strata-slate-700 flex items-center justify-center"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-strata-cream/20"
+        >
+          <line x1="2" y1="2" x2="22" y2="22" />
+          <path d="M10.41 10.41a2 2 0 1 1-2.83-2.83" />
+          <path d="M13.5 6H7a2 2 0 0 0-2 2v9" />
+          <path d="M17 11v5a2 2 0 0 1-2 2H5" />
+          <path d="M20 7l-3 3" />
+          <path d="M20 4v3h-3" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      key={img.id}
+      href={mediaUrl(img.url) ?? '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block h-14 w-[72px] flex-shrink-0 overflow-hidden rounded-md"
+    >
+      <img
+        src={mediaUrl(img.url) ?? ''}
+        alt={img.caption ?? 'Listing photo'}
+        className="h-full w-full object-cover"
+        loading="lazy"
+        onError={() => setError(true)}
+      />
+    </a>
+  );
+}
+
 function ImageGallery({ images }: { images: ListingSummary['images'] }) {
   if (images.length === 0) return null;
 
@@ -39,23 +90,10 @@ function ImageGallery({ images }: { images: ListingSummary['images'] }) {
   return (
     <div className="mb-2 flex gap-1.5 overflow-hidden" data-testid="listing-gallery">
       {thumbs.map((img) => (
-        <a
-          key={img.id}
-          href={mediaUrl(img.url) ?? '#'}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block h-14 w-[72px] flex-shrink-0 overflow-hidden rounded-md"
-        >
-          <img
-            src={mediaUrl(img.url) ?? ''}
-            alt={img.caption ?? 'Listing photo'}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-        </a>
+        <ImageThumb key={img.id} img={img} />
       ))}
       {remaining > 0 && (
-        <span className="flex h-14 w-[72px] flex-shrink-0 items-center justify-center rounded-md bg-strata-slate-800 text-[11px] text-strata-muted">
+        <span className="flex h-14 w-[72px] flex-shrink-0 items-center justify-center rounded-md bg-strata-slate-800 text-xs-11 text-strata-muted">
           +{remaining}
         </span>
       )}
@@ -119,7 +157,7 @@ export function ListingCards({ listings }: Props) {
 
   return (
     <div data-testid="listing-cards">
-      <p className="text-[10px] uppercase tracking-[0.15em] text-strata-cream/50 mb-2">
+      <p className="text-2xs uppercase tracking-[0.15em] text-strata-cream/50 mb-2">
         Active listings
       </p>
       <ul>
@@ -137,7 +175,7 @@ export function ListingCards({ listings }: Props) {
                 <PhotoPlaceholder />
               )}
 
-              <div className="flex items-baseline justify-between gap-2">
+              <div className="flex items-baseline gap-2 flex-wrap">
                 {rent != null && (
                   <span
                     className="text-lg font-semibold text-strata-amber"
@@ -145,16 +183,24 @@ export function ListingCards({ listings }: Props) {
                   >
                     CHF {rent.toLocaleString('de-CH')}
                     <span
-                      className="text-[11px] text-strata-muted ml-1"
+                      className="text-xs-11 text-strata-muted ml-1"
                       data-testid="listing-rent-period"
                     >
                       /mt.
                     </span>
                   </span>
                 )}
+                {l.rent_gross != null && l.rent_net != null && (
+                  <span
+                    className="text-xs-11 text-strata-cream/40"
+                    data-testid="listing-rent-net"
+                  >
+                    {l.rent_net.toLocaleString('de-CH')} net
+                  </span>
+                )}
               </div>
 
-              <div className="mt-0.5 flex gap-3 text-[12px] text-strata-cream/70">
+              <div className="mt-0.5 flex gap-3 text-sm-12 text-strata-cream/70">
                 {l.rooms != null && <span>{l.rooms} rooms</span>}
                 {l.area_m2 != null && <span>{l.area_m2} m²</span>}
               </div>
@@ -168,7 +214,7 @@ export function ListingCards({ listings }: Props) {
                       href={mediaUrl(floorPlans[0].url) ?? '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] text-strata-cream/60 hover:text-strata-cream"
+                      className="text-xs-11 text-strata-cream/60 hover:text-strata-cream"
                       data-testid="floorplan-link"
                     >
                       <FloorplanIcon />
@@ -182,14 +228,14 @@ export function ListingCards({ listings }: Props) {
                       href={l.source_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] text-strata-cream/50 hover:text-strata-cream underline-offset-2 hover:underline"
+                      className="text-2xs text-strata-cream/50 hover:text-strata-cream underline-offset-2 hover:underline"
                       data-testid="listing-link"
                     >
                       View on {l.source}
                     </a>
                   )}
                   <span
-                    className="text-[10px] text-strata-cream/30"
+                    className="text-2xs text-strata-cream/30"
                     data-testid="listing-source"
                   >
                     {l.source}

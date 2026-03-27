@@ -24,24 +24,24 @@ export function BuildingPopup({ summary, listings }: Props) {
   const activeListings = listings ?? [];
 
   return (
-    <div className="min-w-[260px] max-w-[320px] p-4 animate-fadeSlideUp">
+    <div className="w-[320px] p-4 animate-fadeSlideUp">
       {/* Address block */}
       <div data-testid="popup-address">
         {address ? (
           <>
-            <p className="text-[15px] font-semibold text-strata-cream">{address}</p>
+            <p className="text-lg-15 font-semibold text-strata-cream">{address}</p>
             {locality && (
-              <p className="text-[12px] text-strata-muted mt-0.5">{locality}</p>
+              <p className="text-sm-12 text-strata-muted mt-0.5">{locality}</p>
             )}
           </>
         ) : (
-          <p className="text-[15px] text-strata-muted">—</p>
+          <p className="text-lg-15 text-strata-muted">—</p>
         )}
       </div>
 
       {/* Metadata row */}
       <div className="border-t border-strata-cream/10 my-3" />
-      <div className="flex items-center gap-2 text-[12px] text-strata-cream/70 flex-wrap">
+      <div className="flex items-center gap-2 text-sm-12 text-strata-cream/70 flex-wrap">
         {summary.gbauj != null ? (
           <span style={{ color: era.color }}>{summary.gbauj}</span>
         ) : (
@@ -66,9 +66,11 @@ export function BuildingPopup({ summary, listings }: Props) {
         <>
           <div className="border-t border-strata-cream/10 my-3" />
           {activeListings.length > 0 ? (
-            <ListingCards listings={activeListings} />
+            <div className="max-h-[320px] overflow-y-auto pr-0.5">
+              <ListingCards listings={activeListings} />
+            </div>
           ) : (
-            <p className="text-[12px] text-strata-muted">No active listings</p>
+            <p className="text-sm-12 text-strata-muted">No active listings</p>
           )}
         </>
       )}
