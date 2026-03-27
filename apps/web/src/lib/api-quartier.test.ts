@@ -95,8 +95,8 @@ describe('fetchQuartierProfile', () => {
 
 describe('QuartierProfile interface', () => {
   it('exports QuartierProfile type', async () => {
-    const module = await import('./api');
+    const mod = await import('./api');
     // The type exists if we can import the function that uses it
-    expect(module.fetchQuartierProfile).toBeDefined();
+    expect(mod.fetchQuartierProfile).toBeDefined();
   });
 });
