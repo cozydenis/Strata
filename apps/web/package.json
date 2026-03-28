@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cd ../../packages/shared && npx tsc && cd ../../apps/web && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src --ext .ts,.tsx",
     "format": "prettier --check .",
