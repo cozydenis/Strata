@@ -1,34 +1,13 @@
 import { BarChart } from './BarChart';
-
-interface AgeBucket {
-  bucket: string;
-  pct: number;
-}
-
-interface Population {
-  total: number;
-  density_per_km2: number | null;
-  swiss_pct: number | null;
-  foreign_pct: number | null;
-  growth_rate: number | null;
-  trend: 'growing' | 'stable' | 'declining';
-}
-
-interface QuartierProfileData {
-  quartier_id: number;
-  quartier_name: string;
-  kreis: number;
-  population: Population | null;
-  age_distribution: AgeBucket[];
-}
+import type { AgeBucket, QuartierPopulation, QuartierProfile as QuartierProfileData } from '@/lib/api';
 
 interface QuartierProfileProps {
   profile: QuartierProfileData;
   onClose?: () => void;
 }
 
-function TrendBadge({ trend }: { trend: Population['trend'] }) {
-  const colors: Record<Population['trend'], string> = {
+function TrendBadge({ trend }: { trend: QuartierPopulation['trend'] }) {
+  const colors: Record<QuartierPopulation['trend'], string> = {
     growing: 'text-green-400',
     stable: 'text-strata-cream/60',
     declining: 'text-red-400',
@@ -37,7 +16,7 @@ function TrendBadge({ trend }: { trend: Population['trend'] }) {
 }
 
 export function QuartierProfile({ profile, onClose }: QuartierProfileProps) {
-  const { quartier_name, kreis, population, age_distribution } = profile;
+  const { quartier_name, kreis, population, age_distribution, commute_hb_min } = profile;
 
   return (
     <div className="bg-strata-slate-800 backdrop-blur-sm border border-strata-cream/20 rounded-lg shadow-lg p-4 w-64">
@@ -100,6 +79,16 @@ export function QuartierProfile({ profile, onClose }: QuartierProfileProps) {
               </dd>
             </div>
           </dl>
+
+          {commute_hb_min != null && (
+            <div
+              className="flex justify-between mt-2 pt-2 border-t border-strata-cream/10"
+              data-testid="commute-hb-row"
+            >
+              <dt className="text-2xs text-strata-cream/70">To Zürich HB</dt>
+              <dd className="text-xs-11 text-strata-cream">{commute_hb_min} min</dd>
+            </div>
+          )}
 
           {age_distribution.length > 0 && (
             <BarChart buckets={age_distribution} title="Age distribution" />
