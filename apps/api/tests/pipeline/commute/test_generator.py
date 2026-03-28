@@ -221,7 +221,7 @@ def test_fetch_isochrone_traveltime_calls_correct_endpoint() -> None:
     mock_post.assert_called_once()
     url = mock_post.call_args.args[0]
     parsed = urlparse(url)
-    assert parsed.hostname == "traveltimeapp.com"
+    assert parsed.hostname == "api.traveltimeapp.com"
     assert "time-map" in parsed.path
 
 
