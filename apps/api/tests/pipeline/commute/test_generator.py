@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from urllib.parse import urlparse
 
 # ---------------------------------------------------------------------------
 # Phase 2A: destinations constants
@@ -219,8 +220,9 @@ def test_fetch_isochrone_traveltime_calls_correct_endpoint() -> None:
 
     mock_post.assert_called_once()
     url = mock_post.call_args.args[0]
-    assert "traveltimeapp.com" in url
-    assert "time-map" in url
+    parsed = urlparse(url)
+    assert parsed.hostname == "traveltimeapp.com"
+    assert "time-map" in parsed.path
 
 
 def test_fetch_isochrone_traveltime_sends_auth_headers() -> None:
