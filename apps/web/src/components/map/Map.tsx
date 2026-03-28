@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { createElement } from 'react';
 import { Legend } from './Legend';
@@ -10,16 +10,20 @@ import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { PopupSkeleton } from './Skeleton';
 import { LayerPanel } from './LayerPanel';
 import { QuartierProfile } from './QuartierProfile';
+import { CommuteLegend } from './CommuteLegend';
 import { eraColorExpression } from '@/lib/map/era-colors';
 import { quartierFillColor } from '@/lib/map/quartier-colors';
 import { noiseLineColor } from '@/lib/map/noise-colors';
+import { COMMUTE_MINUTES_EXPRESSION, COMMUTE_OPACITY_EXPRESSION } from '@/lib/map/commute-colors';
 import {
   fetchBuildingSummary,
   fetchBuildingListings,
   fetchQuartierProfile,
+  fetchCommuteIsochrone,
   type BuildingSummary,
   type ListingSummary,
   type QuartierProfile as QuartierProfileType,
+  type CommuteDestination,
 } from '@/lib/api';
 
 const ZURICH_CENTER: [number, number] = [8.54, 47.38];
@@ -32,6 +36,7 @@ const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.
 const LISTING_COLOR = '#D4915A';
 const BUILDING_LAYERS = ['clusters', 'cluster-count', 'buildings-unclustered'] as const;
 const QUARTIERE_LAYERS = ['quartiere-fill', 'quartiere-outline', 'quartiere-labels'] as const;
+const COMMUTE_LAYERS = ['commute-fill', 'commute-outline'] as const;
 
 export function MapView() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,44 +56,15 @@ export function MapView() {
   const [noiseVisible, setNoiseVisible] = useState(false);
   const [activeMetric, setActiveMetric] = useState('population_density');
 
+  // Commute isochrone state
+  const [commuteVisible, setCommuteVisible] = useState(false);
+  const [activeDestination, setActiveDestination] = useState<CommuteDestination>('hb');
+  const [commuteUnavailable, setCommuteUnavailable] = useState(false);
+
   // Quartier profile panel
   const [quartierProfile, setQuartierProfile] = useState<QuartierProfileType | null>(null);
 
-  // Handle building click — show skeleton immediately, then fetch real data
-  async function handleBuildingClick(egid: number, coords: [number, number]) {
-    setQuartierProfile(null); // close quartier panel when building clicked
-    try {
-      await showSkeletonPopup(coords);
-      const [summary, listings] = await Promise.all([
-        fetchBuildingSummary(egid),
-        fetchBuildingListings(egid).catch(() => []),
-      ]);
-      setPopup(summary);
-      setPopupListings(listings);
-      setPopupCoords(coords);
-    } catch (err) {
-      console.error('[Strata] Failed to load building data:', err);
-    }
-  }
-
-  async function handleQuartierClick(quartierId: number) {
-    // Close building popup when quartier clicked
-    const prev = popupRef.current as { remove: () => void } | null;
-    prev?.remove();
-    popupRootRef.current?.unmount();
-    popupRootRef.current = null;
-    setPopup(null);
-    setPopupListings(null);
-
-    try {
-      const profile = await fetchQuartierProfile(quartierId);
-      setQuartierProfile(profile);
-    } catch (err) {
-      console.error('[Strata] Failed to load quartier profile:', err);
-    }
-  }
-
-  async function showSkeletonPopup(coords: [number, number]) {
+  const showSkeletonPopup = useCallback(async (coords: [number, number]) => {
     if (!mapRef.current) return;
 
     // Clean up previous popup
@@ -118,7 +94,41 @@ export function MapView() {
       setPopupListings(null);
     });
     popupRef.current = mp;
-  }
+  }, []);
+
+  // Handle building click — show skeleton immediately, then fetch real data
+  const handleBuildingClick = useCallback(async (egid: number, coords: [number, number]) => {
+    setQuartierProfile(null); // close quartier panel when building clicked
+    try {
+      await showSkeletonPopup(coords);
+      const [summary, listings] = await Promise.all([
+        fetchBuildingSummary(egid),
+        fetchBuildingListings(egid).catch(() => []),
+      ]);
+      setPopup(summary);
+      setPopupListings(listings);
+      setPopupCoords(coords);
+    } catch (err) {
+      console.error('[Strata] Failed to load building data:', err);
+    }
+  }, [showSkeletonPopup]);
+
+  const handleQuartierClick = useCallback(async (quartierId: number) => {
+    // Close building popup when quartier clicked
+    const prev = popupRef.current as { remove: () => void } | null;
+    prev?.remove();
+    popupRootRef.current?.unmount();
+    popupRootRef.current = null;
+    setPopup(null);
+    setPopupListings(null);
+
+    try {
+      const profile = await fetchQuartierProfile(quartierId);
+      setQuartierProfile(profile);
+    } catch (err) {
+      console.error('[Strata] Failed to load quartier profile:', err);
+    }
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -146,6 +156,34 @@ export function MapView() {
 
         map.on('load', () => {
           setMapLoaded(true);
+
+          // ── Commute isochrone source + layers (below quartiere and buildings) ──
+          map.addSource('commute', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          });
+
+          map.addLayer({
+            id: 'commute-fill',
+            type: 'fill',
+            source: 'commute',
+            layout: { visibility: 'none' },
+            paint: {
+              'fill-color': COMMUTE_MINUTES_EXPRESSION as unknown as string,
+              'fill-opacity': COMMUTE_OPACITY_EXPRESSION as unknown as number,
+            },
+          });
+
+          map.addLayer({
+            id: 'commute-outline',
+            type: 'line',
+            source: 'commute',
+            layout: { visibility: 'none' },
+            paint: {
+              'line-color': 'rgba(250,247,242,0.4)',
+              'line-width': 0.5,
+            },
+          });
 
           // ── Quartiere source + layers (below buildings) ───────────────
           map.addSource('quartiere', {
@@ -318,7 +356,7 @@ export function MapView() {
         });
       } catch (err) {
         console.error('[Strata] Failed to initialize map:', err);
-        setError(String(err));
+        setError('Could not initialize the map. Please refresh and try again.');
       }
     }
 
@@ -356,6 +394,8 @@ export function MapView() {
       }
     }
 
+    let rafId: number;
+
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / FADE_DURATION, 1);
@@ -364,7 +404,7 @@ export function MapView() {
       map?.setPaintProperty?.('clusters', 'circle-opacity', opacity * (0.7 / 0.85));
 
       if (progress < 1) {
-        requestAnimationFrame(tick);
+        rafId = requestAnimationFrame(tick);
       } else if (!buildingsVisible) {
         for (const layer of BUILDING_LAYERS) {
           if (map?.getLayer?.(layer)) {
@@ -374,7 +414,8 @@ export function MapView() {
       }
     }
 
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [buildingsVisible]);
 
   // Toggle listings layer visibility with opacity fade
@@ -396,6 +437,8 @@ export function MapView() {
       map.setLayoutProperty('listings-markers', 'visibility', 'visible');
     }
 
+    let rafId: number;
+
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / FADE_DURATION, 1);
@@ -403,13 +446,14 @@ export function MapView() {
       map?.setPaintProperty?.('listings-markers', 'circle-opacity', opacity);
 
       if (progress < 1) {
-        requestAnimationFrame(tick);
+        rafId = requestAnimationFrame(tick);
       } else if (!listingsVisible) {
         map?.setLayoutProperty?.('listings-markers', 'visibility', 'none');
       }
     }
 
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [listingsVisible]);
 
   // Toggle quartiere layers visibility with opacity fade
@@ -434,6 +478,8 @@ export function MapView() {
       }
     }
 
+    let rafId: number;
+
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / FADE_DURATION, 1);
@@ -441,7 +487,7 @@ export function MapView() {
       map?.setPaintProperty?.('quartiere-fill', 'fill-opacity', opacity);
 
       if (progress < 1) {
-        requestAnimationFrame(tick);
+        rafId = requestAnimationFrame(tick);
       } else if (!quartiereVisible) {
         for (const layer of QUARTIERE_LAYERS) {
           if (map?.getLayer?.(layer)) {
@@ -452,9 +498,10 @@ export function MapView() {
       }
     }
 
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
 
     if (!quartiereVisible) setQuartierProfile(null);
+    return () => cancelAnimationFrame(rafId);
   }, [quartiereVisible]);
 
   // Toggle noise layer visibility
@@ -466,6 +513,40 @@ export function MapView() {
     if (!map?.setLayoutProperty || !map?.getLayer?.('noise-segments')) return;
     map.setLayoutProperty('noise-segments', 'visibility', noiseVisible ? 'visible' : 'none');
   }, [noiseVisible]);
+
+  // Toggle commute isochrone layers and fetch data when enabled
+  useEffect(() => {
+    const map = mapRef.current as {
+      setLayoutProperty?: (layer: string, prop: string, val: string) => void;
+      getLayer?: (id: string) => unknown;
+      getSource?: (id: string) => { setData?: (data: unknown) => void } | undefined;
+    } | null;
+    if (!map?.setLayoutProperty || !map?.getLayer?.('commute-fill')) return;
+
+    const visibility = commuteVisible ? 'visible' : 'none';
+    for (const layer of COMMUTE_LAYERS) {
+      if (map.getLayer?.(layer)) {
+        map.setLayoutProperty(layer, 'visibility', visibility);
+      }
+    }
+
+    if (commuteVisible) {
+      fetchCommuteIsochrone(activeDestination)
+        .then((geojson) => {
+          if (geojson === null) {
+            setCommuteUnavailable(true);
+            return;
+          }
+          setCommuteUnavailable(false);
+          map.getSource?.('commute')?.setData?.(geojson);
+        })
+        .catch((err) => {
+          console.error('[Strata] Failed to load commute isochrone:', err);
+        });
+    } else {
+      setCommuteUnavailable(false);
+    }
+  }, [commuteVisible, activeDestination]);
 
   // Update choropleth color when active metric changes
   useEffect(() => {
@@ -543,10 +624,31 @@ export function MapView() {
     }
   }
 
+  function handleCommuteToggle() {
+    setCommuteVisible((v) => !v);
+  }
+
+  async function handleDestinationChange(dest: CommuteDestination) {
+    setActiveDestination(dest);
+    if (!commuteVisible) return;
+    try {
+      const geojson = await fetchCommuteIsochrone(dest);
+      if (geojson === null) {
+        setCommuteUnavailable(true);
+        return;
+      }
+      setCommuteUnavailable(false);
+      const map = mapRef.current as { getSource?: (id: string) => { setData?: (data: unknown) => void } | undefined } | null;
+      map?.getSource?.('commute')?.setData?.(geojson);
+    } catch (err) {
+      console.error('[Strata] Failed to load commute isochrone:', err);
+    }
+  }
+
   if (error) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-strata-slate-900 text-strata-terracotta">
-        <p>Map failed to load: {error}</p>
+        <p>{error}</p>
       </div>
     );
   }
@@ -565,12 +667,27 @@ export function MapView() {
           activeMetric={activeMetric}
           onToggle={handleLayerToggle}
           onMetricChange={setActiveMetric}
+          commuteVisible={commuteVisible}
+          activeDestination={activeDestination}
+          onCommuteToggle={handleCommuteToggle}
+          onDestinationChange={handleDestinationChange}
         />
       </div>
       {/* Bottom-left: construction era legend */}
       <div className="absolute bottom-8 left-4 z-10 animate-fadeSlideUp">
         <Legend />
       </div>
+      {/* Bottom-left above era legend: commute legend or unavailable notice */}
+      {commuteVisible && !commuteUnavailable && (
+        <div className="absolute bottom-32 left-4 z-10 animate-fadeSlideUp">
+          <CommuteLegend visible={commuteVisible} />
+        </div>
+      )}
+      {commuteVisible && commuteUnavailable && (
+        <div className="absolute bottom-32 left-4 z-10 animate-fadeSlideUp rounded bg-black/70 px-3 py-2 text-xs text-white">
+          Isochrone data not yet generated. Run <code className="font-mono">scripts/otp/setup.sh</code> to generate.
+        </div>
+      )}
       {/* Bottom-right: quartier profile panel */}
       {quartierProfile && (
         <div className="absolute bottom-8 right-4 z-10 animate-fadeSlideUp">

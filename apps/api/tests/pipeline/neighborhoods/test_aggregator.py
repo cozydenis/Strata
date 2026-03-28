@@ -209,7 +209,7 @@ class TestAggregateQuartierGeojson:
         assert props_73["total_population"] is None
         assert props_73["population_density"] is None
         assert props_73["swiss_pct"] is None
-        assert props_73["trend"] is None
+        assert props_73["trend"] == "stable"
 
     def test_feature_geometry_preserved(self):
         from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson

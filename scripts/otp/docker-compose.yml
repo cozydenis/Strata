@@ -1,0 +1,20 @@
+services:
+  otp:
+    image: docker.io/opentripplanner/opentripplanner:2.6.0
+    container_name: strata-otp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./otp-data:/var/opentripplanner
+    # Only Zürich OSM is used — switzerland.osm.pbf stays on host for re-cropping
+    command: >
+      --build --save --serve
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xmx6g"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/otp/routers/default"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s

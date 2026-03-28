@@ -73,6 +73,7 @@ def _build_profile(feat: dict) -> dict:
             "trend": p.get("trend"),
         },
         "age_distribution": age_distribution,
+        "commute_hb_min": p.get("commute_hb_min"),
     }
 
 
@@ -82,5 +83,5 @@ def get_quartier_profile(quartier_id: int) -> dict:
     geojson = _load_geojson()
     feat = _find_feature(geojson, quartier_id)
     if feat is None:
-        raise HTTPException(status_code=404, detail=f"Quartier {quartier_id} not found")
+        raise HTTPException(status_code=404, detail="Quartier not found")
     return _build_profile(feat)

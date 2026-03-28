@@ -10,6 +10,10 @@ const defaultProps = {
   activeMetric: 'population_density',
   onToggle: vi.fn(),
   onMetricChange: vi.fn(),
+  commuteVisible: false,
+  activeDestination: 'hb' as const,
+  onCommuteToggle: vi.fn(),
+  onDestinationChange: vi.fn(),
 };
 
 describe('LayerPanel', () => {

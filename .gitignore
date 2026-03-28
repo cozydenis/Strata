@@ -51,15 +51,18 @@ coverage/
 htmlcov/
 .pytest_cache/
 
+scripts/otp/switzerland.osm.pbf
+
+
 # Logs
 *.log
 npm-debug.log*
 
-# Images
-*.jpg
-*.jpeg
-*.png
-*.pdf
+# Images and PDFs (scoped to API data directory to avoid silently ignoring web assets)
+apps/api/data/**/*.jpg
+apps/api/data/**/*.jpeg
+apps/api/data/**/*.png
+apps/api/data/**/*.pdf
 
 # SQLite Databases
 *.db
@@ -67,3 +70,6 @@ npm-debug.log*
 
 # Generated map data (regenerate with: DATABASE_URL=... python -m strata_api.scripts.export_buildings_geojson > apps/web/public/data/buildings.geojson)
 apps/web/public/data/buildings.geojson
+
+# OTP data directory (OSM + GTFS downloads, generated graph)
+scripts/otp/otp-data/

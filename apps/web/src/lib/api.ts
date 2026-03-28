@@ -69,7 +69,17 @@ export interface QuartierProfile {
   kreis: number;
   population: QuartierPopulation | null;
   age_distribution: AgeBucket[];
+  commute_hb_min: number | null;
 }
+
+export type CommuteDestination = 'hb' | 'eth' | 'airport' | 'technopark';
+
+export const COMMUTE_DESTINATIONS: Record<CommuteDestination, string> = {
+  hb: 'Zürich HB',
+  eth: 'ETH Zentrum',
+  airport: 'Flughafen',
+  technopark: 'Technopark',
+};
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -106,6 +116,26 @@ export async function fetchQuartierProfile(quartierId: number): Promise<Quartier
     throw new Error('Unexpected response shape: missing quartier_id');
   }
   return data as QuartierProfile;
+}
+
+export async function fetchCommuteIsochrone(
+  destinationKey: CommuteDestination,
+): Promise<{ type: string; features: unknown[] } | null> {
+  const res = await fetch(`/data/commutes/${destinationKey}.geojson`);
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (
+    typeof data !== 'object' ||
+    data === null ||
+    (data as Record<string, unknown>).type !== 'FeatureCollection' ||
+    !Array.isArray((data as Record<string, unknown>).features)
+  ) {
+    throw new Error('Unexpected response shape: not a FeatureCollection');
+  }
+  return data as { type: string; features: unknown[] };
 }
 
 export async function fetchBuildingListings(egid: number): Promise<ListingSummary[]> {
