@@ -343,9 +343,11 @@ def test_generate_all_traveltime_writes_four_files(tmp_path: Path) -> None:
 
     mock_fc = {"type": "FeatureCollection", "features": []}
 
-    with patch("strata_api.pipeline.commute.generator.fetch_isochrone_traveltime", return_value=mock_fc):
-        with patch("time.sleep"):  # skip throttle delay in tests
-            generate_all_traveltime("app", "key", str(tmp_path))
+    with (
+        patch("strata_api.pipeline.commute.generator.fetch_isochrone_traveltime", return_value=mock_fc),
+        patch("time.sleep"),  # skip throttle delay in tests
+    ):
+        generate_all_traveltime("app", "key", str(tmp_path))
 
     written = {f.stem for f in tmp_path.glob("*.geojson")}
     assert written == {"hb", "eth", "airport", "technopark"}
@@ -363,9 +365,11 @@ def test_generate_all_auto_uses_traveltime_when_env_set(tmp_path: Path, monkeypa
     monkeypatch.setenv("TRAVELTIME_APP_ID", "my-app")
     monkeypatch.setenv("TRAVELTIME_API_KEY", "my-key")
 
-    with patch.object(gen_module, "generate_all_traveltime") as mock_tt:
-        with patch.object(gen_module, "generate_all") as mock_otp:
-            gen_module.generate_all_auto(str(tmp_path))
+    with (
+        patch.object(gen_module, "generate_all_traveltime") as mock_tt,
+        patch.object(gen_module, "generate_all") as mock_otp,
+    ):
+        gen_module.generate_all_auto(str(tmp_path))
 
     mock_tt.assert_called_once_with("my-app", "my-key", str(tmp_path))
     mock_otp.assert_not_called()
@@ -378,9 +382,11 @@ def test_generate_all_auto_uses_otp_when_env_not_set(tmp_path: Path, monkeypatch
     monkeypatch.delenv("TRAVELTIME_APP_ID", raising=False)
     monkeypatch.delenv("TRAVELTIME_API_KEY", raising=False)
 
-    with patch.object(gen_module, "generate_all_traveltime") as mock_tt:
-        with patch.object(gen_module, "generate_all") as mock_otp:
-            gen_module.generate_all_auto(str(tmp_path), otp_base_url="http://otp:8080")
+    with (
+        patch.object(gen_module, "generate_all_traveltime") as mock_tt,
+        patch.object(gen_module, "generate_all") as mock_otp,
+    ):
+        gen_module.generate_all_auto(str(tmp_path), otp_base_url="http://otp:8080")
 
     mock_otp.assert_called_once_with("http://otp:8080", str(tmp_path))
     mock_tt.assert_not_called()
