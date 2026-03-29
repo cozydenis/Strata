@@ -2,6 +2,9 @@
 
 Uses dialect-aware INSERT … ON CONFLICT DO UPDATE so it works with both
 SQLite (tests) and PostgreSQL (production).
+
+PostgreSQL path batches rows (BATCH_SIZE per statement) for performance.
+SQLite path falls back to session.merge row-by-row.
 """
 from __future__ import annotations
 
@@ -13,15 +16,15 @@ from sqlalchemy.orm import Session
 
 from strata_api.pipeline.schemas import BuildingRecord, EntranceRecord, UnitRecord
 
+BATCH_SIZE = 1_000
+
 
 def upsert_buildings(engine: Engine, records: list[BuildingRecord]) -> int:
     """Upsert building records; returns the number of rows processed."""
     if not records:
         return 0
-    with Session(engine) as session:
-        for r in records:
-            _upsert_row(session, "gwr_buildings", {"egid": r.egid}, _building_row(r))
-        session.commit()
+    rows = [{"egid": r.egid, **_building_row(r)} for r in records]
+    _upsert_batch(engine, "gwr_buildings", ["egid"], rows)
     return len(records)
 
 
@@ -29,10 +32,8 @@ def upsert_entrances(engine: Engine, records: list[EntranceRecord]) -> int:
     """Upsert entrance records; returns the number of rows processed."""
     if not records:
         return 0
-    with Session(engine) as session:
-        for r in records:
-            _upsert_row(session, "gwr_entrances", {"egid": r.egid, "edid": r.edid}, _entrance_row(r))
-        session.commit()
+    rows = [{"egid": r.egid, "edid": r.edid, **_entrance_row(r)} for r in records]
+    _upsert_batch(engine, "gwr_entrances", ["egid", "edid"], rows)
     return len(records)
 
 
@@ -40,35 +41,46 @@ def upsert_units(engine: Engine, records: list[UnitRecord]) -> int:
     """Upsert unit records; returns the number of rows processed."""
     if not records:
         return 0
-    with Session(engine) as session:
-        for r in records:
-            _upsert_row(session, "gwr_units", {"egid": r.egid, "ewid": r.ewid}, _unit_row(r))
-        session.commit()
+    rows = [{"egid": r.egid, "ewid": r.ewid, **_unit_row(r)} for r in records]
+    _upsert_batch(engine, "gwr_units", ["egid", "ewid"], rows)
     return len(records)
 
 
-# ── helpers ────────────────────────────────────────────────────────────────────
+# ── batch helpers ───────────────────────────────────────────────────────────────
 
-def _upsert_row(session: Session, table: str, pk: dict[str, Any], row: dict[str, Any]) -> None:
-    """Dialect-agnostic single-row upsert."""
-    dialect = session.bind.dialect.name  # type: ignore[union-attr]
-    full_row = {**pk, **row}
+def _upsert_batch(engine: Engine, table_name: str, pk_cols: list[str], rows: list[dict[str, Any]]) -> None:
+    """Dispatch to dialect-specific batch upsert and commit once."""
+    with Session(engine) as session:
+        if engine.dialect.name == "postgresql":
+            for i in range(0, len(rows), BATCH_SIZE):
+                _pg_batch(session, table_name, pk_cols, rows[i : i + BATCH_SIZE])
+        else:
+            for row in rows:
+                pk = {k: row[k] for k in pk_cols}
+                _merge_row(session, table_name, pk, row)
+        session.commit()
 
-    if dialect == "postgresql":
-        from sqlalchemy import column
-        from sqlalchemy import table as sa_table
-        from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-        stmt = pg_insert(sa_table(table, *(column(k) for k in full_row))).values(**full_row)
-        stmt = stmt.on_conflict_do_update(index_elements=list(pk), set_=row)
-        session.execute(stmt)
-    else:
-        # SQLite and others — use session.merge via a mapped class lookup
-        _merge_row(session, table, pk, full_row)
+def _pg_batch(session: Session, table_name: str, pk_cols: list[str], rows: list[dict[str, Any]]) -> None:
+    """Single INSERT … ON CONFLICT DO UPDATE for a batch of rows (PostgreSQL only)."""
+    from sqlalchemy import column
+    from sqlalchemy import table as sa_table
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    all_cols = list(rows[0].keys())
+    update_cols = [c for c in all_cols if c not in pk_cols]
+
+    tbl = sa_table(table_name, *(column(c) for c in all_cols))
+    stmt = pg_insert(tbl).values(rows)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=pk_cols,
+        set_={c: getattr(stmt.excluded, c) for c in update_cols},
+    )
+    session.execute(stmt)
 
 
 def _merge_row(session: Session, table: str, pk: dict[str, Any], full_row: dict[str, Any]) -> None:
-    """Fallback: load existing row and update, or create new."""
+    """Fallback for SQLite: load existing row and update, or create new."""
     from strata_api.db.models.building import Building
     from strata_api.db.models.entrance import Entrance
     from strata_api.db.models.unit import Unit
@@ -88,6 +100,8 @@ def _merge_row(session: Session, table: str, pk: dict[str, Any], full_row: dict[
             if k not in pk:
                 setattr(obj, k, v)
 
+
+# ── row builders ────────────────────────────────────────────────────────────────
 
 def _building_row(r: BuildingRecord) -> dict[str, Any]:
     now = datetime.datetime.utcnow()
