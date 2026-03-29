@@ -1,4 +1,8 @@
-"""Listing pipeline runner — orchestrates fetch, upsert, deactivation, and media download."""
+"""Listing pipeline runner — orchestrates fetch, upsert, deactivation, and media download.
+
+Usage:
+    python -m strata_api.pipeline.listing_runner
+"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -132,3 +136,19 @@ def _download_media_for_new_listings(
         totals["documents_saved"] += counts["documents_saved"]
 
     return totals
+
+
+if __name__ == "__main__":
+    import asyncio
+    import sys
+
+    from strata_api.db.session import get_session
+
+    async def _main() -> int:
+        with get_session() as db:
+            stats = await run_listing_pipeline(db)
+        for source, counts in stats.items():
+            print(f"[listing] {source}: {counts}")
+        return 0
+
+    sys.exit(asyncio.run(_main()))
