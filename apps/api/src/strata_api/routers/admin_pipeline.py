@@ -1,11 +1,13 @@
 """Admin endpoints for triggering GWR data pipeline runs."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
+from sqlalchemy.orm import Session
 
 from strata_api.config import settings
 from strata_api.db.session import get_engine
@@ -42,3 +44,19 @@ def trigger_pipeline(source: str) -> dict:
         raise HTTPException(status_code=500, detail="Pipeline run failed — check server logs.") from err
 
     return asdict(result)
+
+
+@router.post("/run-listings", dependencies=[Depends(_require_api_key)])
+def trigger_listing_pipeline() -> dict:
+    """Trigger the listing ingestion pipeline (fetch + upsert + media download)."""
+    from strata_api.pipeline.listing_runner import run_listing_pipeline
+
+    engine = get_engine()
+    try:
+        with Session(engine) as db:
+            stats = asyncio.run(run_listing_pipeline(db))
+    except Exception as err:
+        logger.exception("Listing pipeline run failed")
+        raise HTTPException(status_code=500, detail="Listing pipeline failed — check server logs.") from err
+
+    return stats
