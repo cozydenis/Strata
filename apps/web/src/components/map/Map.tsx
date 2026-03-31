@@ -28,7 +28,7 @@ import {
 
 const ZURICH_CENTER: [number, number] = [8.54, 47.38];
 const INITIAL_ZOOM = 12;
-const GEOJSON_URL = '/data/buildings.geojson';
+const GEOJSON_URL = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/registry/buildings/geojson`;
 const LISTINGS_GEOJSON_URL = '/data/listings.geojson';
 const QUARTIERE_GEOJSON_URL = '/data/quartiere.geojson';
 const NOISE_GEOJSON_URL = '/data/noise.geojson';

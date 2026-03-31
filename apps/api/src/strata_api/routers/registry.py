@@ -1,7 +1,11 @@
 """Read endpoints for the GWR unit registry."""
 from __future__ import annotations
 
+import json
+from typing import Iterator
+
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -34,6 +38,52 @@ def _unit_dict(u: Unit) -> dict:
         "strname": u.strname, "deinr": u.deinr,
         "lat": u.lat, "lon": u.lon, "data_source": u.data_source,
     }
+
+
+@router.get("/buildings/geojson")
+def buildings_geojson() -> StreamingResponse:
+    """Stream all geolocated buildings as a GeoJSON FeatureCollection.
+
+    Cached for 1 hour — suitable as a MapLibre GeoJSON source.
+    """
+    engine = get_engine()
+
+    def _generate() -> Iterator[str]:
+        yield '{"type":"FeatureCollection","features":['
+        with Session(engine) as s:
+            rows = s.execute(
+                select(Building).where(
+                    Building.lat.is_not(None),
+                    Building.lon.is_not(None),
+                )
+            ).scalars().all()
+        first = True
+        for row in rows:
+            feature = json.dumps(
+                {
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [round(row.lon, 5), round(row.lat, 5)]},
+                    "properties": {
+                        "egid": row.egid,
+                        "gbauj": row.gbauj,
+                        "gkat": row.gkat,
+                        "gastw": row.gastw,
+                        "ganzwhg": row.ganzwhg,
+                    },
+                },
+                separators=(",", ":"),
+            )
+            if not first:
+                yield ","
+            yield feature
+            first = False
+        yield "]}"
+
+    return StreamingResponse(
+        _generate(),
+        media_type="application/geo+json",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
 
 
 @router.get("/buildings")
