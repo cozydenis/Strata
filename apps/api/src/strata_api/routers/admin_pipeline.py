@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 from dataclasses import asdict
 
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, Depends, HTTPException, Response, Security
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
 
@@ -46,17 +47,19 @@ def trigger_pipeline(source: str) -> dict:
     return asdict(result)
 
 
-@router.post("/run-listings", dependencies=[Depends(_require_api_key)])
-def trigger_listing_pipeline() -> dict:
-    """Trigger the listing ingestion pipeline (fetch + upsert + media download)."""
+@router.post("/run-listings", status_code=202, dependencies=[Depends(_require_api_key)])
+def trigger_listing_pipeline(response: Response) -> dict:
+    """Trigger the listing ingestion pipeline in the background and return 202 immediately."""
     from strata_api.pipeline.listing_runner import run_listing_pipeline
 
-    engine = get_engine()
-    try:
-        with Session(engine) as db:
-            stats = asyncio.run(run_listing_pipeline(db))
-    except Exception as err:
-        logger.exception("Listing pipeline run failed")
-        raise HTTPException(status_code=500, detail="Listing pipeline failed — check server logs.") from err
+    def _run() -> None:
+        engine = get_engine()
+        try:
+            with Session(engine) as db:
+                stats = asyncio.run(run_listing_pipeline(db))
+            logger.info("Listing pipeline completed: %s", stats)
+        except Exception:
+            logger.exception("Listing pipeline run failed")
 
-    return stats
+    threading.Thread(target=_run, daemon=True).start()
+    return {"status": "accepted", "message": "Listing pipeline started in background. Check server logs for progress."}
