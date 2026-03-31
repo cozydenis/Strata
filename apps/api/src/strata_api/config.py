@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     environment: str = "dev"
     pipeline_api_key: str = ""
+    supabase_url: str = ""
+    supabase_service_key: str = ""
 
     @property
     def cors_origins_list(self) -> list[str]:

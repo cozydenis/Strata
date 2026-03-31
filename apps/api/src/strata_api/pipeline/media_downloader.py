@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+    from strata_api.pipeline.storage import SupabaseStorageUploader
 
 logger = logging.getLogger(__name__)
 
@@ -169,8 +170,15 @@ def save_listing_media(
     listing_id: int,
     media: dict[str, list[str]],
     media_dir: Path,
+    uploader: SupabaseStorageUploader | None = None,
 ) -> dict[str, int]:
     """Download media files and persist ListingImage rows for a listing.
+
+    When *uploader* is provided, files are uploaded to Supabase Storage and
+    the permanent public URL is stored in listing_images.url.  The original
+    Flatfox URL is kept in local_path for reference.
+
+    Without an uploader, files are written to media_dir (local-only fallback).
 
     Skips listings that already have images (idempotent).
     Returns {"photos_saved": N, "floorplans_saved": N, "documents_saved": N}.
@@ -181,43 +189,43 @@ def save_listing_media(
     floorplans_saved = 0
     documents_saved = 0
 
-    for ordering, url in enumerate(media.get("photos", [])):
-        fname = _url_to_filename(url)
-        dest = media_dir / "photos" / fname
-        ok = download_file(url, dest)
+    def _save(source_url: str, storage_subdir: str, dest_dir: Path, ordering: int, image_type: str) -> None:
+        fname = _url_to_filename(source_url)
+        stored_url = source_url
+        local_path: str | None = None
+
+        if uploader is not None:
+            try:
+                data = _url_read(source_url)
+                storage_path = f"{storage_subdir}/{listing_id}/{fname}"
+                stored_url = uploader.upload(data, storage_path)
+                local_path = source_url  # keep original for reference
+            except Exception:
+                logger.warning("Storage upload failed for listing %s url %s", listing_id, source_url)
+                stored_url = source_url
+        else:
+            dest = dest_dir / fname
+            ok = download_file(source_url, dest)
+            local_path = str(dest) if ok else None
+
         db.add(ListingImage(
             listing_id=listing_id,
-            url=url,
-            local_path=str(dest) if ok else None,
+            url=stored_url,
+            local_path=local_path,
             ordering=ordering,
-            image_type="photo",
+            image_type=image_type,
         ))
+
+    for ordering, url in enumerate(media.get("photos", [])):
+        _save(url, "photos", media_dir / "photos", ordering, "photo")
         photos_saved += 1
 
     for ordering, url in enumerate(media.get("floorplans", [])):
-        fname = _url_to_filename(url)
-        dest = media_dir / "floorplans" / fname
-        ok = download_file(url, dest)
-        db.add(ListingImage(
-            listing_id=listing_id,
-            url=url,
-            local_path=str(dest) if ok else None,
-            ordering=ordering,
-            image_type="floorplan",
-        ))
+        _save(url, "floorplans", media_dir / "floorplans", ordering, "floorplan")
         floorplans_saved += 1
 
     for ordering, url in enumerate(media.get("documents", [])):
-        fname = _url_to_filename(url)
-        dest = media_dir / "documents" / fname
-        ok = download_file(url, dest)
-        db.add(ListingImage(
-            listing_id=listing_id,
-            url=url,
-            local_path=str(dest) if ok else None,
-            ordering=ordering,
-            image_type="document",
-        ))
+        _save(url, "documents", media_dir / "documents", ordering, "document")
         documents_saved += 1
 
     return {

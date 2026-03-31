@@ -10,14 +10,23 @@ from pathlib import Path
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
+from strata_api.config import settings
 from strata_api.db.models.listing import Listing, ListingImage, ListingUnitMatch
 from strata_api.pipeline.address_matcher import match_listing
 from strata_api.pipeline.connectors.flatfox import FlatfoxConnector, FlatfoxListing
 from strata_api.pipeline.listing_loader import deactivate_missing, upsert_listings
 from strata_api.pipeline.media_downloader import save_listing_media, scrape_listing_media
+from strata_api.pipeline.storage import SupabaseStorageUploader
 
 # Default local storage for downloaded media
 _DEFAULT_MEDIA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "images"
+
+
+def _make_uploader() -> SupabaseStorageUploader | None:
+    """Return a Supabase Storage uploader if credentials are configured."""
+    if settings.supabase_url and settings.supabase_service_key:
+        return SupabaseStorageUploader(settings.supabase_url, settings.supabase_service_key)
+    return None
 
 
 async def run_listing_pipeline(
@@ -46,7 +55,8 @@ async def run_listing_pipeline(
     source_stats["unmatched"] = match_stats["unmatched"]
 
     # ── Media (photos + floor plans) ─────────────────────────────────────────
-    media_stats = _download_media_for_new_listings(db, listings, media_dir)
+    uploader = _make_uploader()
+    media_stats = _download_media_for_new_listings(db, listings, media_dir, uploader)
     source_stats["photos_saved"] = media_stats["photos_saved"]
     source_stats["floorplans_saved"] = media_stats["floorplans_saved"]
     source_stats["documents_saved"] = media_stats["documents_saved"]
@@ -101,6 +111,7 @@ def _download_media_for_new_listings(
     db: Session,
     listings: list[FlatfoxListing],
     media_dir: Path,
+    uploader: SupabaseStorageUploader | None = None,
 ) -> dict[str, int]:
     """Download photos and floor plans for listings that have no images yet."""
     # Find DB listings (from this batch) that have no images yet
@@ -130,7 +141,7 @@ def _download_media_for_new_listings(
         except ValueError:
             continue
         media = scrape_listing_media(ff.slug, pk)
-        counts = save_listing_media(db, listing_id, media, media_dir)
+        counts = save_listing_media(db, listing_id, media, media_dir, uploader)
         totals["photos_saved"] += counts["photos_saved"]
         totals["floorplans_saved"] += counts["floorplans_saved"]
         totals["documents_saved"] += counts["documents_saved"]
