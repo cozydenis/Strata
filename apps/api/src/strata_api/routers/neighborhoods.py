@@ -74,6 +74,7 @@ def _build_profile(feat: dict) -> dict:
         },
         "age_distribution": age_distribution,
         "commute_hb_min": p.get("commute_hb_min"),
+        "amenities": p.get("amenities"),
     }
 
 

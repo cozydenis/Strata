@@ -30,7 +30,7 @@ export function BarChart({ buckets, title }: BarChartProps) {
               />
             </div>
             <span className="strata-data w-8 flex-shrink-0 text-2xs text-strata-cream/55">
-              {pct}%
+              {Number(pct.toFixed(1))}%
             </span>
           </li>
         ))}

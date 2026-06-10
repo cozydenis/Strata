@@ -97,3 +97,42 @@ describe('QuartierProfile', () => {
     expect(card.className).toContain('strata-panel');
   });
 });
+
+describe('QuartierProfile amenities', () => {
+  const amenities = {
+    groceries: 8,
+    cafes: 21,
+    restaurants: 34,
+    bars: 12,
+    pharmacies: 4,
+    schools: 6,
+    fitness: 5,
+    total: 90,
+    per_km2: 18.4,
+  };
+
+  it('renders amenity counts when present', () => {
+    render(<QuartierProfile profile={{ ...fullProfile, amenities }} />);
+    expect(screen.getByTestId('amenities-section')).toBeTruthy();
+    expect(screen.getByText('Groceries')).toBeTruthy();
+    expect(screen.getByText('21')).toBeTruthy();
+    expect(screen.getByText('Bars & pubs')).toBeTruthy();
+  });
+
+  it('renders amenity density per km2', () => {
+    render(<QuartierProfile profile={{ ...fullProfile, amenities }} />);
+    expect(screen.getByTestId('amenity-density').textContent).toContain('18.4');
+  });
+
+  it('hides density line when per_km2 is null', () => {
+    render(
+      <QuartierProfile profile={{ ...fullProfile, amenities: { ...amenities, per_km2: null } }} />,
+    );
+    expect(screen.queryByTestId('amenity-density')).toBeNull();
+  });
+
+  it('omits section when amenities are absent', () => {
+    render(<QuartierProfile profile={fullProfile} />);
+    expect(screen.queryByTestId('amenities-section')).toBeNull();
+  });
+});

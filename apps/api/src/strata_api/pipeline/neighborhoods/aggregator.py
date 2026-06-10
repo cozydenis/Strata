@@ -79,10 +79,20 @@ def _demo_props(demo: QuartierDemographics, area_km2: float | None) -> dict:
     }
 
 
+def _amenity_props(counts: dict[str, int] | None, area_km2: float | None) -> dict:
+    """Build the nested amenities property: per-category counts + total + density."""
+    if counts is None:
+        return {"amenities": None}
+    total = sum(counts.values())
+    per_km2 = round(total / area_km2, 1) if (area_km2 is not None and area_km2 > 0) else None
+    return {"amenities": {**counts, "total": total, "per_km2": per_km2}}
+
+
 def aggregate_quartier_geojson(
     quartier_records: dict[int, QuartierRecord],
     demographics: dict[int, QuartierDemographics],
     otp_base_url: str | None = None,
+    amenities: dict[int, dict[str, int]] | None = None,
 ) -> dict:
     """Produce an enriched GeoJSON FeatureCollection.
 
@@ -91,6 +101,7 @@ def aggregate_quartier_geojson(
     - base properties: quartier_id, quartier_name, kreis
     - demographic properties (or nulls if no demographic data exists)
     - commute_hb_min: travel time to Zürich HB in minutes (only when otp_base_url provided)
+    - amenities: per-category OSM counts + total + per_km2 (only when amenities provided)
     """
     # Optionally compute commute times for all quartiere
     commute_times: dict[int, int | None] = {}
@@ -122,10 +133,12 @@ def aggregate_quartier_geojson(
         if otp_base_url is not None:
             commute_p["commute_hb_min"] = commute_times.get(qid)
 
+        amenity_p = _amenity_props(amenities.get(qid) if amenities is not None else None, rec.area_km2)
+
         features.append({
             "type": "Feature",
             "geometry": rec.geometry,
-            "properties": {**base_props, **demo_p, **commute_p},
+            "properties": {**base_props, **demo_p, **commute_p, **amenity_p},
         })
 
     return {"type": "FeatureCollection", "features": features}

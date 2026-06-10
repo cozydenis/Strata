@@ -1,5 +1,40 @@
 import { BarChart } from './BarChart';
-import type { QuartierPopulation, QuartierProfile as QuartierProfileData } from '@/lib/api';
+import type {
+  QuartierAmenities,
+  QuartierPopulation,
+  QuartierProfile as QuartierProfileData,
+} from '@/lib/api';
+
+const AMENITY_LABELS: { key: keyof QuartierAmenities; label: string }[] = [
+  { key: 'groceries', label: 'Groceries' },
+  { key: 'cafes', label: 'Cafés' },
+  { key: 'restaurants', label: 'Restaurants' },
+  { key: 'bars', label: 'Bars & pubs' },
+  { key: 'pharmacies', label: 'Pharmacies' },
+  { key: 'schools', label: 'Schools' },
+  { key: 'fitness', label: 'Fitness' },
+];
+
+function AmenitiesSection({ amenities }: { amenities: QuartierAmenities }) {
+  return (
+    <div className="strata-rule mt-3 pt-3" data-testid="amenities-section">
+      <p className="strata-panel-title mb-2">Amenities</p>
+      <dl className="grid grid-cols-2 gap-x-4">
+        {AMENITY_LABELS.map(({ key, label }) => (
+          <div key={key} className="flex items-baseline justify-between py-[3px]">
+            <dt className="text-2xs text-strata-cream/50">{label}</dt>
+            <dd className="strata-data text-xs-11 text-strata-cream">{amenities[key]}</dd>
+          </div>
+        ))}
+      </dl>
+      {amenities.per_km2 !== null && (
+        <p className="mt-1.5 text-2xs text-strata-cream/40" data-testid="amenity-density">
+          <span className="strata-data text-strata-cream/60">{amenities.per_km2}</span> per km²
+        </p>
+      )}
+    </div>
+  );
+}
 
 interface QuartierProfileProps {
   profile: QuartierProfileData;
@@ -39,7 +74,7 @@ function StatRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 export function QuartierProfile({ profile, onClose }: QuartierProfileProps) {
-  const { quartier_name, kreis, population, age_distribution, commute_hb_min } = profile;
+  const { quartier_name, kreis, population, age_distribution, commute_hb_min, amenities } = profile;
 
   return (
     <div className="strata-panel w-72 p-4">
@@ -100,6 +135,8 @@ export function QuartierProfile({ profile, onClose }: QuartierProfileProps) {
               </div>
             )}
           </dl>
+
+          {amenities && <AmenitiesSection amenities={amenities} />}
 
           {age_distribution.length > 0 && (
             <div className="strata-rule mt-3 pt-3">

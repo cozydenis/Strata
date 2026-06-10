@@ -235,3 +235,45 @@ class TestAggregateQuartierGeojson:
         result = aggregate_quartier_geojson(records, demos)
         props = result["features"][0]["properties"]
         assert props["growth_rate"] is None
+
+
+class TestAmenityProps:
+    """Amenity enrichment in aggregate_quartier_geojson."""
+
+    def test_amenities_none_when_not_provided(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1)}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)})
+        assert result["features"][0]["properties"]["amenities"] is None
+
+    def test_amenity_counts_total_and_density(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1, area_km2=2.0)}
+        counts = {11: {"cafes": 6, "groceries": 4}}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)}, amenities=counts)
+        amenities = result["features"][0]["properties"]["amenities"]
+        assert amenities["cafes"] == 6
+        assert amenities["groceries"] == 4
+        assert amenities["total"] == 10
+        assert amenities["per_km2"] == 5.0
+
+    def test_density_none_without_area(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1, area_km2=None)}
+        counts = {11: {"cafes": 3}}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)}, amenities=counts)
+        amenities = result["features"][0]["properties"]["amenities"]
+        assert amenities["per_km2"] is None
+
+    def test_quartier_missing_from_counts_gets_null(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1), 12: _make_quartier(12, "Lindenhof", 1)}
+        counts = {11: {"cafes": 1}}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)}, amenities=counts)
+        by_id = {f["properties"]["quartier_id"]: f["properties"] for f in result["features"]}
+        assert by_id[11]["amenities"]["cafes"] == 1
+        assert by_id[12]["amenities"] is None

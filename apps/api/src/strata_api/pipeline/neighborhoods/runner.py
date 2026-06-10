@@ -6,6 +6,11 @@ import logging
 from pathlib import Path
 
 from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+from strata_api.pipeline.neighborhoods.amenities import (
+    count_amenities_per_quartier,
+    fetch_overpass_amenities,
+    parse_overpass_amenities,
+)
 from strata_api.pipeline.neighborhoods.demographics_parser import parse_demographics_csv
 from strata_api.pipeline.neighborhoods.downloader import (
     download_demographics_csv,
@@ -18,19 +23,25 @@ from strata_api.pipeline.neighborhoods.quartier_parser import parse_quartier_geo
 logger = logging.getLogger(__name__)
 
 
-def run_neighborhood_pipeline(output_dir: Path, api_data_dir: Path | None = None) -> dict:
+def run_neighborhood_pipeline(
+    output_dir: Path,
+    api_data_dir: Path | None = None,
+    fetch_amenities: bool = False,
+) -> dict:
     """Orchestrate the neighborhood intelligence pipeline.
 
     Steps:
     1. Download Quartier WFS GeoJSON
     2. Download demographics CSV
     3. Download noise cadastre WFS GeoJSON
-    4. Parse all sources
-    5. Aggregate into enriched GeoJSON FeatureCollection
-    6. Write quartiere.geojson and noise.geojson to output_dir
+    4. Amenities: reuse output_dir/amenities_raw.json if present, else fetch
+       from Overpass when fetch_amenities=True (skipped entirely otherwise)
+    5. Parse all sources
+    6. Aggregate into enriched GeoJSON FeatureCollection
+    7. Write quartiere.geojson and noise.geojson to output_dir
        Also copies quartiere.geojson to api_data_dir if provided (for the API router).
 
-    Returns stats dict: {"quartiere": N, "noise_points": N, "year": YYYY}
+    Returns stats dict: {"quartiere": N, "noise_points": N, "year": YYYY, "amenities": N|None}
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -77,8 +88,28 @@ def run_neighborhood_pipeline(output_dir: Path, api_data_dir: Path | None = None
         ],
     }
 
+    # ── Amenities (cached raw Overpass response, network only when asked) ──
+    amenity_counts: dict[int, dict[str, int]] | None = None
+    amenity_total: int | None = None
+    amenities_raw_path = output_dir / "amenities_raw.json"
+    if amenities_raw_path.exists():
+        logger.info("Reusing cached Overpass amenities: %s", amenities_raw_path)
+        amenities_raw = json.loads(amenities_raw_path.read_text(encoding="utf-8"))
+    elif fetch_amenities:
+        logger.info("Fetching amenities from Overpass API...")
+        amenities_raw = fetch_overpass_amenities()
+        amenities_raw_path.write_text(json.dumps(amenities_raw, ensure_ascii=False), encoding="utf-8")
+    else:
+        amenities_raw = None
+
+    if amenities_raw is not None:
+        amenity_points = parse_overpass_amenities(amenities_raw)
+        amenity_counts = count_amenities_per_quartier(amenity_points, quartier_records)
+        amenity_total = sum(sum(c.values()) for c in amenity_counts.values())
+        logger.info("Assigned %d of %d amenity points to quartiere", amenity_total, len(amenity_points))
+
     logger.info("Aggregating into GeoJSON...")
-    geojson = aggregate_quartier_geojson(quartier_records, demographics)
+    geojson = aggregate_quartier_geojson(quartier_records, demographics, amenities=amenity_counts)
 
     quartiere_path = output_dir / "quartiere.geojson"
     quartiere_path.write_text(json.dumps(geojson, ensure_ascii=False), encoding="utf-8")
@@ -102,4 +133,5 @@ def run_neighborhood_pipeline(output_dir: Path, api_data_dir: Path | None = None
         "quartiere": len(geojson["features"]),
         "noise_points": len(noise_geojson["features"]),
         "year": year,
+        "amenities": amenity_total,
     }

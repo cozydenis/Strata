@@ -141,3 +141,58 @@ class TestRunNeighborhoodPipeline:
         mock_q.assert_called_once()
         mock_d.assert_called_once()
         mock_n.assert_called_once()
+
+
+OVERPASS_RAW = {
+    "elements": [
+        # Inside the Rathaus fixture polygon
+        {"type": "node", "id": 1, "lat": 47.372, "lon": 8.535, "tags": {"amenity": "cafe", "name": "C"}},
+        # Outside every quartier
+        {"type": "node", "id": 2, "lat": 47.50, "lon": 8.70, "tags": {"amenity": "cafe"}},
+    ]
+}
+
+
+class TestRunnerAmenities:
+    def test_amenities_skipped_by_default(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+        ):
+            stats = run_neighborhood_pipeline(tmp_path)
+        assert stats["amenities"] is None
+        geojson = json.loads((tmp_path / "quartiere.geojson").read_text())
+        assert geojson["features"][0]["properties"]["amenities"] is None
+
+    def test_cached_amenities_raw_reused(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        (tmp_path / "amenities_raw.json").write_text(json.dumps(OVERPASS_RAW))
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+        ):
+            stats = run_neighborhood_pipeline(tmp_path)
+        assert stats["amenities"] == 1  # only the in-polygon cafe counts
+        geojson = json.loads((tmp_path / "quartiere.geojson").read_text())
+        amenities = geojson["features"][0]["properties"]["amenities"]
+        assert amenities["cafes"] == 1
+        assert amenities["total"] == 1
+
+    def test_fetch_amenities_calls_overpass_and_caches(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.fetch_overpass_amenities", return_value=OVERPASS_RAW) as mock_fetch,
+        ):
+            stats = run_neighborhood_pipeline(tmp_path, fetch_amenities=True)
+        mock_fetch.assert_called_once()
+        assert stats["amenities"] == 1
+        assert (tmp_path / "amenities_raw.json").exists()

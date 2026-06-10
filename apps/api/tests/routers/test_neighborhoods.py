@@ -104,3 +104,33 @@ class TestGetQuartierProfile:
 
         routes = [r.path for r in app.routes]  # type: ignore[attr-defined]
         assert any("neighborhoods" in r for r in routes)
+
+
+class TestProfileAmenities:
+    def test_amenities_null_when_absent_from_geojson(self, client):
+        resp = client.get("/neighborhoods/11/profile")
+        assert resp.status_code == 200
+        assert resp.json()["amenities"] is None
+
+    def test_amenities_passed_through(self, fixture_geojson_data, tmp_path):
+        from fastapi import FastAPI
+
+        from strata_api.routers.neighborhoods import _reset_cache, router
+
+        data = json.loads(json.dumps(fixture_geojson_data))  # deep copy
+        amenities = {"groceries": 8, "cafes": 21, "total": 29, "per_km2": 18.1}
+        data["features"][0]["properties"]["amenities"] = amenities
+        qid = data["features"][0]["properties"]["quartier_id"]
+
+        geojson_path = tmp_path / "quartiere.geojson"
+        geojson_path.write_text(json.dumps(data), encoding="utf-8")
+
+        _reset_cache()
+        app = FastAPI()
+        app.include_router(router)
+        with patch("strata_api.routers.neighborhoods._QUARTIERE_PATH", geojson_path), TestClient(app) as c:
+            resp = c.get(f"/neighborhoods/{qid}/profile")
+        _reset_cache()
+
+        assert resp.status_code == 200
+        assert resp.json()["amenities"] == amenities

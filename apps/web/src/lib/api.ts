@@ -63,6 +63,18 @@ export interface QuartierPopulation {
   trend: 'growing' | 'stable' | 'declining';
 }
 
+export interface QuartierAmenities {
+  groceries: number;
+  cafes: number;
+  restaurants: number;
+  bars: number;
+  pharmacies: number;
+  schools: number;
+  fitness: number;
+  total: number;
+  per_km2: number | null;
+}
+
 export interface QuartierProfile {
   quartier_id: number;
   quartier_name: string;
@@ -70,6 +82,7 @@ export interface QuartierProfile {
   population: QuartierPopulation | null;
   age_distribution: AgeBucket[];
   commute_hb_min: number | null;
+  amenities?: QuartierAmenities | null;
 }
 
 export type CommuteDestination = 'hb' | 'eth' | 'airport' | 'technopark';
