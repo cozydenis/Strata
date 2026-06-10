@@ -113,7 +113,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Profile vault (personal info, documents) | ⚪ Planned | #TBD |
 | Wishlist — broad search alerts | ⚪ Planned | #TBD |
 | Wishlist — building typology matching | ⚪ Planned | #TBD |
-| Watch Mode UI (personal feed of events) | ⚪ Planned | #TBD |
+| Watch Mode feed (new/gone listings, price changes in watched buildings) | 🟢 Done — v1 in watchlist panel | — |
 | Notification system (email-first) | ⚪ Planned | #TBD |
 
 ---
@@ -286,5 +286,5 @@ _Update this section at the start of each work session._
 
 1. **Restore deployment + Supabase project** — unblocks live auth (set SUPABASE_JWT_SECRET +
    NEXT_PUBLIC_SUPABASE_* and run `alembic upgrade head` for the watches table)
-2. **Watch Mode feed** — surface watchlist events (new listing in watched building, etc.)
+2. **Email notifications** — push watch events instead of waiting for panel opens
 3. **Venue typology / vibe profiles** — build on the new amenity data

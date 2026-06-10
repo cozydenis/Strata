@@ -239,3 +239,34 @@ export async function removeWatch(token: string, watchId: number): Promise<void>
     throw new Error(`${res.status}`);
   }
 }
+
+export type WatchEventType = 'new_listing' | 'price_change' | 'listing_gone';
+
+export interface WatchEvent {
+  type: WatchEventType;
+  ts: string;
+  listing_id: number;
+  egid: number;
+  street: string | null;
+  house_number: string | null;
+  plz: number | null;
+  city: string | null;
+  rent_gross: number | null;
+  rooms: number | null;
+  area_m2: number | null;
+  source_url: string | null;
+  old_value: string | null;
+  new_value: string | null;
+}
+
+export async function fetchWatchEvents(token: string, days = 90): Promise<{ total: number; items: WatchEvent[] }> {
+  const res = await fetch(`${BASE_URL}/watchlist/events?days=${days}`, { headers: authHeaders(token) });
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (typeof data !== 'object' || data === null || !Array.isArray((data as Record<string, unknown>).items)) {
+    throw new Error('Unexpected response shape: missing items');
+  }
+  return data as { total: number; items: WatchEvent[] };
+}

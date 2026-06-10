@@ -12,12 +12,13 @@ vi.mock('@/lib/api', async (importOriginal) => {
   return {
     ...actual,
     fetchWatchlist: vi.fn(),
+    fetchWatchEvents: vi.fn(),
     removeWatch: vi.fn(),
   };
 });
 
 import { getAccessToken } from '@/lib/supabase';
-import { fetchWatchlist, removeWatch } from '@/lib/api';
+import { fetchWatchEvents, fetchWatchlist, removeWatch } from '@/lib/api';
 
 const ITEMS = [
   {
@@ -44,8 +45,10 @@ const ITEMS = [
 
 describe('WatchlistPanel', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(getAccessToken).mockResolvedValue('token-123');
     vi.mocked(fetchWatchlist).mockResolvedValue({ total: 2, items: ITEMS });
+    vi.mocked(fetchWatchEvents).mockResolvedValue({ total: 0, items: [] });
     vi.mocked(removeWatch).mockResolvedValue(undefined);
   });
 
@@ -89,5 +92,65 @@ describe('WatchlistPanel', () => {
     vi.mocked(fetchWatchlist).mockRejectedValue(new Error('500'));
     render(<WatchlistPanel onClose={() => {}} />);
     await waitFor(() => expect(screen.getByTestId('watchlist-error')).toBeTruthy());
+  });
+});
+
+describe('WatchlistPanel activity feed', () => {
+  const baseEvent = {
+    listing_id: 7,
+    egid: 10001,
+    street: 'Langstrasse',
+    house_number: '42',
+    plz: 8004,
+    city: 'Zürich',
+    rent_gross: 2400,
+    rooms: 3.5,
+    area_m2: 80,
+    source_url: 'https://flatfox.ch/x/7',
+    old_value: null,
+    new_value: null,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getAccessToken).mockResolvedValue('token-123');
+    vi.mocked(fetchWatchlist).mockResolvedValue({ total: 1, items: [ITEMS[0]] });
+    vi.mocked(removeWatch).mockResolvedValue(undefined);
+  });
+
+  it('renders new listing and gone events', async () => {
+    vi.mocked(fetchWatchEvents).mockResolvedValue({
+      total: 2,
+      items: [
+        { ...baseEvent, type: 'new_listing', ts: '2026-06-08T10:00:00' },
+        { ...baseEvent, type: 'listing_gone', ts: '2026-06-01T10:00:00', listing_id: 8 },
+      ],
+    });
+    render(<WatchlistPanel onClose={() => {}} />);
+    await waitFor(() => expect(screen.getByTestId('watchlist-activity')).toBeTruthy());
+    expect(screen.getAllByTestId('watch-event')).toHaveLength(2);
+    expect(screen.getByText('New listing')).toBeTruthy();
+    expect(screen.getByText('Listing gone')).toBeTruthy();
+    // 2 events + the watch item itself all carry the address
+    expect(screen.getAllByText(/Langstrasse 42/)).toHaveLength(3);
+  });
+
+  it('renders price changes as old → new', async () => {
+    vi.mocked(fetchWatchEvents).mockResolvedValue({
+      total: 1,
+      items: [
+        { ...baseEvent, type: 'price_change', ts: '2026-06-05T10:00:00', old_value: '2200', new_value: '2400' },
+      ],
+    });
+    render(<WatchlistPanel onClose={() => {}} />);
+    await waitFor(() => expect(screen.getByText('Price change')).toBeTruthy());
+    expect(screen.getByText(/CHF 2[’']?200 → 2[’']?400/)).toBeTruthy();
+  });
+
+  it('omits activity section when there are no events', async () => {
+    vi.mocked(fetchWatchEvents).mockResolvedValue({ total: 0, items: [] });
+    render(<WatchlistPanel onClose={() => {}} />);
+    await waitFor(() => expect(screen.getAllByTestId('watchlist-item')).toHaveLength(1));
+    expect(screen.queryByTestId('watchlist-activity')).toBeNull();
   });
 });
