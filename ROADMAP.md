@@ -1,7 +1,7 @@
 # STRATA — Roadmap
 
-> Last updated: March 2026
-> Status: Phase 0 complete, Phase 1 in progress
+> Last updated: June 2026
+> Status: Phase 0 complete, Phase 1 in progress — deployed (Vercel + Railway + Supabase), commute isochrones live
 
 ---
 
@@ -27,8 +27,8 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Photos stored | 565+ |
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
-| Backend tests | 283+ |
-| Frontend tests | 31+ |
+| Backend tests | 452 |
+| Frontend tests | 206 |
 
 ---
 
@@ -73,7 +73,7 @@ The layer that answers "where should I live?" Four dimensions.
 
 | Component | Status | Data Source | Issue |
 |-----------|--------|-------------|-------|
-| **Commute isochrones** | ⚪ Planned | ZVV/SBB API or OpenTripPlanner | #TBD |
+| **Commute isochrones** | 🟢 Done | Travel time pipeline + map visualization (PR #22) | — |
 | **Amenities & walkability** | ⚪ Planned | OSM (groceries, pharmacies, schools, gyms) | #TBD |
 | **Parking** | 💡 Idea | Stadt Zürich Parkleitsystem | #TBD |
 | **School proximity + quality** | 💡 Idea | Volksschulamt data | #TBD |
@@ -193,6 +193,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Address matching engine (93% match) | 🟢 Done | — |
 | Cross-source deduplication | 🟢 Done (untested — only one source active) | — |
 | Listing history / change tracking | 🟢 Done (schema ready, populates on re-runs) | — |
+| Listing media → Supabase Storage (permanent archival) | 🟢 Done | — |
 | Homegate connector (scraping) | 🟡 Built but blocked by DataDome | #TBD |
 | Immoscout24 connector | ⚪ Planned | #TBD |
 | WG-Zimmer connector | 💡 Idea | #TBD |
@@ -230,10 +231,11 @@ The layer that answers "where should I live?" Four dimensions.
 | SQLite local DB | 🟢 Done | — |
 | Alembic migrations | 🟢 Done | — |
 | everything-claude-code harness | 🟢 Done | — |
-| CI/CD (GitHub Actions) | ⚪ Planned | #TBD |
-| Deploy frontend (Vercel) | ⚪ Planned | #TBD |
-| Deploy backend (Railway / Supabase) | ⚪ Planned | #TBD |
-| PostgreSQL (replace SQLite for prod) | ⚪ Planned | #TBD |
+| CI/CD (GitHub Actions — lint + test on PR) | 🟢 Done | — |
+| Deploy frontend (Vercel) | 🟢 Done | — |
+| Deploy backend (Railway) | 🟢 Done | — |
+| PostgreSQL (Supabase, prod) | 🟢 Done | — |
+| Pipeline trigger endpoints (`/admin/pipeline/run`, `/run-listings`) | 🟢 Done | — |
 | Daily pipeline scheduler (cron) | ⚪ Planned | #TBD |
 
 ---
@@ -267,7 +269,7 @@ All currently used or identified open data sources for Strata.
 | Phase | Original Timeline | Actual Status |
 |-------|-------------------|---------------|
 | Phase 0: Foundation | Apr–May 2026 | 🟢 Complete (done in 1 day) |
-| Phase 1: Core Product | Jun–Aug 2026 | 🟡 In progress (map + layers done, missing commute/amenities/comparison/deploy) |
+| Phase 1: Core Product | Jun–Aug 2026 | 🟡 In progress (map + layers + commute + deploy done, missing amenities/comparison) |
 | Phase 2: Demand Side | Sep–Dec 2026 | 🟡 Partially started (listing ingestion done, auth/profiles/watchlists not started) |
 | Phase 3: Marketplace | Jan–Mar 2027 | ⚪ Not started |
 | Phase 4: Intelligence | Apr–Jun 2027 | ⚪ Not started |
@@ -279,8 +281,8 @@ All currently used or identified open data sources for Strata.
 
 _Update this section at the start of each work session._
 
-1. **Commute isochrones** — highest-impact missing layer for "where should I live?"
+1. **UI design pass** — implement the vision's Swiss cartographic design language across the app
 2. **Amenities & walkability** — groceries, cafés, schools nearby per Quartier
 3. **Comparison mode** — once the data is rich enough to be worth comparing
-4. **Deploy** — get a live URL
-5. **PLZ filter fix** — exclude non-Zürich listings
+4. **PLZ filter fix** — exclude non-Zürich listings
+5. **Daily pipeline scheduler** — cron trigger for the deployed pipeline endpoints
