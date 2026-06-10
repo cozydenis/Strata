@@ -681,22 +681,24 @@ export function MapView() {
           onDestinationChange={handleDestinationChange}
         />
       </div>
-      {/* Bottom-left: construction era legend */}
-      <div className="absolute bottom-8 left-4 z-10 animate-fadeSlideUp">
-        <Legend />
+      {/* Bottom-left: legends stacked so they never overlap */}
+      <div className="absolute bottom-8 left-4 z-10 flex flex-col gap-3">
+        {commuteVisible && !commuteUnavailable && (
+          <div className="animate-fadeSlideUp">
+            <CommuteLegend visible={commuteVisible} />
+          </div>
+        )}
+        {commuteVisible && commuteUnavailable && (
+          <div className="strata-panel max-w-[240px] animate-fadeSlideUp px-3.5 py-2.5 text-xs-11 text-strata-cream/75">
+            Isochrone data not yet generated. Run{' '}
+            <code className="font-mono text-strata-amber/80">scripts/otp/setup.sh</code> to
+            generate.
+          </div>
+        )}
+        <div className="animate-fadeSlideUp">
+          <Legend />
+        </div>
       </div>
-      {/* Bottom-left above era legend: commute legend or unavailable notice */}
-      {commuteVisible && !commuteUnavailable && (
-        <div className="absolute bottom-32 left-4 z-10 animate-fadeSlideUp">
-          <CommuteLegend visible={commuteVisible} />
-        </div>
-      )}
-      {commuteVisible && commuteUnavailable && (
-        <div className="strata-panel absolute bottom-32 left-4 z-10 animate-fadeSlideUp px-3.5 py-2.5 text-xs-11 text-strata-cream/75">
-          Isochrone data not yet generated. Run{' '}
-          <code className="font-mono text-strata-amber/80">scripts/otp/setup.sh</code> to generate.
-        </div>
-      )}
       {/* Bottom-right: quartier profile panel */}
       {quartierProfile && (
         <div className="absolute bottom-8 right-4 z-10 animate-fadeSlideUp">

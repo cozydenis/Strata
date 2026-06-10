@@ -54,6 +54,27 @@
 
   /* Panel surface */
   --panel-bg: rgba(28, 26, 24, 0.84);
+
+  /* RGB channel triplets — required for Tailwind opacity modifiers (bg-strata-X/NN) */
+  --strata-slate-900-rgb: 28 26 24;
+  --strata-slate-800-rgb: 42 39 36;
+  --strata-slate-700-rgb: 56 52 49;
+  --strata-slate-600-rgb: 70 66 62;
+  --strata-slate-500-rgb: 96 91 86;
+  --strata-slate-400-rgb: 122 117 111;
+  --strata-slate-300-rgb: 158 152 144;
+  --strata-slate-200-rgb: 200 194 186;
+  --strata-slate-100-rgb: 240 237 232;
+  --strata-stone-900-rgb: 44 40 37;
+  --strata-stone-800-rgb: 61 58 54;
+  --strata-stone-700-rgb: 80 76 71;
+  --strata-stone-600-rgb: 107 102 96;
+  --strata-terracotta-rgb: 196 120 91;
+  --strata-amber-rgb: 212 145 90;
+  --strata-cream-rgb: 250 247 242;
+  --strata-ink-rgb: 44 40 37;
+  --strata-muted-rgb: 138 133 128;
+  --strata-sage-rgb: 143 160 113;
 }
 
 ::selection {
