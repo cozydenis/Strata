@@ -1,4 +1,5 @@
 """Tests for Flatfox API connector (TDD — RED phase)."""
+
 import json
 from pathlib import Path
 
@@ -75,10 +76,14 @@ class TestParseFlatfoxListing:
 
     def test_street_no_number(self):
         listing = {
-            "pk": 2, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 2,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "Musterstrasse",
-            "zipcode": 8001, "city": "Zürich",
+            "zipcode": 8001,
+            "city": "Zürich",
             "public_address": "Musterstrasse, 8001 Zürich",
         }
         result = parse_flatfox_listing(listing)
@@ -88,10 +93,14 @@ class TestParseFlatfoxListing:
     def test_compound_house_number_slash(self):
         """'Hinterbergstrasse 108/110' → street='Hinterbergstrasse', number='108/110'."""
         listing = {
-            "pk": 50, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 50,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "Hinterbergstrasse 108/110",
-            "zipcode": 8044, "city": "Zürich",
+            "zipcode": 8044,
+            "city": "Zürich",
             "public_address": "Hinterbergstrasse 108/110, 8044 Zürich",
         }
         result = parse_flatfox_listing(listing)
@@ -101,10 +110,14 @@ class TestParseFlatfoxListing:
     def test_compound_house_number_with_letter(self):
         """'Seefeldstrasse 30/30a' → street='Seefeldstrasse', number='30/30a'."""
         listing = {
-            "pk": 51, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 51,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "Seefeldstrasse 30/30a",
-            "zipcode": 8008, "city": "Zürich",
+            "zipcode": 8008,
+            "city": "Zürich",
             "public_address": "Seefeldstrasse 30/30a, 8008 Zürich",
         }
         result = parse_flatfox_listing(listing)
@@ -114,10 +127,14 @@ class TestParseFlatfoxListing:
     def test_range_house_number_dash(self):
         """'Im Feld 10 - 24' → street='Im Feld', number='10-24'."""
         listing = {
-            "pk": 52, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 52,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "Im Feld 10 - 24",
-            "zipcode": 8180, "city": "Bülach",
+            "zipcode": 8180,
+            "city": "Bülach",
             "public_address": "Im Feld 10 - 24, 8180 Bülach",
         }
         result = parse_flatfox_listing(listing)
@@ -127,10 +144,14 @@ class TestParseFlatfoxListing:
     def test_ung_prefix_stripped(self):
         """'UNG Feldeggstrasse 5' → prefix stripped, street='Feldeggstrasse', number='5'."""
         listing = {
-            "pk": 53, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 53,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "UNG Feldeggstrasse 5",
-            "zipcode": 8008, "city": "Zürich",
+            "zipcode": 8008,
+            "city": "Zürich",
             "public_address": "UNG Feldeggstrasse 5, 8008 Zürich",
         }
         result = parse_flatfox_listing(listing)
@@ -140,10 +161,14 @@ class TestParseFlatfoxListing:
     def test_eh_suffix_stripped(self):
         """'Seestrasse 30, EH' → suffix removed, street='Seestrasse', number='30'."""
         listing = {
-            "pk": 54, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 54,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "Seestrasse 30, EH",
-            "zipcode": 8002, "city": "Zürich",
+            "zipcode": 8002,
+            "city": "Zürich",
             "public_address": "Seestrasse 30, EH, 8002 Zürich",
         }
         result = parse_flatfox_listing(listing)
@@ -153,10 +178,14 @@ class TestParseFlatfoxListing:
     def test_im_hof_range_with_slash(self):
         """'Im Hof 9/11' → street='Im Hof', number='9/11'."""
         listing = {
-            "pk": 55, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 55,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "Im Hof 9/11",
-            "zipcode": 8355, "city": "Aadorf",
+            "zipcode": 8355,
+            "city": "Aadorf",
             "public_address": "Im Hof 9/11, 8355 Aadorf",
         }
         result = parse_flatfox_listing(listing)
@@ -198,9 +227,12 @@ class TestParseFlatfoxListing:
 
     def test_slug_defaults_to_empty_string_when_missing(self):
         listing = {
-            "pk": 42, "status": "act", "offer_type": "RENT",
+            "pk": 42,
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
-            "zipcode": 8001, "city": "Zürich",
+            "zipcode": 8001,
+            "city": "Zürich",
             "public_address": "8001 Zürich",
         }
         result = parse_flatfox_listing(listing)
@@ -208,9 +240,14 @@ class TestParseFlatfoxListing:
 
     def test_missing_media_fields_default_empty(self):
         listing = {
-            "pk": 99, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 99,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
-            "street": "Test 1", "zipcode": 8001, "city": "Zürich",
+            "street": "Test 1",
+            "zipcode": 8001,
+            "city": "Zürich",
             "public_address": "Test 1, 8001 Zürich",
         }
         result = parse_flatfox_listing(listing)
@@ -221,14 +258,22 @@ class TestParseFlatfoxListing:
 
     def test_nullable_fields_when_missing(self):
         listing = {
-            "pk": 3, "slug": "x", "status": "act", "offer_type": "RENT",
+            "pk": 3,
+            "slug": "x",
+            "status": "act",
+            "offer_type": "RENT",
             "object_category": "APARTMENT",
             "street": "Bergweg 1",
-            "zipcode": 8004, "city": "Zürich",
+            "zipcode": 8004,
+            "city": "Zürich",
             "public_address": "Bergweg 1, 8004 Zürich",
-            "rent_net": None, "rent_gross": None, "rent_charges": None,
-            "number_of_rooms": None, "surface_living": None,
-            "latitude": None, "longitude": None,
+            "rent_net": None,
+            "rent_gross": None,
+            "rent_charges": None,
+            "number_of_rooms": None,
+            "surface_living": None,
+            "latitude": None,
+            "longitude": None,
         }
         result = parse_flatfox_listing(listing)
         assert result.rent_net is None
@@ -248,90 +293,202 @@ class TestParseFlatfoxListing:
 class TestFlatfoxListingSchema:
     def test_is_zurich_area_true(self):
         listing = FlatfoxListing(
-            source="flatfox", source_id="1",
-            address_raw="X", street="X", plz=8001, city="Zürich",
-            offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="1",
+            address_raw="X",
+            street="X",
+            plz=8001,
+            city="Zürich",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_zurich_area is True
 
     def test_is_zurich_area_false_outside(self):
         listing = FlatfoxListing(
-            source="flatfox", source_id="2",
-            address_raw="X", street="X", plz=5600, city="Lenzburg",
-            offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="2",
+            address_raw="X",
+            street="X",
+            plz=5600,
+            city="Lenzburg",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_zurich_area is False
 
     def test_is_zurich_area_false_boundary_8999(self):
         """8999 is NOT in Kanton Zürich — PLZ whitelist rejects it."""
         listing = FlatfoxListing(
-            source="flatfox", source_id="3",
-            address_raw="X", street="X", plz=8999, city="Somewhere",
-            offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="3",
+            address_raw="X",
+            street="X",
+            plz=8999,
+            city="Somewhere",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_zurich_area is False
 
     def test_is_zurich_area_false_thurgau_8570(self):
         """8570 Weinfelden is Thurgau — should be excluded by GWR whitelist."""
         from strata_api.pipeline.connectors.flatfox import ZURICH_PLZS
+
         assert 8570 not in ZURICH_PLZS  # Weinfelden, TG
 
     def test_is_zurich_area_false_stgallen_8640(self):
         """8640 Rapperswil-Jona is St.Gallen — should be excluded by GWR whitelist."""
         from strata_api.pipeline.connectors.flatfox import ZURICH_PLZS
+
         assert 8640 not in ZURICH_PLZS  # Rapperswil SG
+
+    def test_is_zurich_area_false_neuhausen_shared_plz(self):
+        """8212 is shared: Nohl (ZH) + Neuhausen am Rheinfall (SH). City decides."""
+        listing = FlatfoxListing(
+            source="flatfox",
+            source_id="10",
+            address_raw="X",
+            street="X",
+            plz=8212,
+            city="Neuhausen am Rheinfall",
+            offer_type="RENT",
+            status="active",
+        )
+        assert listing.is_zurich_area is False
+
+    def test_is_zurich_area_true_nohl_shared_plz(self):
+        """8212 Nohl is the Kanton ZH locality within the shared PLZ."""
+        listing = FlatfoxListing(
+            source="flatfox",
+            source_id="11",
+            address_raw="X",
+            street="X",
+            plz=8212,
+            city="Nohl",
+            offer_type="RENT",
+            status="active",
+        )
+        assert listing.is_zurich_area is True
+
+    def test_is_zurich_area_false_frauenfeld_shared_plz(self):
+        """8500 is shared: Gerlikon (ZH) + Frauenfeld (TG). City decides."""
+        listing = FlatfoxListing(
+            source="flatfox",
+            source_id="12",
+            address_raw="X",
+            street="X",
+            plz=8500,
+            city="Frauenfeld",
+            offer_type="RENT",
+            status="active",
+        )
+        assert listing.is_zurich_area is False
+
+    def test_is_zurich_area_true_gerlikon_shared_plz(self):
+        listing = FlatfoxListing(
+            source="flatfox",
+            source_id="13",
+            address_raw="X",
+            street="X",
+            plz=8500,
+            city="Gerlikon",
+            offer_type="RENT",
+            status="active",
+        )
+        assert listing.is_zurich_area is True
+
+    def test_is_zurich_area_false_shared_plz_missing_city(self):
+        """Shared PLZ with no city can't be verified as ZH — exclude."""
+        listing = FlatfoxListing(
+            source="flatfox",
+            source_id="14",
+            address_raw="X",
+            street="X",
+            plz=8500,
+            city=None,
+            offer_type="RENT",
+            status="active",
+        )
+        assert listing.is_zurich_area is False
 
     def test_zurich_plzs_includes_winterthur(self):
         """8400 Winterthur should be in the whitelist."""
         from strata_api.pipeline.connectors.flatfox import ZURICH_PLZS
+
         assert 8400 in ZURICH_PLZS
 
     def test_zurich_plzs_includes_zurich_city(self):
         """8001–8099 Stadt Zürich PLZs should be in the whitelist."""
         from strata_api.pipeline.connectors.flatfox import ZURICH_PLZS
+
         assert 8001 in ZURICH_PLZS
         assert 8050 in ZURICH_PLZS
 
     def test_is_residential_true_for_apartment(self):
         listing = FlatfoxListing(
-            source="flatfox", source_id="1", plz=8001,
-            object_type="APARTMENT", offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="1",
+            plz=8001,
+            object_type="APARTMENT",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_residential is True
 
     def test_is_residential_true_for_house(self):
         listing = FlatfoxListing(
-            source="flatfox", source_id="2", plz=8001,
-            object_type="HOUSE", offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="2",
+            plz=8001,
+            object_type="HOUSE",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_residential is True
 
     def test_is_residential_true_for_shared(self):
         listing = FlatfoxListing(
-            source="flatfox", source_id="3", plz=8001,
-            object_type="SHARED", offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="3",
+            plz=8001,
+            object_type="SHARED",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_residential is True
 
     def test_is_residential_false_for_park(self):
         listing = FlatfoxListing(
-            source="flatfox", source_id="4", plz=8001,
-            object_type="PARK", offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="4",
+            plz=8001,
+            object_type="PARK",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_residential is False
 
     def test_is_residential_false_for_industry(self):
         listing = FlatfoxListing(
-            source="flatfox", source_id="5", plz=8001,
-            object_type="INDUSTRY", offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="5",
+            plz=8001,
+            object_type="INDUSTRY",
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_residential is False
 
     def test_is_residential_true_when_object_type_none(self):
         """When object_type is missing, assume residential (don't discard)."""
         listing = FlatfoxListing(
-            source="flatfox", source_id="6", plz=8001,
-            object_type=None, offer_type="RENT", status="active",
+            source="flatfox",
+            source_id="6",
+            plz=8001,
+            object_type=None,
+            offer_type="RENT",
+            status="active",
         )
         assert listing.is_residential is True
 
@@ -425,21 +582,36 @@ class TestFlatfoxConnector:
             "previous": None,
             "results": [
                 {
-                    "pk": 1, "slug": "x", "status": "act", "offer_type": "RENT",
+                    "pk": 1,
+                    "slug": "x",
+                    "status": "act",
+                    "offer_type": "RENT",
                     "object_category": "APARTMENT",
-                    "street": "Seestr. 1", "zipcode": 8001, "city": "Zürich",
+                    "street": "Seestr. 1",
+                    "zipcode": 8001,
+                    "city": "Zürich",
                     "public_address": "Seestr. 1, 8001 Zürich",
                 },
                 {
-                    "pk": 2, "slug": "y", "status": "act", "offer_type": "RENT",
+                    "pk": 2,
+                    "slug": "y",
+                    "status": "act",
+                    "offer_type": "RENT",
                     "object_category": "APARTMENT",
-                    "street": "Main St 5", "zipcode": 3000, "city": "Bern",
+                    "street": "Main St 5",
+                    "zipcode": 3000,
+                    "city": "Bern",
                     "public_address": "Main St 5, 3000 Bern",
                 },
                 {
-                    "pk": 3, "slug": "z", "status": "act", "offer_type": "RENT",
+                    "pk": 3,
+                    "slug": "z",
+                    "status": "act",
+                    "offer_type": "RENT",
                     "object_category": "APARTMENT",
-                    "street": "Bergstr. 7", "zipcode": 8400, "city": "Winterthur",
+                    "street": "Bergstr. 7",
+                    "zipcode": 8400,
+                    "city": "Winterthur",
                     "public_address": "Bergstr. 7, 8400 Winterthur",
                 },
             ],
@@ -465,27 +637,47 @@ class TestFlatfoxConnector:
             "previous": None,
             "results": [
                 {
-                    "pk": 10, "slug": "x", "status": "act", "offer_type": "RENT",
+                    "pk": 10,
+                    "slug": "x",
+                    "status": "act",
+                    "offer_type": "RENT",
                     "object_category": "APARTMENT",
-                    "street": "Seestr. 1", "zipcode": 8001, "city": "Zürich",
+                    "street": "Seestr. 1",
+                    "zipcode": 8001,
+                    "city": "Zürich",
                     "public_address": "Seestr. 1, 8001 Zürich",
                 },
                 {
-                    "pk": 11, "slug": "y", "status": "act", "offer_type": "RENT",
+                    "pk": 11,
+                    "slug": "y",
+                    "status": "act",
+                    "offer_type": "RENT",
                     "object_category": "PARK",
-                    "street": "Parkhaus 1", "zipcode": 8001, "city": "Zürich",
+                    "street": "Parkhaus 1",
+                    "zipcode": 8001,
+                    "city": "Zürich",
                     "public_address": "Parkhaus 1, 8001 Zürich",
                 },
                 {
-                    "pk": 12, "slug": "z", "status": "act", "offer_type": "RENT",
+                    "pk": 12,
+                    "slug": "z",
+                    "status": "act",
+                    "offer_type": "RENT",
                     "object_category": "INDUSTRY",
-                    "street": "Lager 5", "zipcode": 8001, "city": "Zürich",
+                    "street": "Lager 5",
+                    "zipcode": 8001,
+                    "city": "Zürich",
                     "public_address": "Lager 5, 8001 Zürich",
                 },
                 {
-                    "pk": 13, "slug": "w", "status": "act", "offer_type": "RENT",
+                    "pk": 13,
+                    "slug": "w",
+                    "status": "act",
+                    "offer_type": "RENT",
                     "object_category": "SHARED",
-                    "street": "WG-Zimmer 3", "zipcode": 8004, "city": "Zürich",
+                    "street": "WG-Zimmer 3",
+                    "zipcode": 8004,
+                    "city": "Zürich",
                     "public_address": "WG-Zimmer 3, 8004 Zürich",
                 },
             ],

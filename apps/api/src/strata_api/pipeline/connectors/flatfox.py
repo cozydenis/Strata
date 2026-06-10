@@ -1,4 +1,5 @@
 """Flatfox API connector — fetches rental listings from flatfox.ch/api/v1/public-listing/."""
+
 from __future__ import annotations
 
 import asyncio
@@ -40,6 +41,14 @@ ZURICH_PLZS: frozenset[int] = frozenset({
     8953, 8954, 8955,
 })
 
+# PLZs straddling the canton border: the Kanton ZH share is a single small
+# locality (per GWR entrances); any other city name in these PLZs belongs to a
+# neighbouring canton. PLZ alone admits e.g. Neuhausen SH and Frauenfeld TG.
+SHARED_PLZ_ZH_LOCALITIES: dict[int, frozenset[str]] = {
+    8212: frozenset({"nohl"}),  # rest of 8212: Neuhausen am Rheinfall (SH)
+    8500: frozenset({"gerlikon"}),  # rest of 8500: Frauenfeld (TG)
+}
+
 BASE_URL = "https://flatfox.ch/api/v1/public-listing/"
 _DEFAULT_LIMIT = 96
 _REQUEST_DELAY_S = 0.5  # polite delay between pages
@@ -78,7 +87,13 @@ class FlatfoxListing(BaseModel):
     @computed_field  # type: ignore[misc]
     @property
     def is_zurich_area(self) -> bool:
-        return self.plz is not None and self.plz in ZURICH_PLZS
+        if self.plz is None or self.plz not in ZURICH_PLZS:
+            return False
+        zh_localities = SHARED_PLZ_ZH_LOCALITIES.get(self.plz)
+        if zh_localities is None:
+            return True
+        # Border PLZ: only the named ZH locality qualifies; unknown city can't be verified
+        return self.city is not None and self.city.strip().lower() in zh_localities
 
     @computed_field  # type: ignore[misc]
     @property
@@ -93,9 +108,7 @@ _STATUS_MAP = {"act": "active", "inact": "inactive", "res": "reserved"}
 
 # Matches street + house number, where house number can be:
 #   "10", "10a", "108/110", "30/30a", "10-24", "10 - 24"
-_STREET_NUM_RE = re.compile(
-    r"^(.*?)[\s,]+(\d[\w]*(?:\s*[-/]\s*\d[\w]*)*)$"
-)
+_STREET_NUM_RE = re.compile(r"^(.*?)[\s,]+(\d[\w]*(?:\s*[-/]\s*\d[\w]*)*)$")
 
 # Common Swiss listing prefixes/suffixes to strip before parsing
 # UNG = Untergeschoss (basement), EH = Einstellhalle (parking garage),
@@ -193,14 +206,10 @@ class FlatfoxConnector:
                 if attempt == 3:
                     raise
                 wait = 5 * attempt
-                logger.warning(
-                    "Fetch failed (attempt %d/3): %s — retrying in %ds", attempt, exc, wait
-                )
+                logger.warning("Fetch failed (attempt %d/3): %s — retrying in %ds", attempt, exc, wait)
                 time.sleep(wait)
 
-    async def fetch_page(
-        self, offset: int = 0, limit: int | None = None
-    ) -> tuple[list[FlatfoxListing], bool]:
+    async def fetch_page(self, offset: int = 0, limit: int | None = None) -> tuple[list[FlatfoxListing], bool]:
         """Fetch one page of listings.
 
         Returns (listings_in_kanton_zuerich, has_more).
