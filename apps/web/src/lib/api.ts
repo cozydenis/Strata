@@ -85,6 +85,13 @@ export interface QuartierVibe {
   summary: string;
 }
 
+export interface QuartierConstruction {
+  year: number;
+  approved_projects: number;
+  started_projects: number;
+  cost_mchf: number | null;
+}
+
 export interface QuartierProfile {
   quartier_id: number;
   quartier_name: string;
@@ -94,6 +101,7 @@ export interface QuartierProfile {
   commute_hb_min: number | null;
   amenities?: QuartierAmenities | null;
   vibe?: QuartierVibe | null;
+  construction?: QuartierConstruction | null;
 }
 
 export type CommuteDestination = 'hb' | 'eth' | 'airport' | 'technopark';

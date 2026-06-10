@@ -1,10 +1,38 @@
 import { BarChart } from './BarChart';
 import type {
   QuartierAmenities,
+  QuartierConstruction,
   QuartierPopulation,
   QuartierProfile as QuartierProfileData,
   QuartierVibe,
 } from '@/lib/api';
+
+function ConstructionSection({ construction }: { construction: QuartierConstruction }) {
+  if (construction.approved_projects === 0 && construction.started_projects === 0) return null;
+  return (
+    <div className="strata-rule mt-3 pt-3" data-testid="construction-section">
+      <p className="strata-panel-title mb-1.5">New construction · {construction.year}</p>
+      <dl className="divide-y divide-strata-cream/[0.06]">
+        <div className="flex items-baseline justify-between py-[3px]">
+          <dt className="text-2xs text-strata-cream/50">Approved</dt>
+          <dd className="strata-data text-xs-11 text-strata-cream">{construction.approved_projects}</dd>
+        </div>
+        <div className="flex items-baseline justify-between py-[3px]">
+          <dt className="text-2xs text-strata-cream/50">Under construction</dt>
+          <dd className="strata-data text-xs-11 text-strata-cream">{construction.started_projects}</dd>
+        </div>
+        {construction.cost_mchf !== null && (
+          <div className="flex items-baseline justify-between py-[3px]">
+            <dt className="text-2xs text-strata-cream/50">Investment</dt>
+            <dd className="strata-data text-xs-11 text-strata-cream">
+              CHF {construction.cost_mchf.toLocaleString('de-CH')} M
+            </dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  );
+}
 import { AMENITY_LABELS, fmtPct } from '@/lib/quartier-display';
 
 function VibeSection({ vibe }: { vibe: QuartierVibe }) {
@@ -84,8 +112,16 @@ function StatRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 export function QuartierProfile({ profile, onClose, onCompare }: QuartierProfileProps) {
-  const { quartier_name, kreis, population, age_distribution, commute_hb_min, amenities, vibe } =
-    profile;
+  const {
+    quartier_name,
+    kreis,
+    population,
+    age_distribution,
+    commute_hb_min,
+    amenities,
+    vibe,
+    construction,
+  } = profile;
 
   return (
     <div className="strata-panel w-72 p-4">
@@ -150,6 +186,8 @@ export function QuartierProfile({ profile, onClose, onCompare }: QuartierProfile
           </dl>
 
           {amenities && <AmenitiesSection amenities={amenities} />}
+
+          {construction && <ConstructionSection construction={construction} />}
 
           {age_distribution.length > 0 && (
             <div className="strata-rule mt-3 pt-3">

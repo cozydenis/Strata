@@ -152,6 +152,24 @@ export function ComparisonPanel({ left, right, onClose }: ComparisonPanelProps) 
         </div>
       )}
 
+      {(left.construction || right.construction) && (
+        <div className="strata-rule mt-3 pt-3" data-testid="comparison-construction">
+          <p className="strata-panel-title mb-1.5 text-center">New construction</p>
+          <div className="divide-y divide-strata-cream/[0.06]">
+            <CompareRow
+              label="Approved"
+              left={num(left.construction?.approved_projects)}
+              right={num(right.construction?.approved_projects)}
+            />
+            <CompareRow
+              label="Under construction"
+              left={num(left.construction?.started_projects)}
+              right={num(right.construction?.started_projects)}
+            />
+          </div>
+        </div>
+      )}
+
       {ageBuckets.length > 0 && (
         <div className="strata-rule mt-3 pt-3" data-testid="comparison-ages">
           <p className="strata-panel-title mb-1.5 text-center">Age distribution</p>

@@ -182,3 +182,40 @@ describe('QuartierProfile vibe', () => {
     expect(screen.queryByTestId('vibe-section')).toBeNull();
   });
 });
+
+describe('QuartierProfile construction', () => {
+  const construction = { year: 2025, approved_projects: 11, started_projects: 13, cost_mchf: 278.0 };
+
+  it('renders construction pipeline rows', () => {
+    render(<QuartierProfile profile={{ ...fullProfile, construction }} />);
+    expect(screen.getByTestId('construction-section')).toBeTruthy();
+    expect(screen.getByText(/New construction · 2025/)).toBeTruthy();
+    expect(screen.getByText('11')).toBeTruthy();
+    expect(screen.getByText('13')).toBeTruthy();
+    expect(screen.getByText(/CHF 278 M/)).toBeTruthy();
+  });
+
+  it('hides investment row when cost is masked', () => {
+    render(
+      <QuartierProfile profile={{ ...fullProfile, construction: { ...construction, cost_mchf: null } }} />,
+    );
+    expect(screen.queryByText(/Investment/)).toBeNull();
+  });
+
+  it('omits section entirely with zero activity', () => {
+    render(
+      <QuartierProfile
+        profile={{
+          ...fullProfile,
+          construction: { year: 2025, approved_projects: 0, started_projects: 0, cost_mchf: null },
+        }}
+      />,
+    );
+    expect(screen.queryByTestId('construction-section')).toBeNull();
+  });
+
+  it('omits section when construction absent', () => {
+    render(<QuartierProfile profile={fullProfile} />);
+    expect(screen.queryByTestId('construction-section')).toBeNull();
+  });
+});

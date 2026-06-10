@@ -73,3 +73,16 @@ def download_noise_geojson() -> dict:
             break
         offset += _NOISE_PAGE_SIZE
     return {"type": "FeatureCollection", "features": all_features}
+
+
+_CONSTRUCTION_CSV_URL = (
+    "https://data.stadt-zuerich.ch/dataset/"
+    "bau_neubau_projekte_bausm_gbdrinh_projstatus_quartier_seit2009_od5011/"
+    "download/BAU501OD5011.csv"
+)
+
+
+def download_construction_csv() -> str:
+    """Download the new-construction projects CSV (BAU501OD5011) and return as text."""
+    raw = _fetch_bytes(_CONSTRUCTION_CSV_URL, timeout=120)
+    return raw.decode("utf-8", errors="replace")

@@ -27,8 +27,8 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Photos stored | 565+ |
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
-| Backend tests | 536 |
-| Frontend tests | 247 |
+| Backend tests | 546 |
+| Frontend tests | 251 |
 
 ---
 
@@ -86,7 +86,7 @@ The layer that answers "where should I live?" Four dimensions.
 | **Construction activity** | 🟢 Done | GWR construction year distribution per Quartier | — |
 | **Rent trends per Quartier** | 🟡 Partial | From listing data (need historical depth) | #TBD |
 | **Commercial activity** (new venues opening) | 💡 Idea | Handelsregister or OSM changeset history | #TBD |
-| **Baugesuch pipeline** (upcoming construction) | ⚪ Planned | Stadt Zürich Open Data | #TBD |
+| **Construction pipeline** (approved + under construction per Quartier) | 🟢 Done — OGD BAU501OD5011, profile + comparison + vibe | — |
 
 #### Neighborhood Features
 
@@ -287,4 +287,4 @@ _Update this section at the start of each work session._
 1. **Restore deployment + Supabase project** — unblocks live auth (set SUPABASE_JWT_SECRET +
    NEXT_PUBLIC_SUPABASE_* and run `alembic upgrade head` for the watches table)
 2. **Email notifications** — push watch events instead of waiting for panel opens
-3. **Baugesuch pipeline** — building permits for registry enrichment + trajectory
+3. **Per-building Baugesuche** — cantonal Amtsblatt API (quartier-level done via OGD)

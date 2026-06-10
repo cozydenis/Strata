@@ -131,3 +131,24 @@ class TestComputeVibes:
         features = [*_baseline_city(), _feature(7, growth=3.5)]
         vibes = compute_vibes(features)
         assert "rapidly growing" in [t["tag"] for t in vibes[7]["tags"]]
+
+
+class TestBuildingBoomTag:
+    def test_building_boom_from_construction(self):
+        feats = _baseline_city()
+        boom = _feature(9)
+        boom["properties"]["construction"] = {"year": 2025, "approved_projects": 12, "started_projects": 8, "cost_mchf": 200.0}
+        for f in feats:
+            f["properties"]["construction"] = {"year": 2025, "approved_projects": 1, "started_projects": 0, "cost_mchf": 5.0}
+        vibes = compute_vibes([*feats, boom])
+        tags = [t["tag"] for t in vibes[9]["tags"]]
+        assert "building boom" in tags
+
+    def test_no_boom_below_min_count(self):
+        feats = _baseline_city()
+        small = _feature(9)
+        small["properties"]["construction"] = {"year": 2025, "approved_projects": 2, "started_projects": 1, "cost_mchf": 10.0}
+        for f in feats:
+            f["properties"]["construction"] = {"year": 2025, "approved_projects": 0, "started_projects": 0, "cost_mchf": None}
+        vibes = compute_vibes([*feats, small])
+        assert "building boom" not in [t["tag"] for t in vibes[9]["tags"]]

@@ -93,6 +93,7 @@ def aggregate_quartier_geojson(
     demographics: dict[int, QuartierDemographics],
     otp_base_url: str | None = None,
     amenities: dict[int, dict[str, int]] | None = None,
+    construction: dict[int, dict] | None = None,
 ) -> dict:
     """Produce an enriched GeoJSON FeatureCollection.
 
@@ -135,11 +136,12 @@ def aggregate_quartier_geojson(
             commute_p["commute_hb_min"] = commute_times.get(qid)
 
         amenity_p = _amenity_props(amenities.get(qid) if amenities is not None else None, rec.area_km2)
+        construction_p = {"construction": construction.get(qid) if construction is not None else None}
 
         features.append({
             "type": "Feature",
             "geometry": rec.geometry,
-            "properties": {**base_props, **demo_p, **commute_p, **amenity_p},
+            "properties": {**base_props, **demo_p, **commute_p, **amenity_p, **construction_p},
         })
 
     # Vibe profiles need the full city distribution — computed as a second pass

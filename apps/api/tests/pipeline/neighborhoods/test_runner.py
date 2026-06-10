@@ -6,6 +6,13 @@ from unittest.mock import patch
 
 NOISE_GEOJSON: dict = {"type": "FeatureCollection", "features": []}
 
+CONSTRUCTION_CSV = (
+    '"StichtagDatJahr","DatenstandCd","QuarSort","QuarCd","QuarLang","KreisSort","KreisCd","KreisLang",'
+    '"ProjektStatusSSZPubl1Sort","ProjektStatusSSZPubl1Cd","ProjektStatusSSZPubl1Lang",'
+    '"ArtArbeitenSort","ArtArbeitenCd","ArtArbeitenLang","AnzBauprojekte","BaukostenEffektiv"\n'
+    '2025,"D",11,"011","Rathaus",1,"1","Kreis 1",2,"2","Bewilligt harmonisiert",1,"N","Neubau",3,45000\n'
+)
+
 QUARTIER_GEOJSON = {
     "type": "FeatureCollection",
     "features": [
@@ -39,6 +46,7 @@ class TestRunNeighborhoodPipeline:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             stats = run_neighborhood_pipeline(tmp_path)
 
@@ -51,6 +59,7 @@ class TestRunNeighborhoodPipeline:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             stats = run_neighborhood_pipeline(tmp_path)
 
@@ -64,6 +73,7 @@ class TestRunNeighborhoodPipeline:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             stats = run_neighborhood_pipeline(tmp_path)
 
@@ -77,6 +87,7 @@ class TestRunNeighborhoodPipeline:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             run_neighborhood_pipeline(tmp_path)
 
@@ -90,6 +101,7 @@ class TestRunNeighborhoodPipeline:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             run_neighborhood_pipeline(tmp_path)
 
@@ -104,6 +116,7 @@ class TestRunNeighborhoodPipeline:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             run_neighborhood_pipeline(tmp_path)
 
@@ -122,6 +135,7 @@ class TestRunNeighborhoodPipeline:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             run_neighborhood_pipeline(nested_dir)
 
@@ -161,6 +175,7 @@ class TestRunnerAmenities:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             stats = run_neighborhood_pipeline(tmp_path)
         assert stats["amenities"] is None
@@ -175,6 +190,7 @@ class TestRunnerAmenities:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             stats = run_neighborhood_pipeline(tmp_path)
         assert stats["amenities"] == 1  # only the in-polygon cafe counts
@@ -190,6 +206,7 @@ class TestRunnerAmenities:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.fetch_overpass_amenities", return_value=OVERPASS_RAW) as mock_fetch,
         ):
             stats = run_neighborhood_pipeline(tmp_path, fetch_amenities=True)
@@ -207,9 +224,29 @@ class TestRunnerSkipNoise:
             patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
             patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
             patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson") as mock_noise,
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
         ):
             stats = run_neighborhood_pipeline(tmp_path, skip_noise=True)
         mock_noise.assert_not_called()
         assert stats["noise_points"] is None
         assert (tmp_path / "noise.geojson").read_text() == '{"existing": true}'
         assert (tmp_path / "quartiere.geojson").exists()
+
+
+class TestRunnerConstruction:
+    def test_construction_attached_to_features(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
+        ):
+            stats = run_neighborhood_pipeline(tmp_path)
+        assert stats["construction_quartiere"] == 1
+        geojson = json.loads((tmp_path / "quartiere.geojson").read_text())
+        construction = geojson["features"][0]["properties"]["construction"]
+        assert construction["approved_projects"] == 3
+        assert construction["year"] == 2025
+        assert construction["cost_mchf"] == 45.0

@@ -11,8 +11,10 @@ from strata_api.pipeline.neighborhoods.amenities import (
     fetch_overpass_amenities,
     parse_overpass_amenities,
 )
+from strata_api.pipeline.neighborhoods.construction_parser import parse_construction_csv
 from strata_api.pipeline.neighborhoods.demographics_parser import parse_demographics_csv
 from strata_api.pipeline.neighborhoods.downloader import (
+    download_construction_csv,
     download_demographics_csv,
     download_noise_geojson,
     download_quartier_geojson,
@@ -56,6 +58,9 @@ def run_neighborhood_pipeline(
     logger.info("Downloading demographics CSV...")
     demo_csv = download_demographics_csv()
 
+    logger.info("Downloading construction projects CSV...")
+    construction_csv = download_construction_csv()
+
     if skip_noise:
         logger.info("Skipping noise cadastre download (--skip-noise)")
         noise_raw = None
@@ -68,6 +73,9 @@ def run_neighborhood_pipeline(
 
     logger.info("Parsing demographics CSV...")
     demographics = parse_demographics_csv(demo_csv)
+
+    logger.info("Parsing construction projects CSV...")
+    construction = parse_construction_csv(construction_csv)
 
     noise_geojson: dict | None = None
     if noise_raw is not None:
@@ -119,7 +127,9 @@ def run_neighborhood_pipeline(
         logger.info("Assigned %d of %d amenity points to quartiere", amenity_total, len(amenity_points))
 
     logger.info("Aggregating into GeoJSON...")
-    geojson = aggregate_quartier_geojson(quartier_records, demographics, amenities=amenity_counts)
+    geojson = aggregate_quartier_geojson(
+        quartier_records, demographics, amenities=amenity_counts, construction=construction
+    )
 
     quartiere_path = output_dir / "quartiere.geojson"
     quartiere_path.write_text(json.dumps(geojson, ensure_ascii=False), encoding="utf-8")
@@ -145,4 +155,5 @@ def run_neighborhood_pipeline(
         "noise_points": len(noise_geojson["features"]) if noise_geojson is not None else None,
         "year": year,
         "amenities": amenity_total,
+        "construction_quartiere": len(construction),
     }

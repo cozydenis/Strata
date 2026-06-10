@@ -16,6 +16,7 @@ MAX_TAGS = 4
 _MIN_NIGHTLIFE_COUNT = 8
 _MIN_CAFE_COUNT = 4
 _MIN_SCHOOL_COUNT = 4
+_MIN_CONSTRUCTION_COUNT = 4
 
 
 def _quantile(values: list[float], q: float) -> float:
@@ -41,7 +42,15 @@ def _metrics(props: dict) -> dict | None:
     if amenities is not None:
         nightlife = (amenities.get("bars") or 0) + (amenities.get("restaurants") or 0)
 
+    construction = props.get("construction")
+    construction_total = None
+    if construction is not None:
+        construction_total = (construction.get("approved_projects") or 0) + (
+            construction.get("started_projects") or 0
+        )
+
     return {
+        "construction_total": construction_total,
         "young": props.get("age_18_29_pct"),
         "old": props.get("age_65plus_pct"),
         "foreign": props.get("foreign_pct"),
@@ -118,6 +127,11 @@ def _tag_builders() -> list[tuple[str, str, Callable[[dict, dict], str | None]]]
              "schools_count", _MIN_SCHOOL_COUNT)),
         ("rapidly growing", "growing fast",
          top("growth", lambda v: f"population grew {v:.1f}% year over year — top quartile in Zürich")),
+        ("building boom", "a wave of new construction",
+         with_min_count(
+             top("construction_total",
+                 lambda v: f"{v:.0f} new-construction projects approved or underway — top quartile in Zürich"),
+             "construction_total", _MIN_CONSTRUCTION_COUNT)),
     ]
 
 
