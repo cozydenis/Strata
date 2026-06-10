@@ -197,7 +197,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Homegate connector (scraping) | 🟡 Built but blocked by DataDome | #TBD |
 | Immoscout24 connector | ⚪ Planned | #TBD |
 | WG-Zimmer connector | 💡 Idea | #TBD |
-| PLZ filter fix (exclude Thurgau/SG) | ⚪ Planned | #TBD |
+| PLZ filter fix (exclude Thurgau/SG) | 🟢 Done — shared border PLZs (8212/8500) disambiguated by city | — |
 
 ---
 
@@ -236,7 +236,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Deploy backend (Railway) | 🟢 Done | — |
 | PostgreSQL (Supabase, prod) | 🟢 Done | — |
 | Pipeline trigger endpoints (`/admin/pipeline/run`, `/run-listings`) | 🟢 Done | — |
-| Daily pipeline scheduler (cron) | ⚪ Planned | #TBD |
+| Daily pipeline scheduler (GitHub Actions cron) | 🟢 Done — daily Stadt+listings, quarterly Kanton | — |
 
 ---
 
@@ -283,5 +283,4 @@ _Update this section at the start of each work session._
 
 1. **Amenities & walkability** — groceries, cafés, schools nearby per Quartier
 2. **Comparison mode** — once the data is rich enough to be worth comparing
-3. **PLZ filter fix** — exclude non-Zürich listings
-4. **Daily pipeline scheduler** — cron trigger for the deployed pipeline endpoints
+3. **Layer 2 kickoff** — Supabase Auth + watchlist model ("pin this unit")
