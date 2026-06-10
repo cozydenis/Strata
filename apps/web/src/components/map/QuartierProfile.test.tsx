@@ -136,3 +136,19 @@ describe('QuartierProfile amenities', () => {
     expect(screen.queryByTestId('amenities-section')).toBeNull();
   });
 });
+
+describe('QuartierProfile compare button', () => {
+  it('renders compare button and fires onCompare', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    const onCompare = vi.fn();
+    render(<QuartierProfile profile={fullProfile} onCompare={onCompare} />);
+    const btn = screen.getByTestId('compare-button');
+    fireEvent.click(btn);
+    expect(onCompare).toHaveBeenCalledOnce();
+  });
+
+  it('omits compare button when onCompare is not provided', () => {
+    render(<QuartierProfile profile={fullProfile} />);
+    expect(screen.queryByTestId('compare-button')).toBeNull();
+  });
+});

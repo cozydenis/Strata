@@ -4,16 +4,7 @@ import type {
   QuartierPopulation,
   QuartierProfile as QuartierProfileData,
 } from '@/lib/api';
-
-const AMENITY_LABELS: { key: keyof QuartierAmenities; label: string }[] = [
-  { key: 'groceries', label: 'Groceries' },
-  { key: 'cafes', label: 'Cafés' },
-  { key: 'restaurants', label: 'Restaurants' },
-  { key: 'bars', label: 'Bars & pubs' },
-  { key: 'pharmacies', label: 'Pharmacies' },
-  { key: 'schools', label: 'Schools' },
-  { key: 'fitness', label: 'Fitness' },
-];
+import { AMENITY_LABELS, fmtPct } from '@/lib/quartier-display';
 
 function AmenitiesSection({ amenities }: { amenities: QuartierAmenities }) {
   return (
@@ -39,6 +30,7 @@ function AmenitiesSection({ amenities }: { amenities: QuartierAmenities }) {
 interface QuartierProfileProps {
   profile: QuartierProfileData;
   onClose?: () => void;
+  onCompare?: () => void;
 }
 
 const TREND_STYLES: Record<QuartierPopulation['trend'], { arrow: string; className: string }> = {
@@ -59,11 +51,6 @@ function TrendBadge({ trend }: { trend: QuartierPopulation['trend'] }) {
   );
 }
 
-/** Round to one decimal for display — API values can carry full float precision. */
-function fmtPct(value: number): string {
-  return `${Number(value.toFixed(1))}%`;
-}
-
 function StatRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between py-[3px]">
@@ -73,7 +60,7 @@ function StatRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-export function QuartierProfile({ profile, onClose }: QuartierProfileProps) {
+export function QuartierProfile({ profile, onClose, onCompare }: QuartierProfileProps) {
   const { quartier_name, kreis, population, age_distribution, commute_hb_min, amenities } = profile;
 
   return (
@@ -144,6 +131,16 @@ export function QuartierProfile({ profile, onClose }: QuartierProfileProps) {
             </div>
           )}
         </>
+      )}
+
+      {onCompare && (
+        <button
+          onClick={onCompare}
+          data-testid="compare-button"
+          className="strata-rule mt-3 w-full pt-3 text-left text-2xs tracking-[0.04em] text-strata-amber/80 transition-colors hover:text-strata-amber"
+        >
+          Compare with another Quartier →
+        </button>
       )}
     </div>
   );

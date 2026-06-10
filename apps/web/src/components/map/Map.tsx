@@ -10,6 +10,7 @@ import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { PopupSkeleton } from './Skeleton';
 import { LayerPanel } from './LayerPanel';
 import { QuartierProfile } from './QuartierProfile';
+import { ComparisonPanel } from './ComparisonPanel';
 import { CommuteLegend } from './CommuteLegend';
 import { eraColorExpression } from '@/lib/map/era-colors';
 import { quartierFillColor } from '@/lib/map/quartier-colors';
@@ -38,7 +39,12 @@ const BUILDING_LAYERS = ['clusters', 'cluster-count', 'buildings-unclustered'] a
 
 // MapLibre rejects paint opacity outside [0, 1]; rAF fade loops can overshoot slightly
 const clamp01 = (v: number): number => Math.min(Math.max(v, 0), 1);
-const QUARTIERE_LAYERS = ['quartiere-fill', 'quartiere-outline', 'quartiere-labels'] as const;
+const QUARTIERE_LAYERS = [
+  'quartiere-fill',
+  'quartiere-outline',
+  'quartiere-labels',
+  'quartiere-selected',
+] as const;
 const COMMUTE_LAYERS = ['commute-fill', 'commute-outline'] as const;
 
 export function MapView() {
@@ -64,8 +70,18 @@ export function MapView() {
   const [activeDestination, setActiveDestination] = useState<CommuteDestination>('hb');
   const [commuteUnavailable, setCommuteUnavailable] = useState(false);
 
-  // Quartier profile panel
+  // Quartier profile panel + comparison mode
   const [quartierProfile, setQuartierProfile] = useState<QuartierProfileType | null>(null);
+  const [compareBase, setCompareBase] = useState<QuartierProfileType | null>(null);
+  const [comparison, setComparison] = useState<{
+    left: QuartierProfileType;
+    right: QuartierProfileType;
+  } | null>(null);
+  // The map click handler is registered once at load — read compare state via a ref
+  const compareBaseRef = useRef<QuartierProfileType | null>(null);
+  useEffect(() => {
+    compareBaseRef.current = compareBase;
+  }, [compareBase]);
 
   const showSkeletonPopup = useCallback(async (coords: [number, number]) => {
     if (!mapRef.current) return;
@@ -127,11 +143,37 @@ export function MapView() {
 
     try {
       const profile = await fetchQuartierProfile(quartierId);
-      setQuartierProfile(profile);
+      const base = compareBaseRef.current;
+      if (base) {
+        // Compare mode: clicking any other Quartier fills/replaces the right column
+        if (profile.quartier_id !== base.quartier_id) {
+          setComparison({ left: base, right: profile });
+          setQuartierProfile(null);
+        }
+      } else {
+        setQuartierProfile(profile);
+      }
     } catch (err) {
       console.error('[Strata] Failed to load quartier profile:', err);
     }
   }, []);
+
+  function handleCompareStart() {
+    if (!quartierProfile) return;
+    setCompareBase(quartierProfile);
+    setQuartierProfile(null);
+  }
+
+  function handleCompareCancel() {
+    setQuartierProfile(compareBaseRef.current);
+    setCompareBase(null);
+  }
+
+  function handleComparisonClose() {
+    setQuartierProfile(comparison?.left ?? null);
+    setComparison(null);
+    setCompareBase(null);
+  }
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -213,6 +255,18 @@ export function MapView() {
             paint: {
               'line-color': 'rgba(250,247,242,0.45)',
               'line-width': 1,
+            },
+          });
+
+          map.addLayer({
+            id: 'quartiere-selected',
+            type: 'line',
+            source: 'quartiere',
+            layout: { visibility: 'none' },
+            filter: ['in', 'quartier_id', -1],
+            paint: {
+              'line-color': '#D4915A',
+              'line-width': 2,
             },
           });
 
@@ -505,7 +559,11 @@ export function MapView() {
 
     rafId = requestAnimationFrame(tick);
 
-    if (!quartiereVisible) setQuartierProfile(null);
+    if (!quartiereVisible) {
+      setQuartierProfile(null);
+      setCompareBase(null);
+      setComparison(null);
+    }
     return () => cancelAnimationFrame(rafId);
   }, [quartiereVisible]);
 
@@ -552,6 +610,22 @@ export function MapView() {
       setCommuteUnavailable(false);
     }
   }, [commuteVisible, activeDestination]);
+
+  // Highlight selected/compared quartiere with an amber outline
+  useEffect(() => {
+    const map = mapRef.current as {
+      setFilter?: (layer: string, filter: unknown) => void;
+      getLayer?: (id: string) => unknown;
+    } | null;
+    if (!map?.setFilter || !map?.getLayer?.('quartiere-selected')) return;
+
+    const ids = comparison
+      ? [comparison.left.quartier_id, comparison.right.quartier_id]
+      : (compareBase ?? quartierProfile)
+        ? [(compareBase ?? quartierProfile)!.quartier_id]
+        : [-1];
+    map.setFilter('quartiere-selected', ['in', 'quartier_id', ...ids]);
+  }, [quartierProfile, compareBase, comparison]);
 
   // Update choropleth color when active metric changes
   useEffect(() => {
@@ -700,11 +774,41 @@ export function MapView() {
         </div>
       </div>
       {/* Bottom-right: quartier profile panel */}
-      {quartierProfile && (
+      {quartierProfile && !comparison && (
         <div className="absolute bottom-8 right-4 z-10 animate-fadeSlideUp">
           <QuartierProfile
             profile={quartierProfile}
             onClose={() => setQuartierProfile(null)}
+            onCompare={handleCompareStart}
+          />
+        </div>
+      )}
+      {/* Compare armed: waiting for the second Quartier */}
+      {compareBase && !comparison && (
+        <div
+          className="strata-panel absolute bottom-8 right-4 z-10 animate-fadeSlideUp px-3.5 py-2.5"
+          data-testid="compare-hint"
+        >
+          <p className="text-xs-11 text-strata-cream/75">
+            Comparing <span className="font-medium text-strata-cream">{compareBase.quartier_name}</span> —
+            select a second Quartier on the map
+          </p>
+          <button
+            onClick={handleCompareCancel}
+            data-testid="compare-cancel"
+            className="mt-1 text-2xs text-strata-cream/40 transition-colors hover:text-strata-cream"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+      {/* Comparison panel */}
+      {comparison && (
+        <div className="absolute bottom-8 right-4 z-10 animate-fadeSlideUp">
+          <ComparisonPanel
+            left={comparison.left}
+            right={comparison.right}
+            onClose={handleComparisonClose}
           />
         </div>
       )}

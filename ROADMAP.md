@@ -96,7 +96,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Choropleth with metric selector | 🟢 Done | — |
 | Quartier profile panel (slide-out) | 🟢 Done | — |
 | Layer toggle panel | 🟢 Done | — |
-| **Comparison mode** (two Quartiere side by side) | ⚪ Planned | #TBD |
+| **Comparison mode** (two Quartiere side by side) | 🟢 Done — compare from profile panel, swap by map click | — |
 | **Personalized match scoring** ("your match: 87%") | 💡 Idea (needs user profiles) | #TBD |
 
 ---
@@ -215,7 +215,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Quartier profile panel | 🟢 Done | — |
 | Design system (palette, typography) | 🟢 Done — glass panels, Inter + IBM Plex Mono, functional color | — |
 | Dark/muted map style | 🟡 Implemented | — |
-| Comparison mode | ⚪ Planned | #TBD |
+| Comparison mode | 🟢 Done | — |
 | 3D city model (Stadt Zürich) | 💡 Idea — bookmarked for later | #TBD |
 | Explore / Watch / Act modes | ⚪ Planned | #TBD |
 | Onboarding flow | ⚪ Planned | #TBD |
@@ -281,6 +281,6 @@ All currently used or identified open data sources for Strata.
 
 _Update this section at the start of each work session._
 
-1. **Comparison mode** — data is now rich enough (demographics, noise, commute, amenities)
-2. **Layer 2 kickoff** — Supabase Auth + watchlist model ("pin this unit")
-3. **Restore deployment** — Supabase project paused + Railway credits exhausted (see Jun 2026)
+1. **Layer 2 kickoff** — Supabase Auth + watchlist model ("pin this unit")
+2. **Restore deployment** — Supabase project paused + Railway credits exhausted (see Jun 2026)
+3. **Venue typology / vibe profiles** — build on the new amenity data
