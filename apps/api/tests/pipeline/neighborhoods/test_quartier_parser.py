@@ -118,13 +118,13 @@ class TestParseQuartierGeojson:
         result = parse_quartier_geojson({"type": "FeatureCollection", "features": []})
         assert result == {}
 
-    def test_area_km2_is_none_when_not_in_properties(self, geojson_data):
-        """WFS data does not include area — should default to None."""
+    def test_area_km2_computed_when_not_in_properties(self, geojson_data):
+        """WFS data does not include area — it is derived from the geometry."""
         from strata_api.pipeline.neighborhoods.quartier_parser import parse_quartier_geojson
 
         result = parse_quartier_geojson(geojson_data)
-        # Area is not provided in the WFS data
-        assert result[11].area_km2 is None
+        assert result[11].area_km2 is not None
+        assert result[11].area_km2 > 0
 
     def test_handles_missing_features_key(self):
         from strata_api.pipeline.neighborhoods.quartier_parser import parse_quartier_geojson
@@ -150,3 +150,59 @@ class TestParseQuartierGeojson:
         result = parse_quartier_geojson(data_with_null_geom)
         assert 99 not in result
         assert len(result) == 3
+
+
+class TestGeometryArea:
+    def test_square_area_at_zurich_latitude(self):
+        """0.01° x 0.01° square at 47.38°N ≈ 0.7537 km x 1.1132 km ≈ 0.839 km²."""
+        from strata_api.pipeline.neighborhoods.quartier_parser import geometry_area_km2
+
+        geom = {
+            "type": "Polygon",
+            "coordinates": [[
+                [8.50, 47.38], [8.51, 47.38], [8.51, 47.39], [8.50, 47.39], [8.50, 47.38],
+            ]],
+        }
+        assert geometry_area_km2(geom) == pytest.approx(0.839, rel=0.02)
+
+    def test_polygon_hole_subtracted(self):
+        from strata_api.pipeline.neighborhoods.quartier_parser import geometry_area_km2
+
+        outer = [[8.50, 47.38], [8.52, 47.38], [8.52, 47.40], [8.50, 47.40], [8.50, 47.38]]
+        hole = [[8.505, 47.385], [8.515, 47.385], [8.515, 47.395], [8.505, 47.395], [8.505, 47.385]]
+        full = geometry_area_km2({"type": "Polygon", "coordinates": [outer]})
+        holed = geometry_area_km2({"type": "Polygon", "coordinates": [outer, hole]})
+        assert holed == pytest.approx(full * 0.75, rel=0.02)
+
+    def test_multipolygon_sums_parts(self):
+        from strata_api.pipeline.neighborhoods.quartier_parser import geometry_area_km2
+
+        square = [[8.50, 47.38], [8.51, 47.38], [8.51, 47.39], [8.50, 47.39], [8.50, 47.38]]
+        single = geometry_area_km2({"type": "Polygon", "coordinates": [square]})
+        double = geometry_area_km2({"type": "MultiPolygon", "coordinates": [[square], [square]]})
+        assert double == pytest.approx(2 * single, rel=0.001)
+
+    def test_unsupported_geometry_returns_none(self):
+        from strata_api.pipeline.neighborhoods.quartier_parser import geometry_area_km2
+
+        assert geometry_area_km2({"type": "Point", "coordinates": [8.5, 47.38]}) is None
+
+    def test_parser_computes_area_from_geometry(self):
+        """When WFS provides no area_km2, it is derived from the polygon."""
+        from strata_api.pipeline.neighborhoods.quartier_parser import parse_quartier_geojson
+
+        geojson = {
+            "type": "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [8.50, 47.38], [8.51, 47.38], [8.51, 47.39], [8.50, 47.39], [8.50, 47.38],
+                    ]],
+                },
+                "properties": {"qnr": 11, "qname": "Rathaus", "knr": 1},
+            }],
+        }
+        records = parse_quartier_geojson(geojson)
+        assert records[11].area_km2 == pytest.approx(0.839, rel=0.02)

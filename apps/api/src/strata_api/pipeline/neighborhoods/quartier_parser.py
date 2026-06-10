@@ -11,7 +11,52 @@ Real field names discovered via recon:
 """
 from __future__ import annotations
 
+import math
+
 from pydantic import BaseModel
+
+# Metres per degree of latitude (WGS84 mean); longitude scales with cos(lat)
+_M_PER_DEG_LAT = 111_320.0
+
+
+def _ring_area_km2(ring: list) -> float:
+    """Planar shoelace area of a lon/lat ring using an equirectangular projection.
+
+    Accurate to well under 1% at city scale, which is plenty for density figures.
+    """
+    if len(ring) < 4:
+        return 0.0
+    lat0 = math.radians(sum(pt[1] for pt in ring) / len(ring))
+    m_per_deg_lon = _M_PER_DEG_LAT * math.cos(lat0)
+
+    area2 = 0.0
+    j = len(ring) - 1
+    for i in range(len(ring)):
+        xi, yi = ring[i][0] * m_per_deg_lon, ring[i][1] * _M_PER_DEG_LAT
+        xj, yj = ring[j][0] * m_per_deg_lon, ring[j][1] * _M_PER_DEG_LAT
+        area2 += xj * yi - xi * yj
+        j = i
+    return abs(area2) / 2 / 1_000_000
+
+
+def _polygon_area_km2(rings: list) -> float:
+    """Exterior ring area minus holes."""
+    if not rings:
+        return 0.0
+    area = _ring_area_km2(rings[0])
+    for hole in rings[1:]:
+        area -= _ring_area_km2(hole)
+    return max(area, 0.0)
+
+
+def geometry_area_km2(geometry: dict) -> float | None:
+    """Area of a GeoJSON Polygon or MultiPolygon in km², None for other types."""
+    gtype = geometry.get("type")
+    if gtype == "Polygon":
+        return _polygon_area_km2(geometry.get("coordinates", []))
+    if gtype == "MultiPolygon":
+        return sum(_polygon_area_km2(rings) for rings in geometry.get("coordinates", []))
+    return None
 
 
 class QuartierRecord(BaseModel, frozen=True):
@@ -28,7 +73,8 @@ def parse_quartier_geojson(geojson_data: dict) -> dict[int, QuartierRecord]:
     """Parse WFS GeoJSON FeatureCollection into a dict keyed by quartier_id.
 
     Skips features with null/missing geometry.
-    area_km2 is None unless explicitly provided in properties (WFS does not include it).
+    area_km2 comes from properties when provided; otherwise it is computed
+    from the polygon geometry (the WFS does not include it).
     """
     records: dict[int, QuartierRecord] = {}
 
@@ -42,6 +88,8 @@ def parse_quartier_geojson(geojson_data: dict) -> dict[int, QuartierRecord]:
         quartier_name: str = str(props["qname"])
         kreis: int = int(props["knr"])
         area_km2: float | None = props.get("area_km2")
+        if area_km2 is None:
+            area_km2 = geometry_area_km2(geom)
 
         records[quartier_id] = QuartierRecord(
             quartier_id=quartier_id,
