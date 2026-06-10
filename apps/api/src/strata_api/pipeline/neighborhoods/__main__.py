@@ -27,10 +27,13 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_DIR, help="GeoJSON output directory")
     parser.add_argument("--api-data", type=Path, default=DEFAULT_API_DATA_DIR, help="API data directory")
     parser.add_argument("--amenities", action="store_true", help="Fetch OSM amenities from Overpass")
+    parser.add_argument("--skip-noise", action="store_true", help="Skip the slow noise cadastre download")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    stats = run_neighborhood_pipeline(args.output, api_data_dir=args.api_data, fetch_amenities=args.amenities)
+    stats = run_neighborhood_pipeline(
+        args.output, api_data_dir=args.api_data, fetch_amenities=args.amenities, skip_noise=args.skip_noise
+    )
     logging.getLogger(__name__).info("Pipeline complete: %s", stats)
 
 

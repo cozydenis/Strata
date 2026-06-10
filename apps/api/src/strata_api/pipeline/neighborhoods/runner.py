@@ -27,6 +27,7 @@ def run_neighborhood_pipeline(
     output_dir: Path,
     api_data_dir: Path | None = None,
     fetch_amenities: bool = False,
+    skip_noise: bool = False,
 ) -> dict:
     """Orchestrate the neighborhood intelligence pipeline.
 
@@ -41,7 +42,10 @@ def run_neighborhood_pipeline(
     7. Write quartiere.geojson and noise.geojson to output_dir
        Also copies quartiere.geojson to api_data_dir if provided (for the API router).
 
-    Returns stats dict: {"quartiere": N, "noise_points": N, "year": YYYY, "amenities": N|None}
+    skip_noise=True skips the (slow, ~200 MB) noise download and leaves any
+    existing noise.geojson untouched — useful when only quartier enrichment changed.
+
+    Returns stats dict: {"quartiere": N, "noise_points": N|None, "year": YYYY, "amenities": N|None}
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -52,8 +56,12 @@ def run_neighborhood_pipeline(
     logger.info("Downloading demographics CSV...")
     demo_csv = download_demographics_csv()
 
-    logger.info("Downloading noise cadastre...")
-    noise_raw = download_noise_geojson()
+    if skip_noise:
+        logger.info("Skipping noise cadastre download (--skip-noise)")
+        noise_raw = None
+    else:
+        logger.info("Downloading noise cadastre...")
+        noise_raw = download_noise_geojson()
 
     logger.info("Parsing Quartier boundaries...")
     quartier_records = parse_quartier_geojson(quartier_raw)
@@ -61,32 +69,34 @@ def run_neighborhood_pipeline(
     logger.info("Parsing demographics CSV...")
     demographics = parse_demographics_csv(demo_csv)
 
-    logger.info("Parsing noise cadastre...")
-    noise_geojson_all = parse_noise_geojson(noise_raw)
-    # Keep only moderate+ (>=50 dB day), then deduplicate on a ~11m grid
-    # (4 decimal places) keeping max db_day per cell.  Strips Z coordinate and
-    # renames db_day -> "d" to minimise the static file (200 MB -> ~8 MB).
-    _grid: dict[tuple[float, float], float] = {}
-    for f in noise_geojson_all["features"]:
-        db = f["properties"].get("db_day") or 0
-        if db < 50:
-            continue
-        coords = f["geometry"]["coordinates"]
-        cell = (round(coords[0], 4), round(coords[1], 4))
-        if cell not in _grid or db > _grid[cell]:
-            _grid[cell] = db
+    noise_geojson: dict | None = None
+    if noise_raw is not None:
+        logger.info("Parsing noise cadastre...")
+        noise_geojson_all = parse_noise_geojson(noise_raw)
+        # Keep only moderate+ (>=50 dB day), then deduplicate on a ~11m grid
+        # (4 decimal places) keeping max db_day per cell.  Strips Z coordinate and
+        # renames db_day -> "d" to minimise the static file (200 MB -> ~8 MB).
+        _grid: dict[tuple[float, float], float] = {}
+        for f in noise_geojson_all["features"]:
+            db = f["properties"].get("db_day") or 0
+            if db < 50:
+                continue
+            coords = f["geometry"]["coordinates"]
+            cell = (round(coords[0], 4), round(coords[1], 4))
+            if cell not in _grid or db > _grid[cell]:
+                _grid[cell] = db
 
-    noise_geojson: dict = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [lon, lat]},
-                "properties": {"d": round(db, 1)},
-            }
-            for (lon, lat), db in _grid.items()
-        ],
-    }
+        noise_geojson = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [lon, lat]},
+                    "properties": {"d": round(db, 1)},
+                }
+                for (lon, lat), db in _grid.items()
+            ],
+        }
 
     # ── Amenities (cached raw Overpass response, network only when asked) ──
     amenity_counts: dict[int, dict[str, int]] | None = None
@@ -115,9 +125,10 @@ def run_neighborhood_pipeline(
     quartiere_path.write_text(json.dumps(geojson, ensure_ascii=False), encoding="utf-8")
     logger.info("Wrote %s (%d features)", quartiere_path, len(geojson["features"]))
 
-    noise_path = output_dir / "noise.geojson"
-    noise_path.write_text(json.dumps(noise_geojson, ensure_ascii=False), encoding="utf-8")
-    logger.info("Wrote %s (%d features)", noise_path, len(noise_geojson["features"]))
+    if noise_geojson is not None:
+        noise_path = output_dir / "noise.geojson"
+        noise_path.write_text(json.dumps(noise_geojson, ensure_ascii=False), encoding="utf-8")
+        logger.info("Wrote %s (%d features)", noise_path, len(noise_geojson["features"]))
 
     # Also copy quartiere.geojson to the API data dir so the /neighborhoods API can read it
     if api_data_dir is not None:
@@ -131,7 +142,7 @@ def run_neighborhood_pipeline(
 
     return {
         "quartiere": len(geojson["features"]),
-        "noise_points": len(noise_geojson["features"]),
+        "noise_points": len(noise_geojson["features"]) if noise_geojson is not None else None,
         "year": year,
         "amenities": amenity_total,
     }

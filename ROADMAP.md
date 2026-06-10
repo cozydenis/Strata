@@ -67,7 +67,7 @@ The layer that answers "where should I live?" Four dimensions.
 | **Demographics** (age, origin, gender) | 🟢 Done | Statistik Stadt Zürich CSV | — |
 | **Population density** | 🟢 Done | Derived from demographics + Quartier area | — |
 | **Venue typology** (cafés, nightlife, culture) | ⚪ Planned | OSM Overpass API or Google Places | #TBD |
-| **Vibe / character profiles** | 💡 Idea | Derived from venue mix + demographics + rent level | #TBD |
+| **Vibe / character profiles** | 🟢 Done — quartile-based explainable tags + summary | — |
 
 #### Practical Dimension
 
@@ -287,4 +287,4 @@ _Update this section at the start of each work session._
 1. **Restore deployment + Supabase project** — unblocks live auth (set SUPABASE_JWT_SECRET +
    NEXT_PUBLIC_SUPABASE_* and run `alembic upgrade head` for the watches table)
 2. **Email notifications** — push watch events instead of waiting for panel opens
-3. **Venue typology / vibe profiles** — build on the new amenity data
+3. **Baugesuch pipeline** — building permits for registry enrichment + trajectory

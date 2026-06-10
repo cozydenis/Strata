@@ -75,6 +75,16 @@ export interface QuartierAmenities {
   per_km2: number | null;
 }
 
+export interface VibeTag {
+  tag: string;
+  evidence: string;
+}
+
+export interface QuartierVibe {
+  tags: VibeTag[];
+  summary: string;
+}
+
 export interface QuartierProfile {
   quartier_id: number;
   quartier_name: string;
@@ -83,6 +93,7 @@ export interface QuartierProfile {
   age_distribution: AgeBucket[];
   commute_hb_min: number | null;
   amenities?: QuartierAmenities | null;
+  vibe?: QuartierVibe | null;
 }
 
 export type CommuteDestination = 'hb' | 'eth' | 'airport' | 'technopark';

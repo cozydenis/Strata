@@ -3,8 +3,31 @@ import type {
   QuartierAmenities,
   QuartierPopulation,
   QuartierProfile as QuartierProfileData,
+  QuartierVibe,
 } from '@/lib/api';
 import { AMENITY_LABELS, fmtPct } from '@/lib/quartier-display';
+
+function VibeSection({ vibe }: { vibe: QuartierVibe }) {
+  return (
+    <div className="mb-3" data-testid="vibe-section">
+      <div className="flex flex-wrap gap-1.5">
+        {vibe.tags.map(({ tag, evidence }) => (
+          <span
+            key={tag}
+            title={evidence}
+            data-testid="vibe-tag"
+            className="cursor-help rounded-full border border-strata-cream/12 px-2 py-0.5 text-2xs text-strata-cream/75"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+      <p className="mt-1.5 text-2xs leading-relaxed text-strata-cream/45" data-testid="vibe-summary">
+        {vibe.summary}
+      </p>
+    </div>
+  );
+}
 
 function AmenitiesSection({ amenities }: { amenities: QuartierAmenities }) {
   return (
@@ -61,7 +84,8 @@ function StatRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 export function QuartierProfile({ profile, onClose, onCompare }: QuartierProfileProps) {
-  const { quartier_name, kreis, population, age_distribution, commute_hb_min, amenities } = profile;
+  const { quartier_name, kreis, population, age_distribution, commute_hb_min, amenities, vibe } =
+    profile;
 
   return (
     <div className="strata-panel w-72 p-4">
@@ -85,6 +109,8 @@ export function QuartierProfile({ profile, onClose, onCompare }: QuartierProfile
           </button>
         )}
       </div>
+
+      {vibe && <VibeSection vibe={vibe} />}
 
       {population === null ? (
         <p className="text-xs-11 italic text-strata-cream/40">No data</p>

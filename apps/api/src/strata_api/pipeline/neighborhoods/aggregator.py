@@ -124,6 +124,7 @@ def aggregate_quartier_geojson(
             "quartier_id": rec.quartier_id,
             "quartier_name": rec.quartier_name,
             "kreis": rec.kreis,
+            "area_km2": rec.area_km2,
         }
 
         demo = demographics.get(qid)
@@ -140,5 +141,13 @@ def aggregate_quartier_geojson(
             "geometry": rec.geometry,
             "properties": {**base_props, **demo_p, **commute_p, **amenity_p},
         })
+
+    # Vibe profiles need the full city distribution — computed as a second pass
+    from strata_api.pipeline.neighborhoods.vibe import compute_vibes
+
+    vibes = compute_vibes(features)
+    for feature in features:
+        props = feature["properties"]
+        props["vibe"] = vibes.get(props["quartier_id"])
 
     return {"type": "FeatureCollection", "features": features}

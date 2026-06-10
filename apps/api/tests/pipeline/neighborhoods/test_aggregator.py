@@ -277,3 +277,23 @@ class TestAmenityProps:
         by_id = {f["properties"]["quartier_id"]: f["properties"] for f in result["features"]}
         assert by_id[11]["amenities"]["cafes"] == 1
         assert by_id[12]["amenities"] is None
+
+
+class TestVibeInAggregator:
+    def test_features_carry_vibe_and_area(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1, area_km2=2.0)}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)})
+        props = result["features"][0]["properties"]
+        assert props["area_km2"] == 2.0
+        assert props["vibe"] is not None
+        assert len(props["vibe"]["tags"]) >= 1
+        assert props["vibe"]["summary"]
+
+    def test_vibe_none_without_demographics(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1)}
+        result = aggregate_quartier_geojson(records, {})
+        assert result["features"][0]["properties"]["vibe"] is None

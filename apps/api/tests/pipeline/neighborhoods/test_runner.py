@@ -196,3 +196,20 @@ class TestRunnerAmenities:
         mock_fetch.assert_called_once()
         assert stats["amenities"] == 1
         assert (tmp_path / "amenities_raw.json").exists()
+
+
+class TestRunnerSkipNoise:
+    def test_skip_noise_avoids_download_and_keeps_existing_file(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        (tmp_path / "noise.geojson").write_text('{"existing": true}')
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson") as mock_noise,
+        ):
+            stats = run_neighborhood_pipeline(tmp_path, skip_noise=True)
+        mock_noise.assert_not_called()
+        assert stats["noise_points"] is None
+        assert (tmp_path / "noise.geojson").read_text() == '{"existing": true}'
+        assert (tmp_path / "quartiere.geojson").exists()

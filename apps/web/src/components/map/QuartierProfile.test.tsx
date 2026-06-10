@@ -152,3 +152,33 @@ describe('QuartierProfile compare button', () => {
     expect(screen.queryByTestId('compare-button')).toBeNull();
   });
 });
+
+describe('QuartierProfile vibe', () => {
+  const vibe = {
+    tags: [
+      { tag: 'young crowd', evidence: '35% aged 18–29 — top quartile in Zürich' },
+      { tag: 'nightlife hub', evidence: '47 bars & restaurants per km² — top quartile in Zürich' },
+    ],
+    summary: 'A young crowd, buzzing bars and restaurants.',
+  };
+
+  it('renders vibe tags with evidence tooltips', () => {
+    render(<QuartierProfile profile={{ ...fullProfile, vibe }} />);
+    const tags = screen.getAllByTestId('vibe-tag');
+    expect(tags).toHaveLength(2);
+    expect(screen.getByText('young crowd')).toBeTruthy();
+    expect(tags[0].getAttribute('title')).toContain('top quartile');
+  });
+
+  it('renders the summary line', () => {
+    render(<QuartierProfile profile={{ ...fullProfile, vibe }} />);
+    expect(screen.getByTestId('vibe-summary').textContent).toBe(
+      'A young crowd, buzzing bars and restaurants.',
+    );
+  });
+
+  it('omits vibe section when absent', () => {
+    render(<QuartierProfile profile={fullProfile} />);
+    expect(screen.queryByTestId('vibe-section')).toBeNull();
+  });
+});
