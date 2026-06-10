@@ -74,7 +74,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Component | Status | Data Source | Issue |
 |-----------|--------|-------------|-------|
 | **Commute isochrones** | 🟢 Done | Travel time pipeline + map visualization (PR #22) | — |
-| **Amenities & walkability** | ⚪ Planned | OSM (groceries, pharmacies, schools, gyms) | #TBD |
+| **Amenities & walkability** | 🟢 Done | OSM Overpass — 7 categories per Quartier + density | — |
 | **Parking** | 💡 Idea | Stadt Zürich Parkleitsystem | #TBD |
 | **School proximity + quality** | 💡 Idea | Volksschulamt data | #TBD |
 
@@ -281,6 +281,6 @@ All currently used or identified open data sources for Strata.
 
 _Update this section at the start of each work session._
 
-1. **Amenities & walkability** — groceries, cafés, schools nearby per Quartier
-2. **Comparison mode** — once the data is rich enough to be worth comparing
-3. **Layer 2 kickoff** — Supabase Auth + watchlist model ("pin this unit")
+1. **Comparison mode** — data is now rich enough (demographics, noise, commute, amenities)
+2. **Layer 2 kickoff** — Supabase Auth + watchlist model ("pin this unit")
+3. **Restore deployment** — Supabase project paused + Railway credits exhausted (see Jun 2026)
