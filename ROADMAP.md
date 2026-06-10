@@ -1,7 +1,7 @@
 # STRATA — Roadmap
 
 > Last updated: June 2026
-> Status: Phase 0 complete, Phase 1 in progress — deployed (Vercel + Railway + Supabase), commute isochrones live
+> Status: Layer 1 complete, Layer 2 in progress — deployment DOWN (Supabase paused, Railway credits out), see Next Actions
 
 ---
 
@@ -27,8 +27,8 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Photos stored | 565+ |
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
-| Backend tests | 452 |
-| Frontend tests | 206 |
+| Backend tests | 536 |
+| Frontend tests | 247 |
 
 ---
 
