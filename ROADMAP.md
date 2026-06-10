@@ -213,7 +213,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Quartier choropleth | 🟢 Done | — |
 | Noise overlay | 🟢 Done | — |
 | Quartier profile panel | 🟢 Done | — |
-| Design system (palette, typography) | 🟡 First pass done | #TBD |
+| Design system (palette, typography) | 🟢 Done — glass panels, Inter + IBM Plex Mono, functional color | — |
 | Dark/muted map style | 🟡 Implemented | — |
 | Comparison mode | ⚪ Planned | #TBD |
 | 3D city model (Stadt Zürich) | 💡 Idea — bookmarked for later | #TBD |
@@ -281,8 +281,7 @@ All currently used or identified open data sources for Strata.
 
 _Update this section at the start of each work session._
 
-1. **UI design pass** — implement the vision's Swiss cartographic design language across the app
-2. **Amenities & walkability** — groceries, cafés, schools nearby per Quartier
-3. **Comparison mode** — once the data is rich enough to be worth comparing
-4. **PLZ filter fix** — exclude non-Zürich listings
-5. **Daily pipeline scheduler** — cron trigger for the deployed pipeline endpoints
+1. **Amenities & walkability** — groceries, cafés, schools nearby per Quartier
+2. **Comparison mode** — once the data is rich enough to be worth comparing
+3. **PLZ filter fix** — exclude non-Zürich listings
+4. **Daily pipeline scheduler** — cron trigger for the deployed pipeline endpoints
