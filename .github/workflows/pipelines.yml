@@ -1,0 +1,54 @@
+name: Data pipelines
+
+# Triggers the deployed API's pipeline endpoints on a schedule.
+# Requires two repository secrets:
+#   STRATA_API_URL    — base URL of the deployed API (e.g. https://strata-api.up.railway.app)
+#   PIPELINE_API_KEY  — matches the API's PIPELINE_API_KEY env var
+
+on:
+  schedule:
+    - cron: '30 3 * * *' # daily 03:30 UTC — GWR Stadt refresh + listing ingestion
+    - cron: '0 4 1 1,4,7,10 *' # quarterly — GWR Kanton refresh (source updates quarterly)
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which pipelines to trigger'
+        type: choice
+        options:
+          - daily
+          - kanton
+          - all
+        default: daily
+
+jobs:
+  daily:
+    name: GWR Stadt + listings
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.schedule == '30 3 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target != 'kanton')
+    steps:
+      - name: Trigger GWR Stadt pipeline
+        run: |
+          curl --fail-with-body -sS -X POST \
+            -H "X-API-Key: ${{ secrets.PIPELINE_API_KEY }}" \
+            "${{ secrets.STRATA_API_URL }}/admin/pipeline/run/stadt"
+
+      - name: Trigger listing pipeline
+        run: |
+          curl --fail-with-body -sS -X POST \
+            -H "X-API-Key: ${{ secrets.PIPELINE_API_KEY }}" \
+            "${{ secrets.STRATA_API_URL }}/admin/pipeline/run-listings"
+
+  kanton:
+    name: GWR Kanton
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.schedule == '0 4 1 1,4,7,10 *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target != 'daily')
+    steps:
+      - name: Trigger GWR Kanton pipeline
+        run: |
+          curl --fail-with-body -sS -X POST \
+            -H "X-API-Key: ${{ secrets.PIPELINE_API_KEY }}" \
+            "${{ secrets.STRATA_API_URL }}/admin/pipeline/run/kanton"

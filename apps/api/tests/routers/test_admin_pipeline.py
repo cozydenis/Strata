@@ -1,4 +1,6 @@
 """Tests for the admin pipeline trigger endpoints."""
+
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,6 +16,7 @@ _AUTH_HEADERS = {"X-API-Key": _TEST_API_KEY}
 def patch_api_key(monkeypatch):
     """Set pipeline_api_key for all tests in this module."""
     import strata_api.routers.admin_pipeline as mod
+
     monkeypatch.setattr(mod.settings, "pipeline_api_key", _TEST_API_KEY)
 
 
@@ -41,68 +44,76 @@ def mock_kanton_result() -> PipelineResult:
     )
 
 
-@pytest.fixture
-def mock_failed_result() -> PipelineResult:
-    return PipelineResult(
-        run_id=3,
-        run_type="stadt",
-        status="failed",
-        error_message="network error",
-    )
-
-
 @pytest.mark.asyncio
-async def test_trigger_stadt_pipeline_returns_result(mock_stadt_result):
+async def test_trigger_stadt_pipeline_returns_202_and_runs_in_background(mock_stadt_result):
+    """202 Accepted returned immediately; the GWR run executes in a background thread."""
     from strata_api.main import app
 
-    with patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", return_value=mock_stadt_result), \
-         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+    ran = threading.Event()
+
+    def _fake_run(engine):
+        ran.set()
+        return mock_stadt_result
+
+    with (
+        patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", side_effect=_fake_run),
+        patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()),
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post("/admin/pipeline/run/stadt", headers=_AUTH_HEADERS)
+        assert ran.wait(timeout=5), "pipeline never ran in background thread"
 
-    assert response.status_code == 200
+    assert response.status_code == 202
     data = response.json()
-    assert data["run_id"] == 1
-    assert data["run_type"] == "stadt"
-    assert data["status"] == "completed"
-    assert data["buildings_upserted"] == 100
-    assert data["entrances_upserted"] == 80
-    assert data["units_upserted"] == 200
-    assert data["error_message"] is None
+    assert data["status"] == "accepted"
+    assert data["source"] == "stadt"
 
 
 @pytest.mark.asyncio
-async def test_trigger_kanton_pipeline_returns_result(mock_kanton_result):
+async def test_trigger_kanton_pipeline_returns_202_and_runs_in_background(mock_kanton_result):
     from strata_api.main import app
 
-    with patch("strata_api.routers.admin_pipeline.run_kanton_pipeline", return_value=mock_kanton_result), \
-         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+    ran = threading.Event()
+
+    def _fake_run(engine):
+        ran.set()
+        return mock_kanton_result
+
+    with (
+        patch("strata_api.routers.admin_pipeline.run_kanton_pipeline", side_effect=_fake_run),
+        patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()),
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post("/admin/pipeline/run/kanton", headers=_AUTH_HEADERS)
+        assert ran.wait(timeout=5), "pipeline never ran in background thread"
 
-    assert response.status_code == 200
+    assert response.status_code == 202
     data = response.json()
-    assert data["run_id"] == 2
-    assert data["run_type"] == "kanton"
-    assert data["status"] == "completed"
-    assert data["buildings_upserted"] == 500
+    assert data["status"] == "accepted"
+    assert data["source"] == "kanton"
 
 
 @pytest.mark.asyncio
-async def test_trigger_stadt_pipeline_failed_run_returns_200(mock_failed_result):
-    """A failed pipeline run is still a successful API call — result contains error info."""
+async def test_trigger_stadt_pipeline_exception_still_returns_202():
+    """Even when the pipeline raises, the endpoint returns 202 (errors are logged, not surfaced)."""
     from strata_api.main import app
 
-    with patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", return_value=mock_failed_result), \
-         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+    ran = threading.Event()
+
+    def _failing_run(engine):
+        ran.set()
+        raise RuntimeError("network error")
+
+    with (
+        patch("strata_api.routers.admin_pipeline.run_stadt_pipeline", side_effect=_failing_run),
+        patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()),
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post("/admin/pipeline/run/stadt", headers=_AUTH_HEADERS)
+        assert ran.wait(timeout=5), "pipeline never ran in background thread"
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "failed"
-    assert data["error_message"] == "network error"
-    assert data["buildings_upserted"] == 0
+    assert response.status_code == 202
+    assert response.json()["status"] == "accepted"
 
 
 @pytest.mark.asyncio
@@ -166,8 +177,10 @@ async def test_run_listings_returns_202_immediately():
     async def _fake_pipeline(db):
         return {"flatfox": {"inserted": 5, "updated": 2}}
 
-    with patch("strata_api.pipeline.listing_runner.run_listing_pipeline", new=_fake_pipeline), \
-         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+    with (
+        patch("strata_api.pipeline.listing_runner.run_listing_pipeline", new=_fake_pipeline),
+        patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()),
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post("/admin/pipeline/run-listings", headers=_AUTH_HEADERS)
 
@@ -183,8 +196,10 @@ async def test_run_listings_pipeline_exception_still_returns_202():
     async def _failing_pipeline(db):
         raise RuntimeError("connection timeout")
 
-    with patch("strata_api.pipeline.listing_runner.run_listing_pipeline", new=_failing_pipeline), \
-         patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()):
+    with (
+        patch("strata_api.pipeline.listing_runner.run_listing_pipeline", new=_failing_pipeline),
+        patch("strata_api.routers.admin_pipeline.get_engine", return_value=MagicMock()),
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post("/admin/pipeline/run-listings", headers=_AUTH_HEADERS)
 

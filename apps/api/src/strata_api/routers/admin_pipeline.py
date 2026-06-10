@@ -1,4 +1,5 @@
 """Admin endpoints for triggering GWR data pipeline runs."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,23 +29,33 @@ def _require_api_key(key: str = Security(_api_key_header)) -> None:
         raise HTTPException(status_code=401, detail="Invalid or missing API key.")
 
 
-@router.post("/run/{source}", dependencies=[Depends(_require_api_key)])
+@router.post("/run/{source}", status_code=202, dependencies=[Depends(_require_api_key)])
 def trigger_pipeline(source: str) -> dict:
-    """Trigger a pipeline run for the given source (stadt or kanton)."""
+    """Trigger a GWR pipeline run in the background and return 202 immediately.
+
+    Runs take minutes — well past the platform's HTTP timeout — so the work
+    happens in a background thread, same as /run-listings.
+    """
     if source not in _SOURCES:
         raise HTTPException(status_code=404, detail=f"Unknown source '{source}'. Use 'stadt' or 'kanton'.")
 
-    engine = get_engine()
-    try:
-        if source == "stadt":
-            result: PipelineResult = run_stadt_pipeline(engine)
-        else:
-            result = run_kanton_pipeline(engine)
-    except Exception as err:
-        logger.exception("Pipeline run failed for source=%s", source)
-        raise HTTPException(status_code=500, detail="Pipeline run failed — check server logs.") from err
+    def _run() -> None:
+        engine = get_engine()
+        try:
+            if source == "stadt":
+                result: PipelineResult = run_stadt_pipeline(engine)
+            else:
+                result = run_kanton_pipeline(engine)
+            logger.info("GWR pipeline completed for source=%s: %s", source, asdict(result))
+        except Exception:
+            logger.exception("GWR pipeline run failed for source=%s", source)
 
-    return asdict(result)
+    threading.Thread(target=_run, daemon=True).start()
+    return {
+        "status": "accepted",
+        "source": source,
+        "message": "GWR pipeline started in background. Check server logs for progress.",
+    }
 
 
 @router.post("/run-listings", status_code=202, dependencies=[Depends(_require_api_key)])
