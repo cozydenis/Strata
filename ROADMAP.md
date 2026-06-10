@@ -105,11 +105,14 @@ The layer that answers "where should I live?" Four dimensions.
 
 | Component | Status | Issue |
 |-----------|--------|-------|
-| Authentication (Supabase Auth or Clerk) | ⚪ Planned | #TBD |
+| Authentication (Supabase Auth, JWT-verified API) | 🟢 Done — needs live Supabase project creds | — |
+| Watchlist API (watch building or specific unit) | 🟢 Done | — |
+| Watch buttons (building + per-unit) in popup | 🟢 Done | — |
+| Watchlist panel | 🟢 Done | — |
+| Unit list in building popup (registry surfaced) | 🟢 Done | — |
 | Profile vault (personal info, documents) | ⚪ Planned | #TBD |
 | Wishlist — broad search alerts | ⚪ Planned | #TBD |
 | Wishlist — building typology matching | ⚪ Planned | #TBD |
-| Wishlist — specific unit pin ("I want this unit") | ⚪ Planned | #TBD |
 | Watch Mode UI (personal feed of events) | ⚪ Planned | #TBD |
 | Notification system (email-first) | ⚪ Planned | #TBD |
 
@@ -281,6 +284,7 @@ All currently used or identified open data sources for Strata.
 
 _Update this section at the start of each work session._
 
-1. **Layer 2 kickoff** — Supabase Auth + watchlist model ("pin this unit")
-2. **Restore deployment** — Supabase project paused + Railway credits exhausted (see Jun 2026)
+1. **Restore deployment + Supabase project** — unblocks live auth (set SUPABASE_JWT_SECRET +
+   NEXT_PUBLIC_SUPABASE_* and run `alembic upgrade head` for the watches table)
+2. **Watch Mode feed** — surface watchlist events (new listing in watched building, etc.)
 3. **Venue typology / vibe profiles** — build on the new amenity data

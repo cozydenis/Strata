@@ -12,6 +12,8 @@ import { LayerPanel } from './LayerPanel';
 import { QuartierProfile } from './QuartierProfile';
 import { ComparisonPanel } from './ComparisonPanel';
 import { CommuteLegend } from './CommuteLegend';
+import { WatchlistPanel } from './WatchlistPanel';
+import { AuthControl } from '../auth/AuthControl';
 import { eraColorExpression } from '@/lib/map/era-colors';
 import { quartierFillColor } from '@/lib/map/quartier-colors';
 import { noiseLineColor } from '@/lib/map/noise-colors';
@@ -19,12 +21,14 @@ import { COMMUTE_MINUTES_EXPRESSION, COMMUTE_OPACITY_EXPRESSION } from '@/lib/ma
 import {
   fetchBuildingSummary,
   fetchBuildingListings,
+  fetchBuildingUnits,
   fetchQuartierProfile,
   fetchCommuteIsochrone,
   type BuildingSummary,
   type ListingSummary,
   type QuartierProfile as QuartierProfileType,
   type CommuteDestination,
+  type UnitSummary,
 } from '@/lib/api';
 
 const ZURICH_CENTER: [number, number] = [8.54, 47.38];
@@ -55,7 +59,9 @@ export function MapView() {
   const [error, setError] = useState<string | null>(null);
   const [popup, setPopup] = useState<BuildingSummary | null>(null);
   const [popupListings, setPopupListings] = useState<ListingSummary[] | null>(null);
+  const [popupUnits, setPopupUnits] = useState<{ total: number; items: UnitSummary[] } | null>(null);
   const [popupCoords, setPopupCoords] = useState<[number, number] | null>(null);
+  const [watchlistOpen, setWatchlistOpen] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Layer visibility state
@@ -120,12 +126,14 @@ export function MapView() {
     setQuartierProfile(null); // close quartier panel when building clicked
     try {
       await showSkeletonPopup(coords);
-      const [summary, listings] = await Promise.all([
+      const [summary, listings, units] = await Promise.all([
         fetchBuildingSummary(egid),
         fetchBuildingListings(egid).catch(() => []),
+        fetchBuildingUnits(egid).catch(() => null),
       ]);
       setPopup(summary);
       setPopupListings(listings);
+      setPopupUnits(units);
       setPopupCoords(coords);
     } catch (err) {
       console.error('[Strata] Failed to load building data:', err);
@@ -652,6 +660,7 @@ export function MapView() {
           createElement(BuildingPopup, {
             summary: popup!,
             listings: popupListings ?? undefined,
+            units: popupUnits,
           })
         );
         return;
@@ -665,6 +674,7 @@ export function MapView() {
         createElement(BuildingPopup, {
           summary: popup!,
           listings: popupListings ?? undefined,
+          units: popupUnits,
         })
       );
 
@@ -684,7 +694,7 @@ export function MapView() {
     }
 
     updatePopup();
-  }, [popup, popupCoords, popupListings]);
+  }, [popup, popupCoords, popupListings, popupUnits]);
 
   function handleLayerToggle(key: string) {
     switch (key) {
@@ -739,6 +749,12 @@ export function MapView() {
     <div className="relative h-screen w-screen" data-testid="map-container">
       <div ref={containerRef} className="absolute inset-0" />
       <TopBar />
+      <AuthControl onToggleWatchlist={() => setWatchlistOpen((v) => !v)} />
+      {watchlistOpen && (
+        <div className="absolute top-16 right-14 z-20 animate-fadeSlideUp">
+          <WatchlistPanel onClose={() => setWatchlistOpen(false)} />
+        </div>
+      )}
       {/* Top-left below TopBar: layer toggles */}
       <div className="absolute top-20 left-4 z-10 animate-fadeSlideUp">
         <LayerPanel

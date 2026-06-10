@@ -116,7 +116,8 @@ packages/
 - `GET /health`
 - `GET /registry/buildings[/{egid}[/summary|/units[/{ewid}]|/listings]]`
 - `GET /neighborhoods/{quartier_id}/profile`
-- `POST /admin/pipeline/run`
+- `GET|POST /watchlist`, `DELETE /watchlist/{id}` — requires Supabase JWT (Bearer)
+- `POST /admin/pipeline/run/{source}`, `POST /admin/pipeline/run-listings` — requires X-API-Key
 
 ### Testing
 - Backend: pytest + httpx `AsyncClient` with `ASGITransport` against the FastAPI app. Fixtures in `tests/fixtures/`.
@@ -144,5 +145,6 @@ packages/
 - Listing connectors are pluggable — each source implements fetch + parse
 - Map layers are toggleable MapLibre layers, each backed by a GeoJSON source
 - Unit Registry is the single source of truth — listings reference it via address matching
-- Frontend env: `NEXT_PUBLIC_API_URL` points to the backend base URL
-- Backend env: `DATABASE_URL`, `CORS_ORIGINS`, `PIPELINE_API_KEY`
+- Frontend env: `NEXT_PUBLIC_API_URL` (backend base URL), `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (auth; UI hides when placeholders)
+- Backend env: `DATABASE_URL`, `CORS_ORIGINS`, `PIPELINE_API_KEY`, `SUPABASE_JWT_SECRET` (verifies Supabase Auth tokens; watchlist returns 503 when unset)
+- Local dev: run the API with `DATABASE_URL=sqlite:///local.db` — the `.env` file points at prod Supabase

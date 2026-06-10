@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { BuildingPopup } from './BuildingPopup';
 import type { BuildingSummary, ListingSummary } from '@/lib/api';
 
@@ -108,5 +108,47 @@ describe('BuildingPopup', () => {
   it('omits dwellings when ganzwhg is null', () => {
     render(<BuildingPopup summary={{ ...fullSummary, ganzwhg: null }} />);
     expect(screen.queryByText(/dwg/i)).toBeNull();
+  });
+});
+
+describe('BuildingPopup units section', () => {
+  const units = {
+    total: 3,
+    items: [
+      { egid: 100, ewid: 1, wstwklang: 'Parterre', wazim: 3, warea: 70 },
+      { egid: 100, ewid: 2, wstwklang: '1. Stock', wazim: 4.5, warea: 95 },
+      { egid: 100, ewid: 3, wstwklang: null, wazim: null, warea: null },
+    ],
+  };
+
+  it('renders unit rows with floor, rooms, area', () => {
+    render(<BuildingPopup summary={fullSummary} units={units} />);
+    expect(screen.getByTestId('units-section')).toBeTruthy();
+    expect(screen.getAllByTestId('unit-row')).toHaveLength(3);
+    expect(screen.getByText(/Parterre · 3 rooms · 70 m²/)).toBeTruthy();
+    expect(screen.getByText('Unit 3')).toBeTruthy();
+  });
+
+  it('shows the total in the section header', () => {
+    render(<BuildingPopup summary={fullSummary} units={units} />);
+    expect(screen.getByText('Units (3)')).toBeTruthy();
+  });
+
+  it('collapses long unit lists behind a toggle', () => {
+    const many = {
+      total: 8,
+      items: Array.from({ length: 8 }, (_, i) => ({
+        egid: 100, ewid: i + 1, wstwklang: null, wazim: 2, warea: 50,
+      })),
+    };
+    render(<BuildingPopup summary={fullSummary} units={many} />);
+    expect(screen.getAllByTestId('unit-row')).toHaveLength(5);
+    fireEvent.click(screen.getByTestId('units-toggle'));
+    expect(screen.getAllByTestId('unit-row')).toHaveLength(8);
+  });
+
+  it('omits section when units are absent', () => {
+    render(<BuildingPopup summary={fullSummary} />);
+    expect(screen.queryByTestId('units-section')).toBeNull();
   });
 });

@@ -166,3 +166,76 @@ export async function fetchBuildingListings(egid: number): Promise<ListingSummar
   }
   return (data as { listings: ListingSummary[] }).listings;
 }
+
+// ── Units ─────────────────────────────────────────────────────────────────────
+
+export interface UnitSummary {
+  egid: number;
+  ewid: number;
+  wstwklang: string | null;
+  wazim: number | null;
+  warea: number | null;
+}
+
+export async function fetchBuildingUnits(egid: number): Promise<{ total: number; items: UnitSummary[] }> {
+  const res = await fetch(`${BASE_URL}/registry/buildings/${egid}/units`);
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (typeof data !== 'object' || data === null || !Array.isArray((data as Record<string, unknown>).items)) {
+    throw new Error('Unexpected response shape: missing items');
+  }
+  return data as { total: number; items: UnitSummary[] };
+}
+
+// ── Watchlist (authenticated) ─────────────────────────────────────────────────
+
+export interface WatchItem {
+  id: number;
+  egid: number;
+  ewid: number | null;
+  created_at: string;
+  strname: string | null;
+  deinr: string | null;
+  dplz4: number | null;
+  dplzname: string | null;
+}
+
+function authHeaders(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function fetchWatchlist(token: string): Promise<{ total: number; items: WatchItem[] }> {
+  const res = await fetch(`${BASE_URL}/watchlist`, { headers: authHeaders(token) });
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (typeof data !== 'object' || data === null || !Array.isArray((data as Record<string, unknown>).items)) {
+    throw new Error('Unexpected response shape: missing items');
+  }
+  return data as { total: number; items: WatchItem[] };
+}
+
+export async function addWatch(token: string, egid: number, ewid?: number): Promise<WatchItem> {
+  const res = await fetch(`${BASE_URL}/watchlist`, {
+    method: 'POST',
+    headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ egid, ewid: ewid ?? null }),
+  });
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  return (await res.json()) as WatchItem;
+}
+
+export async function removeWatch(token: string, watchId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/watchlist/${watchId}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`${res.status}`);
+  }
+}
