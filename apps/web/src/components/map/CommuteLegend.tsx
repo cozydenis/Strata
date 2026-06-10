@@ -16,19 +16,17 @@ export function CommuteLegend({ visible }: CommuteLegendProps) {
   if (!visible) return null;
 
   return (
-    <div className="bg-strata-slate-800 backdrop-blur-sm border border-strata-cream/20 rounded-lg shadow-lg p-3 w-40">
-      <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-strata-cream/70">
-        Commute to HB
-      </p>
-      <ul className="space-y-1">
+    <div className="strata-panel p-3.5 w-44">
+      <p className="strata-panel-title mb-2.5">Commute to HB</p>
+      <ul className="space-y-1.5">
         {BANDS.map(({ key, label }) => (
-          <li key={key} className="flex items-center gap-2" data-testid="commute-legend-item">
+          <li key={key} className="flex items-center gap-2.5" data-testid="commute-legend-item">
             <span
               data-testid="commute-legend-swatch"
-              className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
+              className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-[2px]"
               style={{ backgroundColor: COMMUTE_COLORS[key] }}
             />
-            <span className="text-2xs text-strata-cream">{label}</span>
+            <span className="strata-data text-2xs text-strata-cream/85">{label}</span>
           </li>
         ))}
       </ul>

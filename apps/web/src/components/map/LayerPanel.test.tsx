@@ -112,6 +112,6 @@ describe('LayerPanel', () => {
   it('applies glass card styling', () => {
     const { container } = render(<LayerPanel {...defaultProps} />);
     const card = container.firstChild as HTMLElement;
-    expect(card.className).toContain('backdrop-blur');
+    expect(card.className).toContain('strata-panel');
   });
 });

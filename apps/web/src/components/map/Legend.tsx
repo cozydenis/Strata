@@ -2,19 +2,17 @@ import { ERA_COLORS } from '@/lib/map/era-colors';
 
 export function Legend() {
   return (
-    <div className="bg-strata-slate-800 border border-strata-cream/20 rounded-lg shadow-lg p-3">
-      <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-strata-cream/70">
-        Construction era
-      </p>
+    <div className="strata-panel p-3.5 w-44">
+      <p className="strata-panel-title mb-2.5">Construction era</p>
       <ul className="space-y-1.5">
         {ERA_COLORS.map((era) => (
-          <li key={era.label} className="flex items-center gap-2">
+          <li key={era.label} className="flex items-center gap-2.5">
             <span
               data-testid="era-swatch"
-              className="inline-block w-2.5 h-2.5 flex-shrink-0 rounded-full"
+              className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-[2px]"
               style={{ backgroundColor: era.color }}
             />
-            <span className="text-xs-11 text-strata-cream">{era.label}</span>
+            <span className="text-xs-11 text-strata-cream/85">{era.label}</span>
           </li>
         ))}
       </ul>

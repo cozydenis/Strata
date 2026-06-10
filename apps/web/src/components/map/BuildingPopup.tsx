@@ -29,9 +29,9 @@ export function BuildingPopup({ summary, listings }: Props) {
       <div data-testid="popup-address">
         {address ? (
           <>
-            <p className="text-lg-15 font-semibold text-strata-cream">{address}</p>
+            <p className="text-lg-15 font-semibold tracking-tight text-strata-cream">{address}</p>
             {locality && (
-              <p className="text-sm-12 text-strata-muted mt-0.5">{locality}</p>
+              <p className="mt-0.5 text-sm-12 text-strata-muted">{locality}</p>
             )}
           </>
         ) : (
@@ -40,23 +40,30 @@ export function BuildingPopup({ summary, listings }: Props) {
       </div>
 
       {/* Metadata row */}
-      <div className="border-t border-strata-cream/10 my-3" />
-      <div className="flex items-center gap-2 text-sm-12 text-strata-cream/70 flex-wrap">
-        {summary.gbauj != null ? (
-          <span style={{ color: era.color }}>{summary.gbauj}</span>
-        ) : (
-          <span className="text-strata-muted">Unknown</span>
-        )}
+      <div className="strata-rule my-3" />
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm-12 text-strata-cream/70">
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block h-2 w-2 rounded-[2px]"
+            style={{ backgroundColor: era.color }}
+          />
+          {summary.gbauj != null ? (
+            <span className="strata-data">{summary.gbauj}</span>
+          ) : (
+            <span className="text-strata-muted">Unknown</span>
+          )}
+        </span>
         {summary.gastw != null && (
           <>
-            <span className="text-strata-cream/30">·</span>
-            <span>{summary.gastw} fl.</span>
+            <span className="text-strata-cream/25">·</span>
+            <span className="strata-data">{summary.gastw} fl.</span>
           </>
         )}
         {summary.ganzwhg != null && (
           <>
-            <span className="text-strata-cream/30">·</span>
-            <span>{summary.ganzwhg} dwg.</span>
+            <span className="text-strata-cream/25">·</span>
+            <span className="strata-data">{summary.ganzwhg} dwg.</span>
           </>
         )}
       </div>
@@ -64,9 +71,9 @@ export function BuildingPopup({ summary, listings }: Props) {
       {/* Listings section */}
       {hasListings && (
         <>
-          <div className="border-t border-strata-cream/10 my-3" />
+          <div className="strata-rule my-3" />
           {activeListings.length > 0 ? (
-            <div className="max-h-[320px] overflow-y-auto pr-0.5">
+            <div className="strata-scroll max-h-[320px] overflow-y-auto pr-1">
               <ListingCards listings={activeListings} />
             </div>
           ) : (

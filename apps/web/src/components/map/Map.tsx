@@ -35,6 +35,9 @@ const NOISE_GEOJSON_URL = '/data/noise.geojson';
 const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 const LISTING_COLOR = '#D4915A';
 const BUILDING_LAYERS = ['clusters', 'cluster-count', 'buildings-unclustered'] as const;
+
+// MapLibre rejects paint opacity outside [0, 1]; rAF fade loops can overshoot slightly
+const clamp01 = (v: number): number => Math.min(Math.max(v, 0), 1);
 const QUARTIERE_LAYERS = ['quartiere-fill', 'quartiere-outline', 'quartiere-labels'] as const;
 const COMMUTE_LAYERS = ['commute-fill', 'commute-outline'] as const;
 
@@ -208,8 +211,8 @@ export function MapView() {
             source: 'quartiere',
             layout: { visibility: 'none' },
             paint: {
-              'line-color': 'rgba(250,247,242,0.7)',
-              'line-width': 1.5,
+              'line-color': 'rgba(250,247,242,0.45)',
+              'line-width': 1,
             },
           });
 
@@ -224,9 +227,9 @@ export function MapView() {
               'text-max-width': 8,
             },
             paint: {
-              'text-color': 'rgba(250,247,242,0.8)',
-              'text-halo-color': 'rgba(0,0,0,0.6)',
-              'text-halo-width': 1,
+              'text-color': 'rgba(250,247,242,0.85)',
+              'text-halo-color': 'rgba(28,26,24,0.75)',
+              'text-halo-width': 1.2,
             },
           });
 
@@ -243,8 +246,8 @@ export function MapView() {
             layout: { visibility: 'none' },
             paint: {
               'circle-color': noiseLineColor() as unknown as string,
-              'circle-radius': 3,
-              'circle-opacity': 0.7,
+              'circle-radius': 2.5,
+              'circle-opacity': 0.55,
             },
           });
 
@@ -266,6 +269,8 @@ export function MapView() {
               'circle-color': '#504C47',
               'circle-radius': ['step', ['get', 'point_count'], 8, 50, 12, 200, 16],
               'circle-opacity': 0.7,
+              'circle-stroke-width': 1,
+              'circle-stroke-color': 'rgba(250,247,242,0.15)',
             },
           });
 
@@ -307,9 +312,9 @@ export function MapView() {
             source: 'listings',
             paint: {
               'circle-color': LISTING_COLOR,
-              'circle-radius': 6,
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#fff',
+              'circle-radius': 5.5,
+              'circle-stroke-width': 1.5,
+              'circle-stroke-color': '#FAF7F2',
               'circle-opacity': 0.9,
             },
           });
@@ -399,7 +404,7 @@ export function MapView() {
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / FADE_DURATION, 1);
-      const opacity = START_OPACITY + (END_OPACITY - START_OPACITY) * progress;
+      const opacity = clamp01(START_OPACITY + (END_OPACITY - START_OPACITY) * progress);
       map?.setPaintProperty?.('buildings-unclustered', 'circle-opacity', opacity);
       map?.setPaintProperty?.('clusters', 'circle-opacity', opacity * (0.7 / 0.85));
 
@@ -442,7 +447,7 @@ export function MapView() {
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / FADE_DURATION, 1);
-      const opacity = START_OPACITY + (END_OPACITY - START_OPACITY) * progress;
+      const opacity = clamp01(START_OPACITY + (END_OPACITY - START_OPACITY) * progress);
       map?.setPaintProperty?.('listings-markers', 'circle-opacity', opacity);
 
       if (progress < 1) {
@@ -483,7 +488,7 @@ export function MapView() {
     function tick(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / FADE_DURATION, 1);
-      const opacity = START_OPACITY + (END_OPACITY - START_OPACITY) * progress;
+      const opacity = clamp01(START_OPACITY + (END_OPACITY - START_OPACITY) * progress);
       map?.setPaintProperty?.('quartiere-fill', 'fill-opacity', opacity);
 
       if (progress < 1) {
@@ -647,8 +652,11 @@ export function MapView() {
 
   if (error) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-strata-slate-900 text-strata-terracotta">
-        <p>{error}</p>
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-3 bg-strata-slate-900">
+        <span className="text-base-13 font-semibold uppercase tracking-[0.28em] text-strata-cream/60">
+          Strata
+        </span>
+        <p className="text-sm-12 text-strata-terracotta">{error}</p>
       </div>
     );
   }
@@ -658,7 +666,7 @@ export function MapView() {
       <div ref={containerRef} className="absolute inset-0" />
       <TopBar />
       {/* Top-left below TopBar: layer toggles */}
-      <div className="absolute top-16 left-4 z-10 animate-fadeSlideUp">
+      <div className="absolute top-20 left-4 z-10 animate-fadeSlideUp">
         <LayerPanel
           buildingsVisible={buildingsVisible}
           listingsVisible={listingsVisible}
@@ -684,8 +692,9 @@ export function MapView() {
         </div>
       )}
       {commuteVisible && commuteUnavailable && (
-        <div className="absolute bottom-32 left-4 z-10 animate-fadeSlideUp rounded bg-black/70 px-3 py-2 text-xs text-white">
-          Isochrone data not yet generated. Run <code className="font-mono">scripts/otp/setup.sh</code> to generate.
+        <div className="strata-panel absolute bottom-32 left-4 z-10 animate-fadeSlideUp px-3.5 py-2.5 text-xs-11 text-strata-cream/75">
+          Isochrone data not yet generated. Run{' '}
+          <code className="font-mono text-strata-amber/80">scripts/otp/setup.sh</code> to generate.
         </div>
       )}
       {/* Bottom-right: quartier profile panel */}

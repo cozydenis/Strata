@@ -6,30 +6,31 @@
 
 :root {
   /* Warm-toned dark palette */
-  --strata-slate-900: #1C1A18;
-  --strata-slate-800: #2A2724;
+  --strata-slate-900: #1c1a18;
+  --strata-slate-800: #2a2724;
   --strata-slate-700: #383431;
-  --strata-slate-600: #46423E;
-  --strata-slate-500: #605B56;
-  --strata-slate-400: #7A756F;
-  --strata-slate-300: #9E9890;
-  --strata-slate-200: #C8C2BA;
-  --strata-slate-100: #F0EDE8;
+  --strata-slate-600: #46423e;
+  --strata-slate-500: #605b56;
+  --strata-slate-400: #7a756f;
+  --strata-slate-300: #9e9890;
+  --strata-slate-200: #c8c2ba;
+  --strata-slate-100: #f0ede8;
 
   /* Stone shades */
-  --strata-stone-900: #2C2825;
-  --strata-stone-800: #3D3A36;
-  --strata-stone-700: #504C47;
-  --strata-stone-600: #6B6660;
+  --strata-stone-900: #2c2825;
+  --strata-stone-800: #3d3a36;
+  --strata-stone-700: #504c47;
+  --strata-stone-600: #6b6660;
 
-  /* Accent colors */
-  --strata-terracotta: #C4785B;
-  --strata-amber: #D4915A;
-  --strata-cream: #FAF7F2;
-  --strata-ink: #2C2825;
-  --strata-muted: #8A8580;
-  --strata-border: rgba(250, 247, 242, 0.1);
-  --strata-shadow: rgba(28, 26, 24, 0.5);
+  /* Accent colors — amber means "pay attention", terracotta means "warning" */
+  --strata-terracotta: #c4785b;
+  --strata-amber: #d4915a;
+  --strata-cream: #faf7f2;
+  --strata-ink: #2c2825;
+  --strata-muted: #8a8580;
+  --strata-sage: #8fa071;
+  --strata-border: rgba(250, 247, 242, 0.08);
+  --strata-shadow: rgba(15, 13, 12, 0.55);
 
   /* Radius */
   --radius-sm: 4px;
@@ -38,8 +39,8 @@
 
   /* Shadows */
   --shadow-sm: 0 1px 3px var(--strata-shadow);
-  --shadow-md: 0 4px 12px var(--strata-shadow);
-  --shadow-lg: 0 8px 24px var(--strata-shadow);
+  --shadow-md: 0 4px 16px var(--strata-shadow);
+  --shadow-lg: 0 12px 32px var(--strata-shadow), 0 2px 8px rgba(15, 13, 12, 0.35);
 
   /* Typography scale */
   --font-size-2xs: 10px;
@@ -50,6 +51,14 @@
 
   /* Focus ring */
   --focus-ring: 0 0 0 2px var(--strata-amber);
+
+  /* Panel surface */
+  --panel-bg: rgba(28, 26, 24, 0.84);
+}
+
+::selection {
+  background: var(--strata-amber);
+  color: var(--strata-slate-900);
 }
 
 /* Reduced motion */
@@ -87,12 +96,69 @@ body {
   margin: 0;
 }
 
-/* MapLibre popup overrides */
+@layer components {
+  /* Shared floating panel — every piece of chrome sits on this surface */
+  .strata-panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px) saturate(1.15);
+    -webkit-backdrop-filter: blur(16px) saturate(1.15);
+    border: 1px solid var(--strata-border);
+    border-radius: var(--radius-lg);
+    box-shadow:
+      var(--shadow-lg),
+      inset 0 1px 0 rgba(250, 247, 242, 0.05);
+  }
+
+  /* Micro-header used atop every panel section */
+  .strata-panel-title {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(250, 247, 242, 0.45);
+  }
+
+  /* Hairline rule between panel sections */
+  .strata-rule {
+    border-top: 1px solid rgba(250, 247, 242, 0.07);
+  }
+
+  /* Data values — cartographic, tabular */
+  .strata-data {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Thin warm scrollbars inside panels and popups */
+.strata-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--strata-stone-700) transparent;
+}
+
+.strata-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.strata-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.strata-scroll::-webkit-scrollbar-thumb {
+  background: var(--strata-stone-700);
+  border-radius: 2px;
+}
+
+/* MapLibre popup overrides — match the panel surface */
 .maplibregl-popup-content {
-  background: var(--strata-slate-900);
+  background: var(--panel-bg);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
   border: 1px solid var(--strata-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(250, 247, 242, 0.05);
   padding: 0;
   color: var(--strata-cream);
 }
@@ -102,6 +168,7 @@ body {
   font-size: 18px;
   padding: 8px 10px;
   line-height: 1;
+  transition: color 150ms ease;
 }
 
 .maplibregl-popup-close-button:hover {
@@ -110,13 +177,14 @@ body {
 }
 
 .maplibregl-popup-tip {
-  border-top-color: var(--strata-slate-900) !important;
+  border-top-color: rgba(28, 26, 24, 0.9) !important;
 }
 
 /* MapLibre control overrides */
 .maplibregl-ctrl-group {
-  background: rgba(28, 26, 24, 0.85) !important;
-  backdrop-filter: blur(8px);
+  background: var(--panel-bg) !important;
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
   border: 1px solid var(--strata-border) !important;
   border-radius: var(--radius-md) !important;
   box-shadow: var(--shadow-md) !important;
@@ -126,8 +194,12 @@ body {
   color: var(--strata-cream) !important;
 }
 
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid rgba(250, 247, 242, 0.07) !important;
+}
+
 .maplibregl-ctrl-group button:hover {
-  background: rgba(250, 247, 242, 0.1) !important;
+  background: rgba(250, 247, 242, 0.08) !important;
 }
 
 .maplibregl-ctrl-group button:focus-visible {
@@ -136,7 +208,7 @@ body {
 }
 
 .maplibregl-ctrl-group button:active {
-  background: rgba(250, 247, 242, 0.15) !important;
+  background: rgba(250, 247, 242, 0.14) !important;
 }
 
 .maplibregl-ctrl-attrib {

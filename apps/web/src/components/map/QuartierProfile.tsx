@@ -1,97 +1,110 @@
 import { BarChart } from './BarChart';
-import type { AgeBucket, QuartierPopulation, QuartierProfile as QuartierProfileData } from '@/lib/api';
+import type { QuartierPopulation, QuartierProfile as QuartierProfileData } from '@/lib/api';
 
 interface QuartierProfileProps {
   profile: QuartierProfileData;
   onClose?: () => void;
 }
 
+const TREND_STYLES: Record<QuartierPopulation['trend'], { arrow: string; className: string }> = {
+  growing: { arrow: '↗', className: 'text-strata-sage' },
+  stable: { arrow: '→', className: 'text-strata-cream/55' },
+  declining: { arrow: '↘', className: 'text-strata-terracotta' },
+};
+
 function TrendBadge({ trend }: { trend: QuartierPopulation['trend'] }) {
-  const colors: Record<QuartierPopulation['trend'], string> = {
-    growing: 'text-green-400',
-    stable: 'text-strata-cream/60',
-    declining: 'text-red-400',
-  };
-  return <span className={`text-xs-11 font-medium ${colors[trend]}`}>{trend}</span>;
+  const { arrow, className } = TREND_STYLES[trend];
+  return (
+    <span className={`text-xs-11 font-medium ${className}`}>
+      <span aria-hidden className="mr-1">
+        {arrow}
+      </span>
+      {trend}
+    </span>
+  );
+}
+
+/** Round to one decimal for display — API values can carry full float precision. */
+function fmtPct(value: number): string {
+  return `${Number(value.toFixed(1))}%`;
+}
+
+function StatRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between py-[3px]">
+      <dt className="text-2xs text-strata-cream/50">{label}</dt>
+      <dd className="strata-data text-xs-11 text-strata-cream">{children}</dd>
+    </div>
+  );
 }
 
 export function QuartierProfile({ profile, onClose }: QuartierProfileProps) {
   const { quartier_name, kreis, population, age_distribution, commute_hb_min } = profile;
 
   return (
-    <div className="bg-strata-slate-800 backdrop-blur-sm border border-strata-cream/20 rounded-lg shadow-lg p-4 w-64">
-      <div className="flex items-start justify-between mb-1">
-        <h3 className="text-base-13 font-semibold text-strata-cream">{quartier_name}</h3>
+    <div className="strata-panel w-72 p-4">
+      <div className="mb-3 flex items-start justify-between">
+        <div>
+          <h3 className="text-lg-15 font-semibold tracking-tight text-strata-cream">
+            {quartier_name}
+          </h3>
+          <p className="mt-0.5 text-2xs uppercase tracking-[0.14em] text-strata-cream/40">
+            Kreis {kreis}
+          </p>
+        </div>
         {onClose && (
           <button
             onClick={onClose}
             data-testid="quartier-close"
-            className="text-strata-cream/40 hover:text-strata-cream text-[14px] leading-none ml-2"
+            className="ml-2 -mr-1 -mt-1 rounded-md p-1 text-[15px] leading-none text-strata-cream/35 transition-colors hover:bg-strata-cream/5 hover:text-strata-cream"
             aria-label="Close"
           >
             ×
           </button>
         )}
       </div>
-      <p className="text-2xs text-strata-cream/70 mb-3">Kreis {kreis}</p>
 
       {population === null ? (
-        <p className="text-xs-11 text-strata-cream/40 italic">No data</p>
+        <p className="text-xs-11 italic text-strata-cream/40">No data</p>
       ) : (
         <>
-          <dl className="space-y-1 mb-3">
-            <div className="flex justify-between">
-              <dt className="text-2xs text-strata-cream/70">Population</dt>
-              <dd className="text-xs-11 text-strata-cream">
-                {population.total.toLocaleString()}
-              </dd>
-            </div>
+          <dl className="divide-y divide-strata-cream/[0.06]">
+            <StatRow label="Population">{population.total.toLocaleString()}</StatRow>
             {population.density_per_km2 !== null && (
-              <div className="flex justify-between">
-                <dt className="text-2xs text-strata-cream/70">Density / km²</dt>
-                <dd className="text-xs-11 text-strata-cream">
-                  {population.density_per_km2.toLocaleString()}
-                </dd>
-              </div>
+              <StatRow label="Density / km²">
+                {Math.round(population.density_per_km2).toLocaleString()}
+              </StatRow>
             )}
             {population.swiss_pct !== null && (
-              <div className="flex justify-between">
-                <dt className="text-2xs text-strata-cream/70">Swiss</dt>
-                <dd className="text-xs-11 text-strata-cream">{population.swiss_pct}%</dd>
-              </div>
+              <StatRow label="Swiss">{fmtPct(population.swiss_pct)}</StatRow>
             )}
             {population.foreign_pct !== null && (
-              <div className="flex justify-between">
-                <dt className="text-2xs text-strata-cream/70">Foreign</dt>
-                <dd className="text-xs-11 text-strata-cream">{population.foreign_pct}%</dd>
-              </div>
+              <StatRow label="Foreign">{fmtPct(population.foreign_pct)}</StatRow>
             )}
             {population.growth_rate !== null && (
-              <div className="flex justify-between">
-                <dt className="text-2xs text-strata-cream/70">Growth rate</dt>
-                <dd className="text-xs-11 text-strata-cream">{population.growth_rate}%</dd>
-              </div>
+              <StatRow label="Growth rate">{fmtPct(population.growth_rate)}</StatRow>
             )}
-            <div className="flex justify-between items-center">
-              <dt className="text-2xs text-strata-cream/70">Trend</dt>
+            <div className="flex items-baseline justify-between py-[3px]">
+              <dt className="text-2xs text-strata-cream/50">Trend</dt>
               <dd>
                 <TrendBadge trend={population.trend} />
               </dd>
             </div>
+            {commute_hb_min != null && (
+              <div
+                className="flex items-baseline justify-between py-[3px]"
+                data-testid="commute-hb-row"
+              >
+                <dt className="text-2xs text-strata-cream/50">To Zürich HB</dt>
+                <dd className="strata-data text-xs-11 text-strata-cream">{commute_hb_min} min</dd>
+              </div>
+            )}
           </dl>
 
-          {commute_hb_min != null && (
-            <div
-              className="flex justify-between mt-2 pt-2 border-t border-strata-cream/10"
-              data-testid="commute-hb-row"
-            >
-              <dt className="text-2xs text-strata-cream/70">To Zürich HB</dt>
-              <dd className="text-xs-11 text-strata-cream">{commute_hb_min} min</dd>
-            </div>
-          )}
-
           {age_distribution.length > 0 && (
-            <BarChart buckets={age_distribution} title="Age distribution" />
+            <div className="strata-rule mt-3 pt-3">
+              <BarChart buckets={age_distribution} title="Age distribution" />
+            </div>
           )}
         </>
       )}

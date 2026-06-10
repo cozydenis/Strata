@@ -29,6 +29,7 @@ const config: Config = {
           },
           terracotta: 'var(--strata-terracotta)',
           amber: 'var(--strata-amber)',
+          sage: 'var(--strata-sage)',
           cream: 'var(--strata-cream)',
           ink: 'var(--strata-ink)',
           muted: 'var(--strata-muted)',
@@ -36,6 +37,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       fontSize: {
         '2xs': ['10px', { lineHeight: '1.4' }],

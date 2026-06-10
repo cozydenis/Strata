@@ -37,11 +37,11 @@ describe('Legend', () => {
     expect(screen.getByText(/construction era/i)).toBeTruthy();
   });
 
-  it('era swatches use rounded-full class for circular appearance', () => {
+  it('era swatches have rounded corners', () => {
     const { container } = render(<Legend />);
     const swatches = container.querySelectorAll('[data-testid="era-swatch"]');
     swatches.forEach((swatch) => {
-      expect((swatch as HTMLElement).className).toContain('rounded-full');
+      expect((swatch as HTMLElement).className).toContain('rounded');
     });
   });
 

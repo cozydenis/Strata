@@ -94,6 +94,6 @@ describe('QuartierProfile', () => {
   it('applies glass card styling', () => {
     const { container } = render(<QuartierProfile profile={fullProfile} />);
     const card = container.firstChild as HTMLElement;
-    expect(card.className).toContain('backdrop-blur');
+    expect(card.className).toContain('strata-panel');
   });
 });

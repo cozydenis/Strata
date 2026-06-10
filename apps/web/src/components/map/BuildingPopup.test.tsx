@@ -89,7 +89,7 @@ describe('BuildingPopup', () => {
 
   it('renders a divider between address and metadata', () => {
     const { container } = render(<BuildingPopup summary={fullSummary} />);
-    const divider = container.querySelector('.border-t');
+    const divider = container.querySelector('.strata-rule');
     expect(divider).toBeTruthy();
   });
 
