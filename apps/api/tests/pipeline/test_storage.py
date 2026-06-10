@@ -1,8 +1,8 @@
 """Tests for Supabase Storage uploader and save_listing_media uploader integration."""
+
 from __future__ import annotations
 
 import datetime
-import io
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,9 +11,8 @@ from sqlalchemy.orm import Session
 
 from strata_api.db.base import Base
 from strata_api.db.models.listing import Listing, ListingImage
-from strata_api.pipeline.storage import SupabaseStorageUploader, _content_type
 from strata_api.pipeline.media_downloader import save_listing_media
-
+from strata_api.pipeline.storage import SupabaseStorageUploader, _content_type
 
 # ── fixtures ─────────────────────────────────────────────────────────────────
 
@@ -97,9 +96,7 @@ class TestContentType:
 class TestPublicUrl:
     def test_returns_correct_url_format(self, uploader):
         url = uploader.public_url("photos/42/img.jpg")
-        assert url == (
-            "https://abcdef.supabase.co/storage/v1/object/public/listing-media/photos/42/img.jpg"
-        )
+        assert url == ("https://abcdef.supabase.co/storage/v1/object/public/listing-media/photos/42/img.jpg")
 
     def test_bucket_name_is_listing_media(self, uploader):
         url = uploader.public_url("anything/file.jpg")
@@ -113,9 +110,7 @@ class TestPublicUrl:
         url = u.public_url("photos/img.jpg")
         # Must not produce double slash between base and storage path
         assert "supabase.co//storage" not in url
-        assert url == (
-            "https://abcdef.supabase.co/storage/v1/object/public/listing-media/photos/img.jpg"
-        )
+        assert url == ("https://abcdef.supabase.co/storage/v1/object/public/listing-media/photos/img.jpg")
 
     def test_storage_path_is_preserved_verbatim(self, uploader):
         path = "documents/999/plan with spaces.pdf"
@@ -156,9 +151,7 @@ class TestUploadSuccess:
 
         assert len(captured_requests) == 1
         req = captured_requests[0]
-        assert req.full_url == (
-            "https://abcdef.supabase.co/storage/v1/object/listing-media/photos/42/img.jpg"
-        )
+        assert req.full_url == ("https://abcdef.supabase.co/storage/v1/object/listing-media/photos/42/img.jpg")
 
     def test_request_uses_post_method(self, uploader):
         mock_response = MagicMock()
@@ -238,26 +231,28 @@ class TestUploadSuccess:
 
 class TestUploadFailure:
     def test_network_error_raises_runtime_error(self, uploader):
-        with patch("urllib.request.urlopen", side_effect=OSError("connection refused")):
-            with pytest.raises(RuntimeError, match="Storage upload failed"):
-                uploader.upload(b"data", "photos/42/img.jpg")
+        with (
+            patch("urllib.request.urlopen", side_effect=OSError("connection refused")),
+            pytest.raises(RuntimeError, match="Storage upload failed"),
+        ):
+            uploader.upload(b"data", "photos/42/img.jpg")
 
     def test_runtime_error_message_contains_storage_path(self, uploader):
-        with patch("urllib.request.urlopen", side_effect=OSError("timeout")):
-            with pytest.raises(RuntimeError, match="photos/42/img.jpg"):
-                uploader.upload(b"data", "photos/42/img.jpg")
+        with (
+            patch("urllib.request.urlopen", side_effect=OSError("timeout")),
+            pytest.raises(RuntimeError, match="photos/42/img.jpg"),
+        ):
+            uploader.upload(b"data", "photos/42/img.jpg")
 
     def test_original_exception_is_chained(self, uploader):
         original = OSError("connection refused")
-        with patch("urllib.request.urlopen", side_effect=original):
-            with pytest.raises(RuntimeError) as exc_info:
-                uploader.upload(b"data", "photos/42/img.jpg")
+        with patch("urllib.request.urlopen", side_effect=original), pytest.raises(RuntimeError) as exc_info:
+            uploader.upload(b"data", "photos/42/img.jpg")
         assert exc_info.value.__cause__ is original
 
     def test_generic_exception_also_raises_runtime_error(self, uploader):
-        with patch("urllib.request.urlopen", side_effect=Exception("unexpected")):
-            with pytest.raises(RuntimeError):
-                uploader.upload(b"data", "photos/42/img.jpg")
+        with patch("urllib.request.urlopen", side_effect=Exception("unexpected")), pytest.raises(RuntimeError):
+            uploader.upload(b"data", "photos/42/img.jpg")
 
 
 # ── save_listing_media with uploader — success path ──────────────────────────
@@ -279,10 +274,7 @@ class TestSaveListingMediaWithUploader:
             "documents": [],
         }
         fake_bytes = b"\xff\xd8\xff\xe0" + b"\x00" * 20
-        supabase_public_url = (
-            "https://abcdef.supabase.co/storage/v1/object/public/listing-media/"
-            f"photos/{listing_id}/img1.jpg"
-        )
+        supabase_public_url = f"https://abcdef.supabase.co/storage/v1/object/public/listing-media/photos/{listing_id}/img1.jpg"
         mock_uploader = self._make_uploader()
 
         with (
@@ -291,26 +283,19 @@ class TestSaveListingMediaWithUploader:
         ):
             save_listing_media(db, listing_id, media, tmp_path, uploader=mock_uploader)
 
-        rows = db.execute(
-            select(ListingImage).where(ListingImage.listing_id == listing_id)
-        ).scalars().all()
+        rows = db.execute(select(ListingImage).where(ListingImage.listing_id == listing_id)).scalars().all()
         assert len(rows) == 1
         assert rows[0].url == supabase_public_url
 
     def test_original_flatfox_url_stored_in_local_path(self, db, listing_id, tmp_path):
-        original_url = (
-            "https://flatfox.ch/thumb/ff/2026/03/img2.jpg?alias=listing_gallery_l&signature=B"
-        )
+        original_url = "https://flatfox.ch/thumb/ff/2026/03/img2.jpg?alias=listing_gallery_l&signature=B"
         media = {
             "photos": [original_url],
             "floorplans": [],
             "documents": [],
         }
         fake_bytes = b"\xff\xd8" + b"\x00" * 10
-        supabase_public_url = (
-            "https://abcdef.supabase.co/storage/v1/object/public/listing-media/"
-            f"photos/{listing_id}/img2.jpg"
-        )
+        supabase_public_url = f"https://abcdef.supabase.co/storage/v1/object/public/listing-media/photos/{listing_id}/img2.jpg"
         mock_uploader = self._make_uploader()
 
         with (
@@ -319,18 +304,12 @@ class TestSaveListingMediaWithUploader:
         ):
             save_listing_media(db, listing_id, media, tmp_path, uploader=mock_uploader)
 
-        rows = db.execute(
-            select(ListingImage).where(ListingImage.listing_id == listing_id)
-        ).scalars().all()
+        rows = db.execute(select(ListingImage).where(ListingImage.listing_id == listing_id)).scalars().all()
         assert len(rows) == 1
         assert rows[0].local_path == original_url
 
-    def test_uploader_called_with_downloaded_bytes_and_storage_path(
-        self, db, listing_id, tmp_path
-    ):
-        original_url = (
-            "https://flatfox.ch/thumb/ff/2026/03/img3.jpg?alias=listing_gallery_l&signature=C"
-        )
+    def test_uploader_called_with_downloaded_bytes_and_storage_path(self, db, listing_id, tmp_path):
+        original_url = "https://flatfox.ch/thumb/ff/2026/03/img3.jpg?alias=listing_gallery_l&signature=C"
         media = {
             "photos": [original_url],
             "floorplans": [],
@@ -417,9 +396,7 @@ class TestSaveListingMediaUploaderFailure:
         )
 
     def test_falls_back_to_original_url_on_upload_failure(self, db, listing_id, tmp_path):
-        original_url = (
-            "https://flatfox.ch/thumb/ff/2026/03/bad.jpg?alias=listing_gallery_l&signature=X"
-        )
+        original_url = "https://flatfox.ch/thumb/ff/2026/03/bad.jpg?alias=listing_gallery_l&signature=X"
         media = {
             "photos": [original_url],
             "floorplans": [],
@@ -435,9 +412,7 @@ class TestSaveListingMediaUploaderFailure:
         ):
             save_listing_media(db, listing_id, media, tmp_path, uploader=mock_uploader)
 
-        rows = db.execute(
-            select(ListingImage).where(ListingImage.listing_id == listing_id)
-        ).scalars().all()
+        rows = db.execute(select(ListingImage).where(ListingImage.listing_id == listing_id)).scalars().all()
         assert len(rows) == 1
         # On failure the original Flatfox URL must be used as fallback
         assert rows[0].url == original_url
@@ -455,9 +430,7 @@ class TestSaveListingMediaUploaderFailure:
 
         with (
             patch("strata_api.pipeline.media_downloader._url_read", return_value=b"\xff\xd8"),
-            patch.object(
-                mock_uploader, "upload", side_effect=RuntimeError("Storage upload failed")
-            ),
+            patch.object(mock_uploader, "upload", side_effect=RuntimeError("Storage upload failed")),
         ):
             # Must not raise — failures are caught and logged
             counts = save_listing_media(db, listing_id, media, tmp_path, uploader=mock_uploader)
@@ -465,9 +438,7 @@ class TestSaveListingMediaUploaderFailure:
         assert counts["photos_saved"] == 1
 
     def test_upload_failure_stores_original_url_not_supabase_url(self, db, listing_id, tmp_path):
-        original_url = (
-            "https://flatfox.ch/thumb/ff/2026/03/fail.jpg?alias=listing_gallery_l&signature=Z"
-        )
+        original_url = "https://flatfox.ch/thumb/ff/2026/03/fail.jpg?alias=listing_gallery_l&signature=Z"
         media = {
             "photos": [original_url],
             "floorplans": [],
@@ -477,15 +448,11 @@ class TestSaveListingMediaUploaderFailure:
 
         with (
             patch("strata_api.pipeline.media_downloader._url_read", return_value=b"\xff\xd8"),
-            patch.object(
-                mock_uploader, "upload", side_effect=RuntimeError("Storage upload failed")
-            ),
+            patch.object(mock_uploader, "upload", side_effect=RuntimeError("Storage upload failed")),
         ):
             save_listing_media(db, listing_id, media, tmp_path, uploader=mock_uploader)
 
-        rows = db.execute(
-            select(ListingImage).where(ListingImage.listing_id == listing_id)
-        ).scalars().all()
+        rows = db.execute(select(ListingImage).where(ListingImage.listing_id == listing_id)).scalars().all()
         assert len(rows) == 1
         stored_url = rows[0].url
         assert "supabase" not in stored_url

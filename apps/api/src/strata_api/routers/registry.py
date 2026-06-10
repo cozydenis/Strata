@@ -1,8 +1,9 @@
 """Read endpoints for the GWR unit registry."""
+
 from __future__ import annotations
 
 import json
-from typing import Iterator
+from collections.abc import Iterator
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -19,24 +20,44 @@ router = APIRouter(prefix="/registry", tags=["registry"])
 
 def _building_dict(b: Building) -> dict:
     return {
-        "egid": b.egid, "gstat": b.gstat, "gkat": b.gkat, "gklas": b.gklas,
-        "gbauj": b.gbauj, "gabbj": b.gabbj, "garea": b.garea,
-        "gastw": b.gastw, "ganzwhg": b.ganzwhg,
-        "lat": b.lat, "lon": b.lon,
-        "municipality": b.municipality, "municipality_code": b.municipality_code,
-        "canton": b.canton, "data_source": b.data_source,
+        "egid": b.egid,
+        "gstat": b.gstat,
+        "gkat": b.gkat,
+        "gklas": b.gklas,
+        "gbauj": b.gbauj,
+        "gabbj": b.gabbj,
+        "garea": b.garea,
+        "gastw": b.gastw,
+        "ganzwhg": b.ganzwhg,
+        "lat": b.lat,
+        "lon": b.lon,
+        "municipality": b.municipality,
+        "municipality_code": b.municipality_code,
+        "canton": b.canton,
+        "data_source": b.data_source,
     }
 
 
 def _unit_dict(u: Unit) -> dict:
     return {
-        "egid": u.egid, "ewid": u.ewid, "edid": u.edid,
-        "wstwk": u.wstwk, "wstwklang": u.wstwklang,
-        "wazim": u.wazim, "warea": u.warea, "wkche": u.wkche,
-        "wstat": u.wstat, "wbauj": u.wbauj, "wabbj": u.wabbj,
-        "dplz4": u.dplz4, "dplzname": u.dplzname,
-        "strname": u.strname, "deinr": u.deinr,
-        "lat": u.lat, "lon": u.lon, "data_source": u.data_source,
+        "egid": u.egid,
+        "ewid": u.ewid,
+        "edid": u.edid,
+        "wstwk": u.wstwk,
+        "wstwklang": u.wstwklang,
+        "wazim": u.wazim,
+        "warea": u.warea,
+        "wkche": u.wkche,
+        "wstat": u.wstat,
+        "wbauj": u.wbauj,
+        "wabbj": u.wabbj,
+        "dplz4": u.dplz4,
+        "dplzname": u.dplzname,
+        "strname": u.strname,
+        "deinr": u.deinr,
+        "lat": u.lat,
+        "lon": u.lon,
+        "data_source": u.data_source,
     }
 
 
@@ -51,12 +72,16 @@ def buildings_geojson() -> StreamingResponse:
     def _generate() -> Iterator[str]:
         yield '{"type":"FeatureCollection","features":['
         with Session(engine) as s:
-            rows = s.execute(
-                select(Building).where(
-                    Building.lat.is_not(None),
-                    Building.lon.is_not(None),
+            rows = (
+                s.execute(
+                    select(Building).where(
+                        Building.lat.is_not(None),
+                        Building.lon.is_not(None),
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
         first = True
         for row in rows:
             feature = json.dumps(
@@ -122,12 +147,7 @@ def get_building_summary(egid: int) -> dict:
         b = s.get(Building, egid)
         if b is None:
             raise HTTPException(status_code=404, detail=f"Building {egid} not found.")
-        entrance = s.execute(
-            select(Entrance)
-            .where(Entrance.egid == egid)
-            .order_by(Entrance.edid)
-            .limit(1)
-        ).scalar_one_or_none()
+        entrance = s.execute(select(Entrance).where(Entrance.egid == egid).order_by(Entrance.edid).limit(1)).scalar_one_or_none()
     return {
         "egid": b.egid,
         "gbauj": b.gbauj,

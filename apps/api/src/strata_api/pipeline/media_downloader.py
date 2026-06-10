@@ -9,6 +9,7 @@ Image URL patterns in Flatfox HTML:
   /thumb/ff/{year}/{month}/{hash}.jpg?alias=listing_gallery_l&signature={sig}
   /thumb/ff/{year}/{month}/{hash}.jpg?alias=listing_floorplan_l&signature={sig}
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,6 +20,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+
     from strata_api.pipeline.storage import SupabaseStorageUploader
 
 logger = logging.getLogger(__name__)
@@ -208,13 +210,15 @@ def save_listing_media(
             ok = download_file(source_url, dest)
             local_path = str(dest) if ok else None
 
-        db.add(ListingImage(
-            listing_id=listing_id,
-            url=stored_url,
-            local_path=local_path,
-            ordering=ordering,
-            image_type=image_type,
-        ))
+        db.add(
+            ListingImage(
+                listing_id=listing_id,
+                url=stored_url,
+                local_path=local_path,
+                ordering=ordering,
+                image_type=image_type,
+            )
+        )
 
     for ordering, url in enumerate(media.get("photos", [])):
         _save(url, "photos", media_dir / "photos", ordering, "photo")
