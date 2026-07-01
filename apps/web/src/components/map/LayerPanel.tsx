@@ -6,6 +6,7 @@ interface LayerPanelProps {
   listingsVisible: boolean;
   quartiereVisible: boolean;
   noiseVisible: boolean;
+  airQualityVisible: boolean;
   activeMetric: string;
   onToggle: (layer: string) => void;
   onMetricChange: (metric: string) => void;
@@ -21,6 +22,7 @@ const LAYERS: { key: string; label: string; glyph: string }[] = [
   { key: 'listings', label: 'Active listings', glyph: '#D4915A' },
   { key: 'quartiere', label: 'Quartiere', glyph: '#5A7D8A' },
   { key: 'noise', label: 'Noise', glyph: '#C4785B' },
+  { key: 'air', label: 'Air quality', glyph: '#8FA071' },
 ];
 
 const COMMUTE_GLYPH = '#C8C2BA';
@@ -37,7 +39,7 @@ function isVisible(
   key: string,
   props: Pick<
     LayerPanelProps,
-    'buildingsVisible' | 'listingsVisible' | 'quartiereVisible' | 'noiseVisible'
+    'buildingsVisible' | 'listingsVisible' | 'quartiereVisible' | 'noiseVisible' | 'airQualityVisible'
   >,
 ): boolean {
   switch (key) {
@@ -49,6 +51,8 @@ function isVisible(
       return props.quartiereVisible;
     case 'noise':
       return props.noiseVisible;
+    case 'air':
+      return props.airQualityVisible;
     default:
       return false;
   }
@@ -106,6 +110,7 @@ export function LayerPanel({
   listingsVisible,
   quartiereVisible,
   noiseVisible,
+  airQualityVisible,
   activeMetric,
   onToggle,
   onMetricChange,
@@ -124,6 +129,7 @@ export function LayerPanel({
             listingsVisible,
             quartiereVisible,
             noiseVisible,
+            airQualityVisible,
           });
           return (
             <li key={key}>

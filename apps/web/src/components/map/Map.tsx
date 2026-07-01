@@ -13,11 +13,14 @@ import { QuartierProfile, type QuartierMatch } from './QuartierProfile';
 import { MatchPanel } from './MatchPanel';
 import { ComparisonPanel } from './ComparisonPanel';
 import { CommuteLegend } from './CommuteLegend';
+import { AirLegend } from './AirLegend';
+import { AirQualityPopup, parseAirStation, type AirStation } from './AirQualityPopup';
 import { WatchlistPanel } from './WatchlistPanel';
 import { AuthControl } from '../auth/AuthControl';
 import { eraColorExpression } from '@/lib/map/era-colors';
 import { quartierFillColor } from '@/lib/map/quartier-colors';
 import { noiseLineColor } from '@/lib/map/noise-colors';
+import { airCircleColor } from '@/lib/map/air-colors';
 import { computeMatchScores, explainMatch, type MatchScoreFeature } from '@/lib/match/score';
 import {
   DEFAULT_PREFERENCES,
@@ -45,6 +48,7 @@ const GEOJSON_URL = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/registry/buildings
 const LISTINGS_GEOJSON_URL = '/data/listings.geojson';
 const QUARTIERE_GEOJSON_URL = '/data/quartiere.geojson';
 const NOISE_GEOJSON_URL = '/data/noise.geojson';
+const AIR_GEOJSON_URL = '/data/air_quality.geojson';
 const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 const LISTING_COLOR = '#D4915A';
 const BUILDING_LAYERS = ['clusters', 'cluster-count', 'buildings-unclustered'] as const;
@@ -64,6 +68,8 @@ export function MapView() {
   const mapRef = useRef<unknown>(null);
   const popupRef = useRef<unknown>(null);
   const popupRootRef = useRef<Root | null>(null);
+  const airPopupRef = useRef<unknown>(null);
+  const airPopupRootRef = useRef<Root | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [popup, setPopup] = useState<BuildingSummary | null>(null);
   const [popupListings, setPopupListings] = useState<ListingSummary[] | null>(null);
@@ -77,6 +83,7 @@ export function MapView() {
   const [listingsVisible, setListingsVisible] = useState(true);
   const [quartiereVisible, setQuartiereVisible] = useState(false);
   const [noiseVisible, setNoiseVisible] = useState(false);
+  const [airQualityVisible, setAirQualityVisible] = useState(false);
   const [activeMetric, setActiveMetric] = useState('population_density');
 
   // Personalized match scoring (client-side, persisted in localStorage)
@@ -131,6 +138,35 @@ export function MapView() {
       setPopupListings(null);
     });
     popupRef.current = mp;
+  }, []);
+
+  // Air-quality station click — data lives in the feature, so render directly
+  const showAirPopup = useCallback(async (station: AirStation, coords: [number, number]) => {
+    if (!mapRef.current) return;
+
+    airPopupRootRef.current?.unmount();
+    airPopupRootRef.current = null;
+    (airPopupRef.current as { remove: () => void } | null)?.remove();
+
+    const mod = await import('maplibre-gl');
+    const maplibregl = mod.default ?? mod;
+
+    const el = document.createElement('div');
+    const root = createRoot(el);
+    airPopupRootRef.current = root;
+    root.render(createElement(AirQualityPopup, { station }));
+
+    const PopupClass = maplibregl.Popup ?? (mod as unknown as { Popup: unknown }).Popup;
+    const mp = new PopupClass({ closeOnClick: true, maxWidth: '320px' })
+      .setLngLat(coords)
+      .setDOMContent(el)
+      .addTo(mapRef.current as Parameters<typeof mp.addTo>[0]);
+
+    mp.on('close', () => {
+      airPopupRootRef.current?.unmount();
+      airPopupRootRef.current = null;
+    });
+    airPopupRef.current = mp;
   }, []);
 
   // Handle building click — show skeleton immediately, then fetch real data
@@ -325,6 +361,26 @@ export function MapView() {
             },
           });
 
+          // ── Air-quality station source + layer (below buildings) ───────
+          map.addSource('air-quality', {
+            type: 'geojson',
+            data: AIR_GEOJSON_URL,
+          });
+
+          map.addLayer({
+            id: 'air-quality-stations',
+            type: 'circle',
+            source: 'air-quality',
+            layout: { visibility: 'none' },
+            paint: {
+              'circle-color': airCircleColor() as unknown as string,
+              'circle-radius': 7,
+              'circle-stroke-width': 1.5,
+              'circle-stroke-color': '#FAF7F2',
+              'circle-opacity': 0.9,
+            },
+          });
+
           // ── Buildings source + layers ──────────────────────────────────
           map.addSource('buildings', {
             type: 'geojson',
@@ -423,8 +479,19 @@ export function MapView() {
             handleQuartierClick(quartierId);
           });
 
+          // ── Click: air-quality stations ───────────────────────────────
+          map.on('click', 'air-quality-stations', (e: { features?: Array<{ geometry: GeoJSON.Geometry; properties?: Record<string, unknown> }>; originalEvent: Event }) => {
+            e.originalEvent.stopPropagation();
+            if (!e.features?.length) return;
+            const feature = e.features[0];
+            const station = parseAirStation(feature.properties);
+            if (!station) return;
+            const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+            showAirPopup(station, coords);
+          });
+
           // ── Cursor hints ──────────────────────────────────────────────
-          for (const layer of ['buildings-unclustered', 'listings-markers', 'quartiere-fill']) {
+          for (const layer of ['buildings-unclustered', 'listings-markers', 'quartiere-fill', 'air-quality-stations']) {
             map.on('mouseenter', layer, () => {
               map.getCanvas().style.cursor = 'pointer';
             });
@@ -596,6 +663,23 @@ export function MapView() {
     if (!map?.setLayoutProperty || !map?.getLayer?.('noise-segments')) return;
     map.setLayoutProperty('noise-segments', 'visibility', noiseVisible ? 'visible' : 'none');
   }, [noiseVisible]);
+
+  // Toggle air-quality layer visibility
+  useEffect(() => {
+    const map = mapRef.current as {
+      setLayoutProperty?: (layer: string, prop: string, val: string) => void;
+      getLayer?: (id: string) => unknown;
+    } | null;
+    if (!map?.setLayoutProperty || !map?.getLayer?.('air-quality-stations')) return;
+    map.setLayoutProperty('air-quality-stations', 'visibility', airQualityVisible ? 'visible' : 'none');
+
+    // Dismiss any open station popup when the layer is hidden
+    if (!airQualityVisible) {
+      airPopupRootRef.current?.unmount();
+      airPopupRootRef.current = null;
+      (airPopupRef.current as { remove: () => void } | null)?.remove();
+    }
+  }, [airQualityVisible]);
 
   // Toggle commute isochrone layers and fetch data when enabled
   useEffect(() => {
@@ -788,6 +872,9 @@ export function MapView() {
       case 'noise':
         setNoiseVisible((v) => !v);
         break;
+      case 'air':
+        setAirQualityVisible((v) => !v);
+        break;
     }
   }
 
@@ -840,6 +927,7 @@ export function MapView() {
           listingsVisible={listingsVisible}
           quartiereVisible={quartiereVisible}
           noiseVisible={noiseVisible}
+          airQualityVisible={airQualityVisible}
           activeMetric={activeMetric}
           onToggle={handleLayerToggle}
           onMetricChange={setActiveMetric}
@@ -868,6 +956,11 @@ export function MapView() {
             Isochrone data not yet generated. Run{' '}
             <code className="font-mono text-strata-amber/80">scripts/otp/setup.sh</code> to
             generate.
+          </div>
+        )}
+        {airQualityVisible && (
+          <div className="animate-fadeSlideUp">
+            <AirLegend visible={airQualityVisible} />
           </div>
         )}
         <div className="animate-fadeSlideUp">
