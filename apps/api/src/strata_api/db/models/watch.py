@@ -20,6 +20,9 @@ class Watch(Base):
     ewid: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
+    # Last time a notification digest was successfully sent covering this watch.
+    # NULL = never notified; the runner uses it as the per-user event cutoff.
+    last_notified_at: Mapped[datetime.datetime | None] = mapped_column(DateTime, nullable=True)
 
     __table_args__ = (
         # NULL ewid values are distinct per SQL semantics — building-level

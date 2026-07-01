@@ -13,6 +13,9 @@ from sqlalchemy.orm import Session
 
 from strata_api.config import settings
 from strata_api.db.session import get_engine
+from strata_api.notifications.emailer import build_sender
+from strata_api.notifications.runner import run_notifications
+from strata_api.notifications.user_emails import build_email_resolver
 from strata_api.pipeline.runner import PipelineResult, run_kanton_pipeline, run_stadt_pipeline
 
 logger = logging.getLogger(__name__)
@@ -74,3 +77,19 @@ def trigger_listing_pipeline(response: Response) -> dict:
 
     threading.Thread(target=_run, daemon=True).start()
     return {"status": "accepted", "message": "Listing pipeline started in background. Check server logs for progress."}
+
+
+@router.post("/run-notifications", status_code=200, dependencies=[Depends(_require_api_key)])
+def trigger_notifications() -> dict:
+    """Send watch-event email digests to every user with fresh events.
+
+    Runs synchronously and returns the summary counts. The email sender and
+    user-email resolver are built from settings (ConsoleSender + Supabase Admin
+    API by default); both are module-level so tests can inject fakes.
+    """
+    engine = get_engine()
+    sender = build_sender(settings)
+    resolve_email = build_email_resolver(settings)
+    summary = run_notifications(engine, sender=sender, resolve_email=resolve_email)
+    logger.info("Notification run completed: %s", asdict(summary))
+    return {"status": "completed", **asdict(summary)}
