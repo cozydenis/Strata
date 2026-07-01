@@ -88,12 +88,25 @@ def _amenity_props(counts: dict[str, int] | None, area_km2: float | None) -> dic
     return {"amenities": {**counts, "total": total, "per_km2": per_km2}}
 
 
+# Green-space metric keys embedded flat into each Quartier's properties (see
+# green_space.py for the centroid-assignment approximation behind these figures).
+_GREEN_KEYS = ("green_area_m2", "green_share_pct", "green_m2_per_capita")
+
+
+def _green_props(metrics: dict | None) -> dict:
+    """Flatten the three green metrics into properties, or None each when absent."""
+    if metrics is None:
+        return dict.fromkeys(_GREEN_KEYS, None)
+    return {key: metrics.get(key) for key in _GREEN_KEYS}
+
+
 def aggregate_quartier_geojson(
     quartier_records: dict[int, QuartierRecord],
     demographics: dict[int, QuartierDemographics],
     otp_base_url: str | None = None,
     amenities: dict[int, dict[str, int]] | None = None,
     construction: dict[int, dict] | None = None,
+    green: dict[int, dict] | None = None,
 ) -> dict:
     """Produce an enriched GeoJSON FeatureCollection.
 
@@ -137,11 +150,12 @@ def aggregate_quartier_geojson(
 
         amenity_p = _amenity_props(amenities.get(qid) if amenities is not None else None, rec.area_km2)
         construction_p = {"construction": construction.get(qid) if construction is not None else None}
+        green_p = _green_props(green.get(qid) if green is not None else None)
 
         features.append({
             "type": "Feature",
             "geometry": rec.geometry,
-            "properties": {**base_props, **demo_p, **commute_p, **amenity_p, **construction_p},
+            "properties": {**base_props, **demo_p, **commute_p, **amenity_p, **construction_p, **green_p},
         })
 
     # Vibe profiles need the full city distribution — computed as a second pass

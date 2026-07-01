@@ -215,6 +215,92 @@ class TestRunnerAmenities:
         assert (tmp_path / "amenities_raw.json").exists()
 
 
+GREEN_RAW = {
+    "elements": [
+        # A park whose vertices sit inside the Rathaus fixture polygon
+        {
+            "type": "way",
+            "id": 1,
+            "tags": {"leisure": "park", "name": "Fixture Park"},
+            "geometry": [
+                {"lat": 47.3705, "lon": 8.5305},
+                {"lat": 47.3705, "lon": 8.5315},
+                {"lat": 47.3715, "lon": 8.5315},
+                {"lat": 47.3705, "lon": 8.5305},
+            ],
+        },
+        # A forest well outside every quartier -> dropped
+        {
+            "type": "way",
+            "id": 2,
+            "tags": {"landuse": "forest"},
+            "geometry": [
+                {"lat": 47.50, "lon": 8.70},
+                {"lat": 47.50, "lon": 8.71},
+                {"lat": 47.51, "lon": 8.71},
+                {"lat": 47.50, "lon": 8.70},
+            ],
+        },
+    ]
+}
+
+
+class TestRunnerGreen:
+    def test_green_skipped_by_default(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
+        ):
+            stats = run_neighborhood_pipeline(tmp_path)
+        assert stats["green_areas"] is None
+        geojson = json.loads((tmp_path / "quartiere.geojson").read_text())
+        props = geojson["features"][0]["properties"]
+        assert props["green_area_m2"] is None
+        assert props["green_share_pct"] is None
+        assert props["green_m2_per_capita"] is None
+        assert not (tmp_path / "green_spaces.geojson").exists()
+
+    def test_cached_green_raw_reused(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        (tmp_path / "green_raw.json").write_text(json.dumps(GREEN_RAW))
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
+        ):
+            stats = run_neighborhood_pipeline(tmp_path)
+        assert stats["green_areas"] == 1  # only the in-polygon park counts toward a quartier
+        geojson = json.loads((tmp_path / "quartiere.geojson").read_text())
+        props = geojson["features"][0]["properties"]
+        assert props["green_area_m2"] > 0
+        assert props["green_share_pct"] is not None
+        # green_spaces.geojson written for the map layer (both parsed areas kept)
+        green_fc = json.loads((tmp_path / "green_spaces.geojson").read_text())
+        assert green_fc["type"] == "FeatureCollection"
+        assert len(green_fc["features"]) == 2
+
+    def test_fetch_green_calls_overpass_and_caches(self, tmp_path):
+        from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
+
+        with (
+            patch("strata_api.pipeline.neighborhoods.runner.download_quartier_geojson", return_value=QUARTIER_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_demographics_csv", return_value=DEMO_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.download_noise_geojson", return_value=NOISE_GEOJSON),
+            patch("strata_api.pipeline.neighborhoods.runner.download_construction_csv", return_value=CONSTRUCTION_CSV),
+            patch("strata_api.pipeline.neighborhoods.runner.fetch_overpass_green", return_value=GREEN_RAW) as mock_fetch,
+        ):
+            stats = run_neighborhood_pipeline(tmp_path, fetch_green=True)
+        mock_fetch.assert_called_once()
+        assert stats["green_areas"] == 1
+        assert (tmp_path / "green_raw.json").exists()
+
+
 class TestRunnerSkipNoise:
     def test_skip_noise_avoids_download_and_keeps_existing_file(self, tmp_path):
         from strata_api.pipeline.neighborhoods.runner import run_neighborhood_pipeline
