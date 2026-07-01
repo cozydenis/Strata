@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
+import type { QuartierProfile as QuartierProfileData } from '@/lib/api';
 
 const baseProfile = {
   quartier_id: 1,
@@ -55,8 +56,8 @@ describe('QuartierProfile commute_hb_min display', () => {
 
   it('does NOT show commute row when commute_hb_min is undefined', async () => {
     const { QuartierProfile } = await import('./QuartierProfile');
-    // Cast to allow undefined for legacy data compatibility test
-    const profile = { ...baseProfile } as typeof baseProfile & { commute_hb_min?: number | null };
+    // Legacy data compatibility: commute_hb_min may be entirely absent.
+    const profile = { ...baseProfile } as unknown as QuartierProfileData;
     const { queryByTestId } = render(
       <QuartierProfile
         profile={profile}
