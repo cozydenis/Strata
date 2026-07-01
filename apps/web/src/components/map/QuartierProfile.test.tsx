@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QuartierProfile } from './QuartierProfile';
 
@@ -6,6 +6,7 @@ const fullProfile = {
   quartier_id: 11,
   quartier_name: 'Rathaus',
   kreis: 1,
+  commute_hb_min: null,
   population: {
     total: 4200,
     density_per_km2: 8400,
@@ -27,6 +28,7 @@ const nullPopulationProfile = {
   quartier_id: 12,
   quartier_name: 'Hochschulen',
   kreis: 1,
+  commute_hb_min: null,
   population: null,
   age_distribution: [],
 };
@@ -134,6 +136,32 @@ describe('QuartierProfile amenities', () => {
   it('omits section when amenities are absent', () => {
     render(<QuartierProfile profile={fullProfile} />);
     expect(screen.queryByTestId('amenities-section')).toBeNull();
+  });
+});
+
+describe('QuartierProfile match score', () => {
+  const match = { score: 72, strong: ['nightlife', 'young & social'], weak: ['calm'] };
+
+  it('renders "Your match: N%" when a score is provided', () => {
+    render(<QuartierProfile profile={fullProfile} match={match} />);
+    expect(screen.getByTestId('match-score')).toBeTruthy();
+    expect(screen.getByTestId('match-score').textContent).toContain('72%');
+  });
+
+  it('renders strong and weak explanation chips', () => {
+    render(<QuartierProfile profile={fullProfile} match={match} />);
+    expect(screen.getByText(/strong on nightlife/i)).toBeTruthy();
+    expect(screen.getByText(/weak on calm/i)).toBeTruthy();
+  });
+
+  it('omits the match line when no match prop is given', () => {
+    render(<QuartierProfile profile={fullProfile} />);
+    expect(screen.queryByTestId('match-score')).toBeNull();
+  });
+
+  it('omits the match line when the score is null', () => {
+    render(<QuartierProfile profile={fullProfile} match={{ score: null, strong: [], weak: [] }} />);
+    expect(screen.queryByTestId('match-score')).toBeNull();
   });
 });
 
