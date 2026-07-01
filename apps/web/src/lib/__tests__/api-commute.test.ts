@@ -66,8 +66,9 @@ describe('fetchCommuteIsochrone', () => {
     });
 
     const result = await fetchCommuteIsochrone('hb');
-    expect(result.type).toBe('FeatureCollection');
-    expect(Array.isArray(result.features)).toBe(true);
+    expect(result).not.toBeNull();
+    expect(result?.type).toBe('FeatureCollection');
+    expect(Array.isArray(result?.features)).toBe(true);
   });
 
   it('returns null on 404 response', async () => {
