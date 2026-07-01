@@ -30,6 +30,7 @@ const METRICS: { value: string; label: string }[] = [
   { value: 'foreign_pct', label: 'Foreign residents %' },
   { value: 'age_avg', label: 'Average age' },
   { value: 'growth_rate', label: 'Growth rate' },
+  { value: 'match', label: 'Your match' },
 ];
 
 function isVisible(

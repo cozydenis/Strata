@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { createElement } from 'react';
 import { Legend } from './Legend';
@@ -9,7 +9,8 @@ import { BuildingPopup } from './BuildingPopup';
 import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { PopupSkeleton } from './Skeleton';
 import { LayerPanel } from './LayerPanel';
-import { QuartierProfile } from './QuartierProfile';
+import { QuartierProfile, type QuartierMatch } from './QuartierProfile';
+import { MatchPanel } from './MatchPanel';
 import { ComparisonPanel } from './ComparisonPanel';
 import { CommuteLegend } from './CommuteLegend';
 import { WatchlistPanel } from './WatchlistPanel';
@@ -17,6 +18,13 @@ import { AuthControl } from '../auth/AuthControl';
 import { eraColorExpression } from '@/lib/map/era-colors';
 import { quartierFillColor } from '@/lib/map/quartier-colors';
 import { noiseLineColor } from '@/lib/map/noise-colors';
+import { computeMatchScores, explainMatch, type MatchScoreFeature } from '@/lib/match/score';
+import {
+  DEFAULT_PREFERENCES,
+  loadPreferences,
+  savePreferences,
+  type MatchPreferences,
+} from '@/lib/match/preferences';
 import { COMMUTE_MINUTES_EXPRESSION, COMMUTE_OPACITY_EXPRESSION } from '@/lib/map/commute-colors';
 import {
   fetchBuildingSummary,
@@ -70,6 +78,10 @@ export function MapView() {
   const [quartiereVisible, setQuartiereVisible] = useState(false);
   const [noiseVisible, setNoiseVisible] = useState(false);
   const [activeMetric, setActiveMetric] = useState('population_density');
+
+  // Personalized match scoring (client-side, persisted in localStorage)
+  const [matchPrefs, setMatchPrefs] = useState<MatchPreferences>(DEFAULT_PREFERENCES);
+  const [quartierFeatures, setQuartierFeatures] = useState<MatchScoreFeature[] | null>(null);
 
   // Commute isochrone state
   const [commuteVisible, setCommuteVisible] = useState(false);
@@ -645,6 +657,72 @@ export function MapView() {
     map.setPaintProperty('quartiere-fill', 'fill-color', quartierFillColor(activeMetric));
   }, [activeMetric]);
 
+  // Load persisted match preferences once (client-side only)
+  useEffect(() => {
+    setMatchPrefs(loadPreferences());
+  }, []);
+
+  // Fetch the Quartiere GeoJSON separately so scores can be computed client-side
+  useEffect(() => {
+    let cancelled = false;
+    fetch(QUARTIERE_GEOJSON_URL)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { features?: MatchScoreFeature[] } | null) => {
+        if (cancelled || !data?.features) return;
+        setQuartierFeatures(data.features);
+      })
+      .catch(() => {
+        // Match choropleth simply stays unavailable if the file can't be loaded.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Recompute match scores whenever features or preferences change
+  const matchScores = useMemo(
+    () => (quartierFeatures ? computeMatchScores(quartierFeatures, matchPrefs) : null),
+    [quartierFeatures, matchPrefs],
+  );
+
+  // Inject match_score into the Quartiere source so the choropleth can read it
+  useEffect(() => {
+    const map = mapRef.current as {
+      getSource?: (id: string) => { setData?: (data: unknown) => void } | undefined;
+    } | null;
+    if (!map?.getSource || !quartierFeatures || !matchScores) return;
+    const augmented = {
+      type: 'FeatureCollection',
+      features: quartierFeatures.map((feature) => ({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          match_score: matchScores.get(feature.properties.quartier_id)?.score ?? -1,
+        },
+      })),
+    };
+    map.getSource?.('quartiere')?.setData?.(augmented);
+  }, [quartierFeatures, matchScores, mapLoaded]);
+
+  // Explain the selected Quartier's match for the profile panel
+  const selectedMatch: QuartierMatch | null = useMemo(() => {
+    if (activeMetric !== 'match' || !quartierProfile || !matchScores) return null;
+    const result = matchScores.get(quartierProfile.quartier_id);
+    if (!result) return null;
+    const { strong, weak } = explainMatch(result.contributions, matchPrefs);
+    return { score: result.score, strong, weak };
+  }, [activeMetric, quartierProfile, matchScores, matchPrefs]);
+
+  const handleMatchChange = useCallback((next: MatchPreferences) => {
+    setMatchPrefs(next);
+    savePreferences(next);
+  }, []);
+
+  const handleMatchReset = useCallback(() => {
+    setMatchPrefs(DEFAULT_PREFERENCES);
+    savePreferences(DEFAULT_PREFERENCES);
+  }, []);
+
   // Popup rendering — re-render with real data once fetched
   useEffect(() => {
     if (!mapRef.current || !popup || !popupCoords) return;
@@ -755,8 +833,8 @@ export function MapView() {
           <WatchlistPanel onClose={() => setWatchlistOpen(false)} />
         </div>
       )}
-      {/* Top-left below TopBar: layer toggles */}
-      <div className="absolute top-20 left-4 z-10 animate-fadeSlideUp">
+      {/* Top-left below TopBar: layer toggles + match preferences */}
+      <div className="absolute top-20 left-4 z-10 flex flex-col gap-3 animate-fadeSlideUp">
         <LayerPanel
           buildingsVisible={buildingsVisible}
           listingsVisible={listingsVisible}
@@ -770,6 +848,13 @@ export function MapView() {
           onCommuteToggle={handleCommuteToggle}
           onDestinationChange={handleDestinationChange}
         />
+        {quartiereVisible && activeMetric === 'match' && (
+          <MatchPanel
+            preferences={matchPrefs}
+            onChange={handleMatchChange}
+            onReset={handleMatchReset}
+          />
+        )}
       </div>
       {/* Bottom-left: legends stacked so they never overlap */}
       <div className="absolute bottom-8 left-4 z-10 flex flex-col gap-3">
@@ -796,6 +881,7 @@ export function MapView() {
             profile={quartierProfile}
             onClose={() => setQuartierProfile(null)}
             onCompare={handleCompareStart}
+            match={selectedMatch}
           />
         </div>
       )}

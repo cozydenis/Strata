@@ -78,10 +78,48 @@ function AmenitiesSection({ amenities }: { amenities: QuartierAmenities }) {
   );
 }
 
+export interface QuartierMatch {
+  score: number | null;
+  strong: string[];
+  weak: string[];
+}
+
 interface QuartierProfileProps {
   profile: QuartierProfileData;
   onClose?: () => void;
   onCompare?: () => void;
+  match?: QuartierMatch | null;
+}
+
+function MatchSection({ match }: { match: QuartierMatch }) {
+  return (
+    <div className="strata-rule mt-3 pt-3" data-testid="match-score">
+      <div className="flex items-baseline justify-between">
+        <p className="strata-panel-title">Your match</p>
+        <span className="strata-data text-lg-15 font-semibold text-strata-amber">{match.score}%</span>
+      </div>
+      {(match.strong.length > 0 || match.weak.length > 0) && (
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {match.strong.map((label) => (
+            <span
+              key={`strong-${label}`}
+              className="rounded-full border border-strata-sage/30 px-2 py-0.5 text-2xs text-strata-sage"
+            >
+              strong on {label}
+            </span>
+          ))}
+          {match.weak.map((label) => (
+            <span
+              key={`weak-${label}`}
+              className="rounded-full border border-strata-cream/12 px-2 py-0.5 text-2xs text-strata-cream/45"
+            >
+              weak on {label}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const TREND_STYLES: Record<QuartierPopulation['trend'], { arrow: string; className: string }> = {
@@ -111,7 +149,7 @@ function StatRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-export function QuartierProfile({ profile, onClose, onCompare }: QuartierProfileProps) {
+export function QuartierProfile({ profile, onClose, onCompare, match }: QuartierProfileProps) {
   const {
     quartier_name,
     kreis,
@@ -147,6 +185,8 @@ export function QuartierProfile({ profile, onClose, onCompare }: QuartierProfile
       </div>
 
       {vibe && <VibeSection vibe={vibe} />}
+
+      {match && match.score !== null && <MatchSection match={match} />}
 
       {population === null ? (
         <p className="text-xs-11 italic text-strata-cream/40">No data</p>

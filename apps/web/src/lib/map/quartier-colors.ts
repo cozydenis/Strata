@@ -44,6 +44,15 @@ const GROWTH_RATE_STOPS: [number, string][] = [
   [3, '#00c853'],
 ];
 
+// Personalized match score (0..100): Viridis (poor fit → great fit)
+const MATCH_STOPS: [number, string][] = [
+  [0, '#440154'],
+  [25, '#3b528b'],
+  [50, '#21918c'],
+  [75, '#5ec962'],
+  [90, '#fde725'],
+];
+
 function _stepExpression(
   property: string,
   stops: [number, string][],
@@ -68,6 +77,7 @@ function _stepExpression(
  *   - "foreign_pct"        — percentage of foreign residents
  *   - "age_avg"            — average age proxy
  *   - "growth_rate"        — year-over-year growth rate
+ *   - "match"              — personalized match score (reads `match_score`)
  *
  * Unknown metrics fall back to the population_density expression.
  */
@@ -81,6 +91,8 @@ export function quartierFillColor(metric: Metric): unknown[] {
       return _stepExpression('age_avg', AGE_AVG_STOPS);
     case 'growth_rate':
       return _stepExpression('growth_rate', GROWTH_RATE_STOPS);
+    case 'match':
+      return _stepExpression('match_score', MATCH_STOPS);
     default:
       return _stepExpression('population_density', DENSITY_STOPS);
   }
