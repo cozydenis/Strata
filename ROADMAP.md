@@ -27,7 +27,7 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Photos stored | 565+ |
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
-| Backend tests | 630 |
+| Backend tests | 663 |
 | Frontend tests | 314 |
 
 ---
@@ -114,7 +114,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Wishlist — broad search alerts | ⚪ Planned | #TBD |
 | Wishlist — building typology matching | ⚪ Planned | #TBD |
 | Watch Mode feed (new/gone listings, price changes in watched buildings) | 🟢 Done — v1 in watchlist panel | — |
-| Notification system (email-first) | ⚪ Planned | #TBD |
+| Notification system (email-first) | 🟢 Done — watch-event digests, ConsoleSender dry-run default / SMTP via env, `POST /admin/pipeline/run-notifications` | — |
 
 ---
 
@@ -286,5 +286,5 @@ _Update this section at the start of each work session._
 
 1. **Restore deployment + Supabase project** — unblocks live auth (set SUPABASE_JWT_SECRET +
    NEXT_PUBLIC_SUPABASE_* and run `alembic upgrade head` for the watches table)
-2. **Email notifications** — push watch events instead of waiting for panel opens
-3. **Per-building Baugesuche** — cantonal Amtsblatt API (quartier-level done via OGD)
+2. **Per-building Baugesuche** — cantonal Amtsblatt API (quartier-level done via OGD)
+3. **Wire email notifications into the daily cron** once deployment is restored (SMTP env + trigger after pipeline runs)
