@@ -16,6 +16,7 @@ const defaultProps = {
   listingsVisible: true,
   quartiereVisible: false,
   noiseVisible: false,
+  airQualityVisible: false,
   activeMetric: 'population_density',
   onToggle: vi.fn(),
   onMetricChange: vi.fn(),

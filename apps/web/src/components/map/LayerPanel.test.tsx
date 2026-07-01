@@ -7,6 +7,7 @@ const defaultProps = {
   listingsVisible: true,
   quartiereVisible: false,
   noiseVisible: false,
+  airQualityVisible: false,
   activeMetric: 'population_density',
   onToggle: vi.fn(),
   onMetricChange: vi.fn(),
@@ -39,6 +40,26 @@ describe('LayerPanel', () => {
   it('renders a noise toggle', () => {
     render(<LayerPanel {...defaultProps} />);
     expect(screen.getByTestId('toggle-noise')).toBeTruthy();
+  });
+
+  it('renders an air-quality toggle', () => {
+    render(<LayerPanel {...defaultProps} />);
+    expect(screen.getByTestId('toggle-air')).toBeTruthy();
+  });
+
+  it('air-quality checkbox reflects airQualityVisible=true', () => {
+    render(<LayerPanel {...defaultProps} airQualityVisible={true} />);
+    const cb = screen.getByTestId('toggle-air').querySelector('input[type="checkbox"]') as HTMLInputElement;
+    expect(cb.checked).toBe(true);
+  });
+
+  it('calls onToggle with "air" when air-quality checkbox clicked', () => {
+    const onToggle = vi.fn();
+    render(<LayerPanel {...defaultProps} onToggle={onToggle} />);
+    fireEvent.click(
+      screen.getByTestId('toggle-air').querySelector('input[type="checkbox"]')!,
+    );
+    expect(onToggle).toHaveBeenCalledWith('air');
   });
 
   it('buildings checkbox reflects buildingsVisible=true', () => {

@@ -28,7 +28,7 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
 | Backend tests | 663 |
-| Frontend tests | 314 |
+| Frontend tests | 344 |
 
 ---
 
@@ -57,7 +57,7 @@ The layer that answers "where should I live?" Four dimensions.
 |-----------|--------|-------------|-------|
 | **Noise map** | 🟢 Done | Stadt Zürich Strassenlärmkataster | — |
 | **Sunlight / shadow** | 💡 Idea | Stadt Zürich 3D-Stadtmodell (shadow simulation) | #TBD |
-| **Air quality** | 🟡 Pipeline done — UGZ hourly → air_quality.geojson (LRV levels); map layer pending | #4 |
+| **Air quality** | 🟢 Done — UGZ hourly pipeline (LRV levels) + toggleable station layer with per-parameter popup | #4 |
 | **Green space** | 💡 Idea | OSM parks + Stadt Zürich Grünflächenkataster | #TBD |
 
 #### Social & Cultural Dimension
