@@ -51,6 +51,15 @@ describe('quartierFillColor', () => {
     expect(Array.isArray(expr)).toBe(true);
   });
 
+  it('returns a MapLibre expression referencing match_score for the match metric', async () => {
+    const { quartierFillColor } = await import('./quartier-colors');
+    const expr = quartierFillColor('match');
+    expect(Array.isArray(expr)).toBe(true);
+    const str = JSON.stringify(expr);
+    expect(str).toContain('match_score');
+    expect(str).toMatch(/#[0-9a-fA-F]{6}/);
+  });
+
   it('expression contains color strings (hex)', async () => {
     const { quartierFillColor } = await import('./quartier-colors');
     const expr = quartierFillColor('population_density');

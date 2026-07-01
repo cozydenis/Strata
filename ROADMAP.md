@@ -28,7 +28,7 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
 | Backend tests | 583 |
-| Frontend tests | 251 |
+| Frontend tests | 286 |
 
 ---
 
@@ -97,7 +97,7 @@ The layer that answers "where should I live?" Four dimensions.
 | Quartier profile panel (slide-out) | 🟢 Done | — |
 | Layer toggle panel | 🟢 Done | — |
 | **Comparison mode** (two Quartiere side by side) | 🟢 Done — compare from profile panel, swap by map click | — |
-| **Personalized match scoring** ("your match: 87%") | 💡 Idea (needs user profiles) | #TBD |
+| **Personalized match scoring** ("your match: 87%") | 🟢 Done — stateless client-side v1: 6 explainable dimensions, localStorage prefs, match choropleth + profile breakdown | #9 |
 
 ---
 
