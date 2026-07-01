@@ -19,6 +19,12 @@ from strata_api.pipeline.neighborhoods.downloader import (
     download_noise_geojson,
     download_quartier_geojson,
 )
+from strata_api.pipeline.neighborhoods.green_space import (
+    build_green_geojson,
+    compute_green_metrics,
+    fetch_overpass_green,
+    parse_overpass_green,
+)
 from strata_api.pipeline.neighborhoods.noise_parser import parse_noise_geojson
 from strata_api.pipeline.neighborhoods.quartier_parser import parse_quartier_geojson
 
@@ -29,6 +35,7 @@ def run_neighborhood_pipeline(
     output_dir: Path,
     api_data_dir: Path | None = None,
     fetch_amenities: bool = False,
+    fetch_green: bool = False,
     skip_noise: bool = False,
 ) -> dict:
     """Orchestrate the neighborhood intelligence pipeline.
@@ -39,9 +46,11 @@ def run_neighborhood_pipeline(
     3. Download noise cadastre WFS GeoJSON
     4. Amenities: reuse output_dir/amenities_raw.json if present, else fetch
        from Overpass when fetch_amenities=True (skipped entirely otherwise)
-    5. Parse all sources
-    6. Aggregate into enriched GeoJSON FeatureCollection
-    7. Write quartiere.geojson and noise.geojson to output_dir
+    5. Green space: reuse output_dir/green_raw.json if present, else fetch from
+       Overpass when fetch_green=True (skipped entirely otherwise)
+    6. Parse all sources
+    7. Aggregate into enriched GeoJSON FeatureCollection
+    8. Write quartiere.geojson, noise.geojson and green_spaces.geojson to output_dir
        Also copies quartiere.geojson to api_data_dir if provided (for the API router).
 
     skip_noise=True skips the (slow, ~200 MB) noise download and leaves any
@@ -126,9 +135,32 @@ def run_neighborhood_pipeline(
         amenity_total = sum(sum(c.values()) for c in amenity_counts.values())
         logger.info("Assigned %d of %d amenity points to quartiere", amenity_total, len(amenity_points))
 
+    # ── Green space (cached raw Overpass response, network only when asked) ──
+    green_metrics: dict[int, dict] | None = None
+    green_geojson: dict | None = None
+    green_area_count: int | None = None
+    green_raw_path = output_dir / "green_raw.json"
+    if green_raw_path.exists():
+        logger.info("Reusing cached Overpass green data: %s", green_raw_path)
+        green_raw = json.loads(green_raw_path.read_text(encoding="utf-8"))
+    elif fetch_green:
+        logger.info("Fetching green space from Overpass API...")
+        green_raw = fetch_overpass_green()
+        green_raw_path.write_text(json.dumps(green_raw, ensure_ascii=False), encoding="utf-8")
+    else:
+        green_raw = None
+
+    if green_raw is not None:
+        green_areas = parse_overpass_green(green_raw)
+        populations = {qid: (d.total_population if (d := demographics.get(qid)) else None) for qid in quartier_records}
+        green_metrics = compute_green_metrics(green_areas, quartier_records, populations)
+        green_geojson = build_green_geojson(green_areas)
+        green_area_count = sum(1 for m in green_metrics.values() if m["green_area_m2"] > 0)
+        logger.info("Parsed %d green polygons; %d quartiere have green area", len(green_areas), green_area_count)
+
     logger.info("Aggregating into GeoJSON...")
     geojson = aggregate_quartier_geojson(
-        quartier_records, demographics, amenities=amenity_counts, construction=construction
+        quartier_records, demographics, amenities=amenity_counts, construction=construction, green=green_metrics
     )
 
     quartiere_path = output_dir / "quartiere.geojson"
@@ -139,6 +171,11 @@ def run_neighborhood_pipeline(
         noise_path = output_dir / "noise.geojson"
         noise_path.write_text(json.dumps(noise_geojson, ensure_ascii=False), encoding="utf-8")
         logger.info("Wrote %s (%d features)", noise_path, len(noise_geojson["features"]))
+
+    if green_geojson is not None:
+        green_path = output_dir / "green_spaces.geojson"
+        green_path.write_text(json.dumps(green_geojson, ensure_ascii=False), encoding="utf-8")
+        logger.info("Wrote %s (%d features)", green_path, len(green_geojson["features"]))
 
     # Also copy quartiere.geojson to the API data dir so the /neighborhoods API can read it
     if api_data_dir is not None:
@@ -156,4 +193,6 @@ def run_neighborhood_pipeline(
         "year": year,
         "amenities": amenity_total,
         "construction_quartiere": len(construction),
+        "green_areas": green_area_count,
+        "green_polygons": len(green_geojson["features"]) if green_geojson is not None else None,
     }

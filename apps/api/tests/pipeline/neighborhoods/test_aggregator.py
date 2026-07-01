@@ -279,6 +279,54 @@ class TestAmenityProps:
         assert by_id[12]["amenities"] is None
 
 
+class TestGreenProps:
+    """Green-space enrichment in aggregate_quartier_geojson."""
+
+    def test_green_keys_none_when_not_provided(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1)}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)})
+        props = result["features"][0]["properties"]
+        assert props["green_area_m2"] is None
+        assert props["green_share_pct"] is None
+        assert props["green_m2_per_capita"] is None
+
+    def test_green_metrics_merged(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1)}
+        green = {11: {"green_area_m2": 12345.6, "green_share_pct": 4.2, "green_m2_per_capita": 12.3}}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)}, green=green)
+        props = result["features"][0]["properties"]
+        assert props["green_area_m2"] == 12345.6
+        assert props["green_share_pct"] == 4.2
+        assert props["green_m2_per_capita"] == 12.3
+
+    def test_quartier_missing_from_green_gets_none(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1), 12: _make_quartier(12, "Lindenhof", 1)}
+        green = {11: {"green_area_m2": 100.0, "green_share_pct": 1.0, "green_m2_per_capita": 2.0}}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)}, green=green)
+        by_id = {f["properties"]["quartier_id"]: f["properties"] for f in result["features"]}
+        assert by_id[11]["green_area_m2"] == 100.0
+        assert by_id[12]["green_area_m2"] is None
+
+    def test_only_three_green_keys_added(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1)}
+        without = aggregate_quartier_geojson(records, {11: _make_demo(11)})
+        with_green = aggregate_quartier_geojson(
+            records, {11: _make_demo(11)},
+            green={11: {"green_area_m2": 1.0, "green_share_pct": 2.0, "green_m2_per_capita": 3.0}},
+        )
+        added = set(with_green["features"][0]["properties"]) - set(without["features"][0]["properties"])
+        assert added == set()  # keys exist in both; green is always present
+        assert "green_area_m2" in without["features"][0]["properties"]
+
+
 class TestVibeInAggregator:
     def test_features_carry_vibe_and_area(self):
         from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
