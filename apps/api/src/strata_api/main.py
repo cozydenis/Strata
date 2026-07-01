@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from strata_api.config import settings
-from strata_api.routers import admin_pipeline, listings, neighborhoods, registry, watchlist
+from strata_api.routers import admin_pipeline, listings, neighborhoods, referenzzins, registry, watchlist
 
 app = FastAPI(title="Strata API", version="0.1.0")
 
@@ -22,6 +22,7 @@ app.include_router(listings.router)
 app.include_router(registry.router)
 app.include_router(neighborhoods.router)
 app.include_router(watchlist.router)
+app.include_router(referenzzins.router)
 
 
 # Serve downloaded images/documents at /media/images/{egid}/...

@@ -26,6 +26,10 @@ class Listing(TimestampMixin, Base):
     rent_gross: Mapped[int | None] = mapped_column(Integer, nullable=True)
     rent_charges: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # Reference rate the current rent is based on (for Herabsetzungsbegehren analysis).
+    # Usually unknown for scraped listings — inferred from first_seen when absent.
+    base_reference_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+
     # Unit characteristics
     rooms: Mapped[float | None] = mapped_column(Float, nullable=True)
     area_m2: Mapped[float | None] = mapped_column(Float, nullable=True)
