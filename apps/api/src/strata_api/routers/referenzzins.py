@@ -19,6 +19,13 @@ from strata_api.db.models.reference_rate import ReferenceRate
 from strata_api.db.session import get_engine
 from strata_api.legal import rates
 from strata_api.legal.herabsetzung import HerabsetzungContext, render
+from strata_api.legal.or270 import or270_info
+from strata_api.legal.quartierueblichkeit import (
+    RECENCY_MONTHS,
+    InitialRentAnalysis,
+    analyze_initial_rent,
+    select_comparables,
+)
 from strata_api.legal.referenzzins import analyze_rent, permitted_change_pct
 
 router = APIRouter(prefix="/legal", tags=["legal"])
@@ -170,6 +177,58 @@ def generate_letter(listing_id: int, req: LetterRequest) -> dict:
         )
         letter = render(context)
     return {"listing_id": listing_id, "basis": basis, "letter": letter}
+
+
+def _comparable_candidates(s: Session, listing: Listing, now: datetime.datetime) -> list[Listing]:
+    """Thin candidate query: same PLZ, seen within the recency window, and active or recent.
+
+    The comparability math (rooms/area/CHF-m² filtering) lives in ``legal/quartierueblichkeit``;
+    this only narrows the DB scan by PLZ and recency to keep the pool small.
+    """
+    if listing.plz is None:
+        return []
+    cutoff = now - datetime.timedelta(days=RECENCY_MONTHS * 31)
+    rows = s.execute(
+        select(Listing).where(
+            Listing.plz == listing.plz,
+            Listing.id != listing.id,
+            Listing.last_seen >= cutoff,
+            (Listing.is_active.is_(True)) | (Listing.last_seen >= cutoff),
+        )
+    ).scalars().all()
+    return list(rows)
+
+
+def _serialize_initial_rent(listing: Listing, analysis: InitialRentAnalysis) -> dict:
+    return {
+        "listing_id": listing.id,
+        "verdict": analysis.verdict.value,
+        "target_chf_m2": analysis.target_chf_m2,
+        "median_chf_m2": analysis.median_chf_m2,
+        "p25": analysis.p25_chf_m2,
+        "p75": analysis.p75_chf_m2,
+        "comparable_count": analysis.comparable_count,
+        "explanation": analysis.explanation,
+        "or270": or270_info().as_dict(),
+    }
+
+
+@router.get("/listings/{listing_id}/initial-rent-check")
+def initial_rent_check(listing_id: int) -> dict:
+    """Indicative OR Art. 270 initial-rent check for a listing vs. the quarter.
+
+    404 for an unknown id. Listings missing rent_net or area_m2 return 200 with a
+    verdict of "insufficient_data" (never 500) — the comparison is simply not possible.
+    """
+    now = datetime.datetime.utcnow()
+    with Session(get_engine()) as s:
+        listing = s.get(Listing, listing_id)
+        if listing is None:
+            raise HTTPException(status_code=404, detail="listing not found")
+        candidates = _comparable_candidates(s, listing, now)
+        comparables = select_comparables(listing, candidates, now=now)
+        analysis = analyze_initial_rent(listing, comparables)
+        return _serialize_initial_rent(listing, analysis)
 
 
 def _listing_address(listing: Listing) -> str:
