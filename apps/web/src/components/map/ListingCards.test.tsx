@@ -1,7 +1,40 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { ListingSummary, RentAnalysis } from '@/lib/api';
+
+vi.mock('@/lib/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api')>();
+  return {
+    ...actual,
+    fetchRentAnalysis: vi.fn(),
+    generateHerabsetzung: vi.fn(),
+  };
+});
+
 import { ListingCards } from './ListingCards';
-import type { ListingSummary } from '@/lib/api';
+import { fetchRentAnalysis } from '@/lib/api';
+
+const mockFetchRentAnalysis = vi.mocked(fetchRentAnalysis);
+
+const REDUCTION: RentAnalysis = {
+  listing_id: 1,
+  basis: 'known',
+  base_rate: 1.75,
+  current_rate: 1.5,
+  rent_net: 2000,
+  change_pct: -2.91,
+  monthly_chf: -114.8,
+  new_rent_net: 1885.2,
+  direction: 'reduction',
+  message: 'Mietsenkung möglich',
+};
+
+beforeEach(() => {
+  // Default: no reduction applies, so the badge renders nothing and existing
+  // assertions are unaffected.
+  mockFetchRentAnalysis.mockReset();
+  mockFetchRentAnalysis.mockResolvedValue({ ...REDUCTION, basis: 'unknown', direction: null });
+});
 
 const listing: ListingSummary = {
   id: 1,
@@ -149,6 +182,18 @@ describe('ListingCards', () => {
     render(<ListingCards listings={[listing]} />);
     expect(screen.getByTestId('listing-rent-period')).toBeTruthy();
     expect(screen.getByTestId('listing-rent-period').textContent).toContain('/mt.');
+  });
+
+  it('renders a RentAnalysisBadge per listing when a reduction applies', async () => {
+    mockFetchRentAnalysis.mockResolvedValue(REDUCTION);
+    const listings = [listing, { ...listing, id: 2, source_id: 'L-1002' }];
+    render(<ListingCards listings={listings} />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('rent-analysis-badge').length).toBe(2);
+    });
+    expect(mockFetchRentAnalysis).toHaveBeenCalledWith(1);
+    expect(mockFetchRentAnalysis).toHaveBeenCalledWith(2);
   });
 
   it('image thumbnails have object-cover class', () => {

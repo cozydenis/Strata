@@ -28,7 +28,7 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
 | Backend tests | 583 |
-| Frontend tests | 286 |
+| Frontend tests | 314 |
 
 ---
 
@@ -174,8 +174,8 @@ The layer that answers "where should I live?" Four dimensions.
 
 | Component | Status | Issue |
 |-----------|--------|-------|
-| Referenzzinssatz auto-tracking | 🟢 Backend done — history table + `/legal/reference-rate`, per-listing analysis (OR 269a step table) | #17 |
-| Pre-drafted Herabsetzungsbegehren | 🟢 Backend done — `POST /legal/listings/{id}/herabsetzungsbegehren` | #17 |
+| Referenzzinssatz auto-tracking | 🟢 Done — history table + `/legal/reference-rate`, per-listing analysis (OR 269a step table), badge in listing cards | #17 |
+| Pre-drafted Herabsetzungsbegehren | 🟢 Done — API + one-tap letter dialog (copy/download) in listing cards | #17 |
 | Initial rent challenge analysis (OR Art. 270) | ⚪ Planned | #TBD |
 | Rent increase verification | ⚪ Planned | #TBD |
 | Mängelrüge templates | 💡 Idea | #TBD |

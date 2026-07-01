@@ -289,3 +289,95 @@ export async function fetchWatchEvents(token: string, days = 90): Promise<{ tota
   }
   return data as { total: number; items: WatchEvent[] };
 }
+
+// ── Legal intelligence (Referenzzinssatz / Herabsetzungsbegehren) ───────────────
+
+export type RentAnalysisBasis = 'known' | 'assumed_from_first_seen' | 'override' | 'unknown';
+export type RentAnalysisDirection = 'reduction' | 'increase' | 'none' | null;
+
+export interface RentAnalysis {
+  listing_id: number;
+  basis: RentAnalysisBasis;
+  base_rate: number | null;
+  current_rate: number | null;
+  rent_net: number | null;
+  change_pct: number | null;
+  monthly_chf: number | null;
+  new_rent_net: number | null;
+  direction: RentAnalysisDirection;
+  message: string;
+}
+
+/** Fetch the rent-vs-reference-rate analysis for a listing. */
+export async function fetchRentAnalysis(listingId: number, baseRate?: number): Promise<RentAnalysis> {
+  const query = baseRate != null ? `?base_rate=${baseRate}` : '';
+  const res = await fetch(`${BASE_URL}/legal/listings/${listingId}/rent-analysis${query}`);
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (
+    typeof data !== 'object' ||
+    data === null ||
+    typeof (data as Record<string, unknown>).listing_id !== 'number'
+  ) {
+    throw new Error('Unexpected response shape: missing listing_id');
+  }
+  return data as RentAnalysis;
+}
+
+export interface HerabsetzungPayload {
+  tenant_name: string;
+  tenant_address?: string;
+  landlord_name?: string;
+  landlord_address?: string;
+  property_address?: string;
+  base_rate?: number;
+  actual_rent?: number;
+}
+
+export interface HerabsetzungLetter {
+  listing_id: number;
+  basis: RentAnalysisBasis;
+  letter: string;
+}
+
+/**
+ * Result of a Herabsetzungsbegehren request. A 409 (no reduction applies) is
+ * surfaced as a distinguishable result rather than a thrown error so the UI can
+ * show a friendly message. Validation (422) and other failures throw.
+ */
+export type HerabsetzungResult =
+  | { status: 'ok'; data: HerabsetzungLetter }
+  | { status: 'no_reduction' };
+
+export async function generateHerabsetzung(
+  listingId: number,
+  payload: HerabsetzungPayload,
+): Promise<HerabsetzungResult> {
+  const res = await fetch(`${BASE_URL}/legal/listings/${listingId}/herabsetzungsbegehren`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (res.status === 409) {
+    return { status: 'no_reduction' };
+  }
+  if (!res.ok) {
+    let message = `${res.status}`;
+    try {
+      const body: unknown = await res.json();
+      const detail = (body as Record<string, unknown> | null)?.detail;
+      if (typeof detail === 'string' && detail.length > 0) {
+        message = detail;
+      }
+    } catch {
+      // Response had no JSON body — fall back to the status code.
+    }
+    throw new Error(message);
+  }
+
+  const data = (await res.json()) as HerabsetzungLetter;
+  return { status: 'ok', data };
+}
