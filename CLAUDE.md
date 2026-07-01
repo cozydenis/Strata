@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Strata is a spatial intelligence platform for the Zurich housing market. It models every residential unit as a persistent object in a living registry (from the GWR federal register), enriched with listing data scraped from Flatfox/Homegate, neighborhood intelligence, and map visualization. Not a listing platform — housing infrastructure.
 
-**Current Phase:** Phase 0 — Foundation (Apr–May 2026). GWR pipeline, listing ingestion, and proof-of-concept map are built. Remaining: connect to real PostgreSQL (Supabase), deploy, validate against live data.
+**Current Phase:** Layer 1 (Unit Registry) complete; Layer 2 (auth + watchlists + neighborhood intelligence) in progress. Deployment is currently **DOWN** (Supabase paused, Railway credits out). See **`ROADMAP.md`** for the authoritative, up-to-date status of every layer/feature and the current "Next Actions" — read it each session before planning work.
 
 ## Tech Stack
 
@@ -45,7 +45,11 @@ cd apps/api && uv run ruff format .             # auto-format
 ```bash
 cd apps/api && uv run python -m strata_api.pipeline         # GWR pipeline (download + parse + load)
 cd apps/api && uv run python -m strata_api.pipeline.listing_runner  # listing pipeline
+cd apps/api && uv run python -m strata_api.pipeline.neighborhoods            # quartier intelligence → quartiere/noise GeoJSON
+cd apps/api && uv run python -m strata_api.pipeline.neighborhoods --amenities  # also refetch OSM amenities (Overpass); else reuses cached amenities_raw.json
 ```
+
+Commute/isochrone data uses a self-hosted OpenTripPlanner instance — see `scripts/otp/README.md` (docker-compose + GTFS filtering) to stand it up before running the commute pipeline (`pipeline/commute/`).
 
 ### Database migrations (Alembic)
 ```bash
@@ -73,15 +77,17 @@ cd apps/api && DATABASE_URL=... uv run python -m strata_api.scripts.export_listi
 apps/
   web/              Next.js frontend — map is the primary interface
     src/
-      components/map/   Map.tsx (MapLibre), BuildingPopup, Legend, ListingCards, LayerPanel, QuartierProfile
-      lib/              api.ts (fetch wrappers), map/ (era-colors, noise-colors, quartier-colors)
+      components/map/   Map.tsx (MapLibre), BuildingPopup, Legend, ListingCards, LayerPanel, QuartierProfile,
+                        ComparisonPanel (quartier compare), CommuteLegend, TopBar, WatchButton, WatchlistPanel, BarChart
+      components/auth/  AuthControl.tsx (Supabase Auth UI; hidden when env is placeholder)
+      lib/              api.ts (fetch wrappers), supabase.ts (client), quartier-display.ts, time.ts, map/ (era-colors, noise-colors, quartier-colors)
       app/              page.tsx (single-page map app), layout.tsx
   api/              Python backend
     src/strata_api/
       main.py           FastAPI app entry point, mounts routers + static media
       config.py         pydantic-settings (DATABASE_URL, CORS_ORIGINS, PIPELINE_API_KEY)
       db/               SQLAlchemy models (building, unit, entrance, listing, pipeline_run), session factory, Base
-      routers/          registry, listings, neighborhoods, admin_pipeline
+      routers/          registry, listings, neighborhoods, watchlist, admin_pipeline
       pipeline/
         runner.py           GWR pipeline orchestrator (stadt + kanton sources)
         listing_runner.py   Listing pipeline orchestrator
@@ -91,9 +97,10 @@ apps/
         listing_loader.py   Upsert with change detection + deactivation
         loader.py           GWR upsert (buildings, entrances, units)
         dedup.py            Kanton dedup against Stadt EGIDs
-        neighborhoods/      Quartier data: noise, demographics, aggregator
+        neighborhoods/      Quartier intelligence: noise, demographics, amenities (OSM), construction, vibe profiles, aggregator
+        commute/            Quartier→destination commute times via self-hosted OpenTripPlanner
       scripts/          GeoJSON export scripts
-    alembic/            DB migrations (3 versions: initial, listings, listing media)
+    alembic/            DB migrations (5 versions)
     tests/              Mirrors src structure — pipeline/, routers/, db/, fixtures/
     data/               Downloaded media (images, neighborhoods, recon)
 packages/
