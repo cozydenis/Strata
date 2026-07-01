@@ -1,0 +1,44 @@
+{
+ "Standorte": [
+  {
+   "ID": "Zch_Stampfenbachstrasse",
+   "Name": "Zürich Stampfenbachstrasse",
+   "Kurzname": "Stampfenbachstrasse",
+   "Koordinaten_WGS84_lat": 47.3868,
+   "Koordinaten_WGS84_lng": 8.5398,
+   "Adresse": "Stampfenbachstrasse 144, 8006 Zürich"
+  },
+  {
+   "ID": "Zch_Schimmelstrasse",
+   "Name": "Zürich Schimmelstrasse",
+   "Kurzname": "Schimmelstrasse",
+   "Koordinaten_WGS84_lat": 47.371,
+   "Koordinaten_WGS84_lng": 8.5235,
+   "Adresse": "Schimmelstrasse 21, 8003 Zürich"
+  },
+  {
+   "ID": "Zch_Rosengartenstrasse",
+   "Name": "Zürich Rosengartenstrasse",
+   "Kurzname": "Rosengartenstrasse",
+   "Koordinaten_WGS84_lat": 47.3952,
+   "Koordinaten_WGS84_lng": 8.5261,
+   "Adresse": "Rosengartenstrasse 24, 8037 Zürich"
+  },
+  {
+   "ID": "Zch_Heubeeribüel",
+   "Name": "Zürich Heubeeribüel",
+   "Kurzname": "Heubeeribüel",
+   "Koordinaten_WGS84_lat": 47.3815,
+   "Koordinaten_WGS84_lng": 8.5659,
+   "Adresse": "Heubeeriweg 30, 8044 Zürich"
+  },
+  {
+   "ID": "Zch_Rosengartenbrücke",
+   "Name": "Zürich Rosengartenbrücke",
+   "Kurzname": "Rosengartenbrücke",
+   "Koordinaten_WGS84_lat": 47.3943,
+   "Koordinaten_WGS84_lng": 8.5253,
+   "Adresse": "Rosengartenstrasse 18, 8037 Zürich"
+  }
+ ]
+}

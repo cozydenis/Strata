@@ -27,7 +27,7 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Photos stored | 565+ |
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
-| Backend tests | 583 |
+| Backend tests | 630 |
 | Frontend tests | 286 |
 
 ---
@@ -57,7 +57,7 @@ The layer that answers "where should I live?" Four dimensions.
 |-----------|--------|-------------|-------|
 | **Noise map** | 🟢 Done | Stadt Zürich Strassenlärmkataster | — |
 | **Sunlight / shadow** | 💡 Idea | Stadt Zürich 3D-Stadtmodell (shadow simulation) | #TBD |
-| **Air quality** | ⚪ Planned | Stadt Zürich UGZ live sensors (NO₂, O₃, PM10, PM2.5) | #TBD |
+| **Air quality** | 🟡 Pipeline done — UGZ hourly → air_quality.geojson (LRV levels); map layer pending | #4 |
 | **Green space** | 💡 Idea | OSM parks + Stadt Zürich Grünflächenkataster | #TBD |
 
 #### Social & Cultural Dimension
@@ -257,7 +257,7 @@ All currently used or identified open data sources for Strata.
 | Statistik Stadt Zürich demographics | CSV | City | Annual | 🟢 Ingested |
 | Statistische Quartiere boundaries | WFS GeoJSON | City | Stable | 🟢 Ingested |
 | Stadt Zürich 3D-Stadtmodell | CityGML/OBJ | City | Periodic | 💡 Bookmarked |
-| UGZ Luftqualität (air quality) | Live API | City | Real-time | ⚪ Identified |
+| UGZ Luftqualität (air quality) | CSV/JSON OGD | City | Hourly | 🟢 Ingested |
 | ZVV/SBB timetable | GTFS / API | Canton | Periodic | ⚪ Identified |
 | OSM Overpass (amenities) | API | Global | Real-time | ⚪ Identified |
 | Baugesuche Stadt Zürich | Open Data | City | Periodic | ⚪ Identified |
