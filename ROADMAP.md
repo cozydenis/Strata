@@ -1,7 +1,7 @@
 # STRATA — Roadmap
 
-> Last updated: June 2026
-> Status: Layer 1 complete, Layer 2 in progress — deployment DOWN (Supabase paused, Railway credits out), see Next Actions
+> Last updated: 2 July 2026 (autonomous dev-loop night shift: PRs #24–#36)
+> Status: Layers 1 + 7 substantially complete, Layer 2 core done — deployment still DOWN (Supabase paused, Railway credits out), see Next Actions
 
 ---
 
@@ -284,7 +284,12 @@ All currently used or identified open data sources for Strata.
 
 _Update this section at the start of each work session._
 
-1. **Restore deployment + Supabase project** — unblocks live auth (set SUPABASE_JWT_SECRET +
-   NEXT_PUBLIC_SUPABASE_* and run `alembic upgrade head` for the watches table)
+1. **Restore deployment + Supabase project** (Denis — billing) — unblocks live auth, watchlists, email notifications.
+   Runbook: new/unpause Supabase project → set `SUPABASE_JWT_SECRET` + `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` (API env)
+   and `NEXT_PUBLIC_SUPABASE_URL`/`ANON_KEY` (Vercel) → refill Railway or redeploy API elsewhere → `DATABASE_URL` →
+   `alembic upgrade head` (now 6 revisions: watches, reference_rates, last_notified_at) → set repo secret
+   `PIPELINE_API_KEY` → re-run listing pipeline → `--rents --amenities` neighborhoods regen (populates rent trends +
+   venue categories) → set SMTP_* env to activate email digests (#28)
 2. **Per-building Baugesuche** — cantonal Amtsblatt API (quartier-level done via OGD)
-3. **Wire email notifications into the daily cron** once deployment is restored (SMTP env + trigger after pipeline runs)
+3. **OTP server for custom commute destinations (#21)** — needs a host; unblocked by action 1
+4. **Data partnership with SMG** (Immoscout24 + Homegate, #11/#12 both blocked by bot protection — one agreement unblocks both)
