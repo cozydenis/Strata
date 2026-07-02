@@ -15,6 +15,7 @@ export const MATCH_DIMENSIONS = [
   'family',
   'youngSocial',
   'upAndComing',
+  'green',
 ] as const;
 
 export type MatchDimension = (typeof MATCH_DIMENSIONS)[number];
@@ -27,6 +28,7 @@ export const DIMENSION_LABELS: Record<MatchDimension, string> = {
   family: 'Family-friendly',
   youngSocial: 'Young & social',
   upAndComing: 'Up-and-coming',
+  green: 'Green space',
 };
 
 /** Short labels used in explanation chips ("strong on nightlife"). */
@@ -37,6 +39,7 @@ export const DIMENSION_SHORT_LABELS: Record<MatchDimension, string> = {
   family: 'family',
   youngSocial: 'young & social',
   upAndComing: 'up-and-coming',
+  green: 'green space',
 };
 
 export const MIN_WEIGHT = 0;
@@ -55,6 +58,7 @@ export const DEFAULT_PREFERENCES: MatchPreferences = {
     family: DEFAULT_WEIGHT,
     youngSocial: DEFAULT_WEIGHT,
     upAndComing: DEFAULT_WEIGHT,
+    green: DEFAULT_WEIGHT,
   },
 };
 

@@ -24,6 +24,7 @@ function feat(
     start?: number;
     area?: number;
     amenities?: unknown;
+    green?: number | null;
   },
 ): MatchScoreFeature {
   return {
@@ -35,6 +36,9 @@ function feat(
       growth_rate: o.growth ?? 0,
       age_0_17_pct: o.a017 ?? 0,
       age_18_29_pct: o.a1829 ?? 0,
+      // Only attach green_share_pct when the caller provided it — absence
+      // must exercise the missing-data path, not a default.
+      ...('green' in o ? { green_share_pct: o.green } : {}),
       amenities:
         'amenities' in o
           ? (o.amenities as never)
@@ -90,6 +94,32 @@ describe('computeMatchScores', () => {
     expect(c.contributions.family).toBeCloseTo(0);
     expect(c.contributions.youngSocial).toBeCloseTo(1);
     expect(c.contributions.upAndComing).toBeCloseTo(1);
+    // No fixture feature carries green_share_pct → all-equal collapse to 0.5.
+    expect(c.contributions.green).toBeCloseTo(0.5);
+  });
+
+  it('min-max normalizes green_share_pct across features', () => {
+    const greens: MatchScoreFeature[] = [
+      feat(1, { green: 5 }),
+      feat(2, { green: 10 }),
+      feat(3, { green: 25 }),
+    ];
+    const scores = computeMatchScores(greens, DEFAULT_PREFERENCES);
+    expect(scores.get(3)?.contributions.green).toBeCloseTo(1);
+    expect(scores.get(1)?.contributions.green).toBeCloseTo(0);
+    expect(scores.get(2)?.contributions.green).toBeCloseTo(0.25);
+  });
+
+  it('treats missing or null green_share_pct as 0 before normalization', () => {
+    const mixed: MatchScoreFeature[] = [
+      feat(1, {}), // green_share_pct absent
+      feat(2, { green: null }),
+      feat(3, { green: 20 }),
+    ];
+    const scores = computeMatchScores(mixed, DEFAULT_PREFERENCES);
+    expect(scores.get(1)?.contributions.green).toBeCloseTo(0);
+    expect(scores.get(2)?.contributions.green).toBeCloseTo(0);
+    expect(scores.get(3)?.contributions.green).toBeCloseTo(1);
   });
 
   it('all-equal inputs normalize every dimension to 0.5', () => {
@@ -109,8 +139,8 @@ describe('computeMatchScores', () => {
   });
 
   it('applies weighted mean and excludes weight-0 dimensions', () => {
-    // nightlife weight 2, calm weight 0, all others weight 1
-    const prefs = weights({ nightlife: 2, calm: 0 });
+    // nightlife weight 2, calm + green weight 0, all others weight 1
+    const prefs = weights({ nightlife: 2, calm: 0, green: 0 });
     // Feature C: nightlife=1(w2), dailyNeeds=0(w1), family=0(w1), youngSocial=1(w1), upAndComing=1(w1)
     // weighted sum = 2*1 + 0 + 0 + 1 + 1 = 4 ; weight sum = 2+1+1+1+1 = 6 → 66.67 → 67
     expect(computeMatchScores(FIXTURE, prefs).get(3)?.score).toBe(67);
@@ -127,6 +157,7 @@ describe('computeMatchScores', () => {
       family: 0,
       youngSocial: 0,
       upAndComing: 0,
+      green: 0,
     });
     expect(computeMatchScores(FIXTURE, prefs).get(1)?.score).toBeNull();
   });
@@ -160,6 +191,7 @@ describe('explainMatch', () => {
     family: 0.8,
     youngSocial: 0.3,
     upAndComing: 0.2,
+    green: 0.5,
   };
 
   it('returns the top-2 strongest and bottom-2 weakest dimensions', () => {
@@ -184,11 +216,18 @@ describe('explainMatch', () => {
       calm: 0,
       youngSocial: 0,
       upAndComing: 0,
+      green: 0,
     });
     const { strong, weak } = explainMatch(contributions, prefs);
     expect(strong).toEqual(['nightlife', 'family']);
     for (const label of weak) {
       expect(strong).not.toContain(label);
     }
+  });
+
+  it('names green space among the strong chips when green dominates', () => {
+    const greenHeavy = { ...contributions, green: 1, nightlife: 0.2 };
+    const { strong } = explainMatch(greenHeavy, DEFAULT_PREFERENCES);
+    expect(strong).toContain('green space');
   });
 });

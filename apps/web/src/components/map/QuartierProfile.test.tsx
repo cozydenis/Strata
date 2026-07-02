@@ -165,6 +165,62 @@ describe('QuartierProfile match score', () => {
   });
 });
 
+describe('QuartierProfile green space', () => {
+  const greenProfile = {
+    ...fullProfile,
+    green_share_pct: 12.06,
+    green_m2_per_capita: 34.4,
+  };
+
+  it('renders green share with one decimal', () => {
+    render(<QuartierProfile profile={greenProfile} />);
+    expect(screen.getByTestId('green-section')).toBeTruthy();
+    expect(screen.getByText('Green share')).toBeTruthy();
+    expect(screen.getByText('12.1%')).toBeTruthy();
+  });
+
+  it('renders per-capita green space as whole m²', () => {
+    render(<QuartierProfile profile={greenProfile} />);
+    expect(screen.getByText('Green space per capita')).toBeTruthy();
+    expect(screen.getByText('34 m²')).toBeTruthy();
+  });
+
+  it('hides the section entirely when both green properties are absent', () => {
+    render(<QuartierProfile profile={fullProfile} />);
+    expect(screen.queryByTestId('green-section')).toBeNull();
+  });
+
+  it('hides the section entirely when both green properties are null', () => {
+    render(
+      <QuartierProfile
+        profile={{ ...fullProfile, green_share_pct: null, green_m2_per_capita: null }}
+      />,
+    );
+    expect(screen.queryByTestId('green-section')).toBeNull();
+  });
+
+  it('omits only the per-capita row when that value is null', () => {
+    render(
+      <QuartierProfile
+        profile={{ ...fullProfile, green_share_pct: 8.25, green_m2_per_capita: null }}
+      />,
+    );
+    expect(screen.getByTestId('green-section')).toBeTruthy();
+    expect(screen.getByText('8.3%')).toBeTruthy();
+    expect(screen.queryByText('Green space per capita')).toBeNull();
+  });
+
+  it('names the green dimension in match chips', () => {
+    render(
+      <QuartierProfile
+        profile={greenProfile}
+        match={{ score: 81, strong: ['green space'], weak: ['nightlife'] }}
+      />,
+    );
+    expect(screen.getByText(/strong on green space/i)).toBeTruthy();
+  });
+});
+
 describe('QuartierProfile compare button', () => {
   it('renders compare button and fires onCompare', async () => {
     const { fireEvent } = await import('@testing-library/react');

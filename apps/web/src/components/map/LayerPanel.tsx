@@ -1,5 +1,6 @@
 import type { CommuteDestination } from '@/lib/api';
 import { COMMUTE_DESTINATIONS } from '@/lib/api';
+import { GREEN_FILL_COLOR } from '@/lib/map/green-colors';
 
 interface LayerPanelProps {
   buildingsVisible: boolean;
@@ -7,6 +8,7 @@ interface LayerPanelProps {
   quartiereVisible: boolean;
   noiseVisible: boolean;
   airQualityVisible: boolean;
+  greenSpacesVisible: boolean;
   activeMetric: string;
   onToggle: (layer: string) => void;
   onMetricChange: (metric: string) => void;
@@ -23,6 +25,7 @@ const LAYERS: { key: string; label: string; glyph: string }[] = [
   { key: 'quartiere', label: 'Quartiere', glyph: '#5A7D8A' },
   { key: 'noise', label: 'Noise', glyph: '#C4785B' },
   { key: 'air', label: 'Air quality', glyph: '#8FA071' },
+  { key: 'green', label: 'Green spaces', glyph: GREEN_FILL_COLOR },
 ];
 
 const COMMUTE_GLYPH = '#C8C2BA';
@@ -39,7 +42,12 @@ function isVisible(
   key: string,
   props: Pick<
     LayerPanelProps,
-    'buildingsVisible' | 'listingsVisible' | 'quartiereVisible' | 'noiseVisible' | 'airQualityVisible'
+    | 'buildingsVisible'
+    | 'listingsVisible'
+    | 'quartiereVisible'
+    | 'noiseVisible'
+    | 'airQualityVisible'
+    | 'greenSpacesVisible'
   >,
 ): boolean {
   switch (key) {
@@ -53,6 +61,8 @@ function isVisible(
       return props.noiseVisible;
     case 'air':
       return props.airQualityVisible;
+    case 'green':
+      return props.greenSpacesVisible;
     default:
       return false;
   }
@@ -111,6 +121,7 @@ export function LayerPanel({
   quartiereVisible,
   noiseVisible,
   airQualityVisible,
+  greenSpacesVisible,
   activeMetric,
   onToggle,
   onMetricChange,
@@ -130,6 +141,7 @@ export function LayerPanel({
             quartiereVisible,
             noiseVisible,
             airQualityVisible,
+            greenSpacesVisible,
           });
           return (
             <li key={key}>

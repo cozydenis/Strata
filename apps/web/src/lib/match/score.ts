@@ -1,7 +1,7 @@
 /**
  * Pure, explainable per-Quartier match scoring.
  *
- * Every score is derived from six normalized dimensions (each 0..1, min-max
+ * Every score is derived from seven normalized dimensions (each 0..1, min-max
  * normalized across the supplied Quartiere) combined via a weighted mean of the
  * user's preferences. No DOM, no fetch, no mutation of inputs.
  */
@@ -37,6 +37,8 @@ export interface MatchScoreProperties {
   growth_rate?: number;
   age_0_17_pct?: number;
   age_18_29_pct?: number;
+  green_share_pct?: number | null;
+  green_m2_per_capita?: number | null;
   amenities?: Amenities | null;
   construction?: Construction | null;
 }
@@ -72,6 +74,7 @@ interface BaseMetrics {
   youngSocial: number;
   growth: number;
   constructionDensity: number;
+  greenShare: number;
 }
 
 function extractBaseMetrics(feature: MatchScoreFeature): BaseMetrics {
@@ -92,6 +95,8 @@ function extractBaseMetrics(feature: MatchScoreFeature): BaseMetrics {
     youngSocial: num(p.age_18_29_pct),
     growth: num(p.growth_rate),
     constructionDensity: perKm2(projects, area),
+    // Missing green data → 0, matching the robustness convention above.
+    greenShare: num(p.green_share_pct),
   };
 }
 
@@ -122,6 +127,7 @@ export function computeMatchScores(
   const normYoung = minMax(base.map((b) => b.youngSocial));
   const normGrowth = minMax(base.map((b) => b.growth));
   const normConstruction = minMax(base.map((b) => b.constructionDensity));
+  const normGreen = minMax(base.map((b) => b.greenShare));
 
   const results = new Map<number, MatchResult>();
 
@@ -134,6 +140,7 @@ export function computeMatchScores(
       family: normFamily[i],
       youngSocial: normYoung[i],
       upAndComing: 0.5 * normGrowth[i] + 0.5 * normConstruction[i],
+      green: normGreen[i],
     };
     results.set(feature.properties.quartier_id, {
       score: weightedScore(contributions, prefs),

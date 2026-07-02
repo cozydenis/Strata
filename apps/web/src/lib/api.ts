@@ -102,6 +102,8 @@ export interface QuartierProfile {
   amenities?: QuartierAmenities | null;
   vibe?: QuartierVibe | null;
   construction?: QuartierConstruction | null;
+  green_share_pct?: number | null;
+  green_m2_per_capita?: number | null;
 }
 
 export type CommuteDestination = 'hb' | 'eth' | 'airport' | 'technopark';

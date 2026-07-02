@@ -78,6 +78,22 @@ function AmenitiesSection({ amenities }: { amenities: QuartierAmenities }) {
   );
 }
 
+function GreenSection({ sharePct, m2PerCapita }: { sharePct: number | null; m2PerCapita: number | null }) {
+  return (
+    <div className="strata-rule mt-3 pt-3" data-testid="green-section">
+      <p className="strata-panel-title mb-2">Green space</p>
+      <dl>
+        {sharePct !== null && (
+          <StatRow label="Green share">{`${sharePct.toFixed(1)}%`}</StatRow>
+        )}
+        {m2PerCapita !== null && (
+          <StatRow label="Green space per capita">{`${Math.round(m2PerCapita)} m²`}</StatRow>
+        )}
+      </dl>
+    </div>
+  );
+}
+
 export interface QuartierMatch {
   score: number | null;
   strong: string[];
@@ -159,7 +175,13 @@ export function QuartierProfile({ profile, onClose, onCompare, match }: Quartier
     amenities,
     vibe,
     construction,
+    green_share_pct,
+    green_m2_per_capita,
   } = profile;
+
+  const greenShare = green_share_pct ?? null;
+  const greenPerCapita = green_m2_per_capita ?? null;
+  const hasGreen = greenShare !== null || greenPerCapita !== null;
 
   return (
     <div className="strata-panel w-72 p-4">
@@ -236,6 +258,8 @@ export function QuartierProfile({ profile, onClose, onCompare, match }: Quartier
           )}
         </>
       )}
+
+      {hasGreen && <GreenSection sharePct={greenShare} m2PerCapita={greenPerCapita} />}
 
       {onCompare && (
         <button

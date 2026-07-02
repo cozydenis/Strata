@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   DEFAULT_PREFERENCES,
+  DIMENSION_LABELS,
+  DIMENSION_SHORT_LABELS,
   MATCH_DIMENSIONS,
   hasActivePreferences,
   loadPreferences,
@@ -9,6 +11,18 @@ import {
 } from './preferences';
 
 const STORAGE_KEY = 'strata.match.preferences.v1';
+
+describe('MATCH_DIMENSIONS', () => {
+  it('contains seven dimensions including green', () => {
+    expect(MATCH_DIMENSIONS).toHaveLength(7);
+    expect(MATCH_DIMENSIONS).toContain('green');
+  });
+
+  it('labels the green dimension "Green space"', () => {
+    expect(DIMENSION_LABELS.green).toBe('Green space');
+    expect(DIMENSION_SHORT_LABELS.green).toBe('green space');
+  });
+});
 
 describe('DEFAULT_PREFERENCES', () => {
   it('assigns weight 1 to every dimension', () => {
@@ -29,7 +43,15 @@ describe('preferences persistence', () => {
 
   it('round-trips saved preferences', () => {
     const prefs: MatchPreferences = {
-      weights: { nightlife: 2, dailyNeeds: 0, calm: 1, family: 2, youngSocial: 0, upAndComing: 1 },
+      weights: {
+        nightlife: 2,
+        dailyNeeds: 0,
+        calm: 1,
+        family: 2,
+        youngSocial: 0,
+        upAndComing: 1,
+        green: 2,
+      },
     };
     savePreferences(prefs);
     expect(loadPreferences()).toEqual(prefs);
@@ -45,6 +67,23 @@ describe('preferences persistence', () => {
     const loaded = loadPreferences();
     expect(loaded.weights.nightlife).toBe(2);
     expect(loaded.weights.calm).toBe(1);
+    expect(loaded.weights.upAndComing).toBe(1);
+  });
+
+  it('loads pre-green stored JSON with green defaulting to weight 1', () => {
+    // Simulates preferences persisted before the green dimension existed:
+    // all six legacy keys present, `green` absent entirely.
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        weights: { nightlife: 2, dailyNeeds: 0, calm: 1, family: 2, youngSocial: 0, upAndComing: 1 },
+      }),
+    );
+    const loaded = loadPreferences();
+    expect(loaded.weights.green).toBe(1);
+    // Legacy weights survive untouched.
+    expect(loaded.weights.nightlife).toBe(2);
+    expect(loaded.weights.dailyNeeds).toBe(0);
     expect(loaded.weights.upAndComing).toBe(1);
   });
 
@@ -85,7 +124,15 @@ describe('hasActivePreferences', () => {
 
   it('is false when all weights are zero', () => {
     const allZero: MatchPreferences = {
-      weights: { nightlife: 0, dailyNeeds: 0, calm: 0, family: 0, youngSocial: 0, upAndComing: 0 },
+      weights: {
+        nightlife: 0,
+        dailyNeeds: 0,
+        calm: 0,
+        family: 0,
+        youngSocial: 0,
+        upAndComing: 0,
+        green: 0,
+      },
     };
     expect(hasActivePreferences(allZero)).toBe(false);
   });

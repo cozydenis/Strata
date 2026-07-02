@@ -25,11 +25,28 @@ describe('MatchPanel', () => {
     expect(card.className).toContain('strata-panel');
   });
 
-  it('renders a control for every one of the six dimensions', () => {
+  it('renders a control for every one of the seven dimensions', () => {
     render(<MatchPanel {...defaultProps} />);
+    expect(MATCH_DIMENSIONS).toHaveLength(7);
     for (const dim of MATCH_DIMENSIONS) {
       expect(screen.getByTestId(`match-dim-${dim}`)).toBeTruthy();
     }
+  });
+
+  it('renders a green space row with weight controls', () => {
+    render(<MatchPanel {...defaultProps} />);
+    expect(screen.getByTestId('match-dim-green')).toBeTruthy();
+    expect(screen.getByText('Green space')).toBeTruthy();
+    expect(screen.getByTestId('match-dim-green-weight-2')).toBeTruthy();
+  });
+
+  it('calls onChange with an updated green weight', () => {
+    const onChange = vi.fn();
+    render(<MatchPanel {...defaultProps} onChange={onChange} />);
+    fireEvent.click(screen.getByTestId('match-dim-green-weight-0'));
+    const updated = onChange.mock.calls[0][0] as MatchPreferences;
+    expect(updated.weights.green).toBe(0);
+    expect(updated.weights.nightlife).toBe(1);
   });
 
   it('renders human-readable labels', () => {
@@ -37,6 +54,7 @@ describe('MatchPanel', () => {
     expect(screen.getByText(DIMENSION_LABELS.nightlife)).toBeTruthy();
     expect(screen.getByText(DIMENSION_LABELS.calm)).toBeTruthy();
     expect(screen.getByText(DIMENSION_LABELS.upAndComing)).toBeTruthy();
+    expect(screen.getByText(DIMENSION_LABELS.green)).toBeTruthy();
   });
 
   it('calls onChange with updated preferences when a control changes', () => {

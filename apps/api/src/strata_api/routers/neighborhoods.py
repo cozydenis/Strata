@@ -77,6 +77,8 @@ def _build_profile(feat: dict) -> dict:
         "amenities": p.get("amenities"),
         "vibe": p.get("vibe"),
         "construction": p.get("construction"),
+        "green_share_pct": p.get("green_share_pct"),
+        "green_m2_per_capita": p.get("green_m2_per_capita"),
     }
 
 
