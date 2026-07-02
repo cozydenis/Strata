@@ -27,7 +27,7 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Photos stored | 565+ |
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
-| Backend tests | 729 |
+| Backend tests | 744 |
 | Frontend tests | 367 |
 
 ---
@@ -84,7 +84,7 @@ The layer that answers "where should I live?" Four dimensions.
 |-----------|--------|-------------|-------|
 | **Population growth/decline** | 🟢 Done | YoY from demographics CSV (back to 1993) | — |
 | **Construction activity** | 🟢 Done | GWR construction year distribution per Quartier | — |
-| **Rent trends per Quartier** | 🟡 Partial | From listing data (need historical depth) | #TBD |
+| **Rent trends per Quartier** | 🟢 Pipeline done — `--rents`: median CHF/m² + 12-month monthly trend per quartier from own listings corpus | — |
 | **Commercial activity** (new venues opening) | 💡 Idea | Handelsregister or OSM changeset history | #TBD |
 | **Construction pipeline** (approved + under construction per Quartier) | 🟢 Done — OGD BAU501OD5011, profile + comparison + vibe | — |
 

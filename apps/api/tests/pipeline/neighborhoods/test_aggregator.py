@@ -345,3 +345,37 @@ class TestVibeInAggregator:
         records = {11: _make_quartier(11, "Rathaus", 1)}
         result = aggregate_quartier_geojson(records, {})
         assert result["features"][0]["properties"]["vibe"] is None
+
+
+class TestRentProps:
+    """Rent-trend properties merged into quartier features (see rent_trends.py)."""
+
+    def test_rent_keys_none_when_not_provided(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+
+        records = {11: _make_quartier(11, "Rathaus", 1)}
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)})
+        props = result["features"][0]["properties"]
+        assert props["rent_median_chf_m2"] is None
+        assert props["rent_listing_count"] is None
+        assert props["rent_trend"] is None
+
+    def test_rent_stats_merged(self):
+        from strata_api.pipeline.neighborhoods.aggregator import aggregate_quartier_geojson
+        from strata_api.pipeline.neighborhoods.rent_trends import RentStats
+
+        records = {11: _make_quartier(11, "Rathaus", 1), 12: _make_quartier(12, "Lindenhof", 1)}
+        rents = {
+            11: RentStats(
+                median_chf_m2=31.5,
+                listing_count=14,
+                trend=({"month": "2026-06", "median_chf_m2": 31.0, "n": 12},),
+            )
+        }
+        result = aggregate_quartier_geojson(records, {11: _make_demo(11)}, rents=rents)
+        by_id = {f["properties"]["quartier_id"]: f["properties"] for f in result["features"]}
+        assert by_id[11]["rent_median_chf_m2"] == 31.5
+        assert by_id[11]["rent_listing_count"] == 14
+        assert by_id[11]["rent_trend"] == [{"month": "2026-06", "median_chf_m2": 31.0, "n": 12}]
+        assert by_id[12]["rent_median_chf_m2"] is None
+        assert by_id[12]["rent_trend"] is None
