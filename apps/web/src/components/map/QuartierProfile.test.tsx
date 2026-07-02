@@ -303,3 +303,52 @@ describe('QuartierProfile construction', () => {
     expect(screen.queryByTestId('construction-section')).toBeNull();
   });
 });
+
+describe('QuartierProfile asking rent', () => {
+  const rentProfile = {
+    ...fullProfile,
+    rent_median_chf_m2: 31.5,
+    rent_listing_count: 14,
+    rent_trend: [
+      { month: '2026-05', median_chf_m2: 30.8, n: 11 },
+      { month: '2026-06', median_chf_m2: 31.5, n: 14 },
+    ],
+  };
+
+  it('renders median asking rent with listing count', () => {
+    render(<QuartierProfile profile={rentProfile} />);
+    expect(screen.getByTestId('rent-section')).toBeTruthy();
+    expect(screen.getByText('Median asking rent')).toBeTruthy();
+    expect(screen.getByText(/CHF 31\.50\/m²/)).toBeTruthy();
+    expect(screen.getByText(/14 listings/)).toBeTruthy();
+  });
+
+  it('renders a sparkline with month labels when trend has 2+ points', () => {
+    const { container } = render(<QuartierProfile profile={rentProfile} />);
+    expect(container.querySelector('[data-testid="rent-sparkline"] svg')).toBeTruthy();
+    expect(screen.getByText('2026-05')).toBeTruthy();
+    expect(screen.getByText('2026-06')).toBeTruthy();
+  });
+
+  it('omits the sparkline for fewer than 2 trend points', () => {
+    const { container } = render(
+      <QuartierProfile
+        profile={{ ...rentProfile, rent_trend: [{ month: '2026-06', median_chf_m2: 31.5, n: 14 }] }}
+      />,
+    );
+    expect(screen.getByTestId('rent-section')).toBeTruthy();
+    expect(container.querySelector('[data-testid="rent-sparkline"]')).toBeNull();
+  });
+
+  it('hides the section entirely when rent data is absent or null', () => {
+    render(<QuartierProfile profile={fullProfile} />);
+    expect(screen.queryByTestId('rent-section')).toBeNull();
+
+    render(
+      <QuartierProfile
+        profile={{ ...fullProfile, rent_median_chf_m2: null, rent_listing_count: null, rent_trend: null }}
+      />,
+    );
+    expect(screen.queryByTestId('rent-section')).toBeNull();
+  });
+});
