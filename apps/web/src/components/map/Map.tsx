@@ -21,6 +21,12 @@ import { eraColorExpression } from '@/lib/map/era-colors';
 import { quartierFillColor } from '@/lib/map/quartier-colors';
 import { noiseLineColor } from '@/lib/map/noise-colors';
 import { airCircleColor } from '@/lib/map/air-colors';
+import {
+  GREEN_FILL_COLOR,
+  GREEN_FILL_OPACITY,
+  GREEN_OUTLINE_COLOR,
+  GREEN_OUTLINE_WIDTH,
+} from '@/lib/map/green-colors';
 import { computeMatchScores, explainMatch, type MatchScoreFeature } from '@/lib/match/score';
 import {
   DEFAULT_PREFERENCES,
@@ -49,6 +55,7 @@ const LISTINGS_GEOJSON_URL = '/data/listings.geojson';
 const QUARTIERE_GEOJSON_URL = '/data/quartiere.geojson';
 const NOISE_GEOJSON_URL = '/data/noise.geojson';
 const AIR_GEOJSON_URL = '/data/air_quality.geojson';
+const GREEN_GEOJSON_URL = '/data/green_spaces.geojson';
 const TILE_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 const LISTING_COLOR = '#D4915A';
 const BUILDING_LAYERS = ['clusters', 'cluster-count', 'buildings-unclustered'] as const;
@@ -84,6 +91,7 @@ export function MapView() {
   const [quartiereVisible, setQuartiereVisible] = useState(false);
   const [noiseVisible, setNoiseVisible] = useState(false);
   const [airQualityVisible, setAirQualityVisible] = useState(false);
+  const [greenSpacesVisible, setGreenSpacesVisible] = useState(false);
   const [activeMetric, setActiveMetric] = useState('population_density');
 
   // Personalized match scoring (client-side, persisted in localStorage)
@@ -358,6 +366,35 @@ export function MapView() {
               'circle-color': noiseLineColor() as unknown as string,
               'circle-radius': 2.5,
               'circle-opacity': 0.55,
+            },
+          });
+
+          // ── Green-space polygons (ambient context; under stations/buildings) ──
+          map.addSource('green-spaces', {
+            type: 'geojson',
+            data: GREEN_GEOJSON_URL,
+          });
+
+          map.addLayer({
+            id: 'green-spaces-fill',
+            type: 'fill',
+            source: 'green-spaces',
+            layout: { visibility: 'none' },
+            paint: {
+              'fill-color': GREEN_FILL_COLOR,
+              'fill-opacity': GREEN_FILL_OPACITY,
+            },
+          });
+
+          map.addLayer({
+            id: 'green-spaces-outline',
+            type: 'line',
+            source: 'green-spaces',
+            layout: { visibility: 'none' },
+            paint: {
+              'line-color': GREEN_OUTLINE_COLOR,
+              'line-width': GREEN_OUTLINE_WIDTH,
+              'line-opacity': 0.5,
             },
           });
 
@@ -681,6 +718,18 @@ export function MapView() {
     }
   }, [airQualityVisible]);
 
+  // Toggle green-space polygon layers visibility
+  useEffect(() => {
+    const map = mapRef.current as {
+      setLayoutProperty?: (layer: string, prop: string, val: string) => void;
+      getLayer?: (id: string) => unknown;
+    } | null;
+    if (!map?.setLayoutProperty || !map?.getLayer?.('green-spaces-fill')) return;
+    const visibility = greenSpacesVisible ? 'visible' : 'none';
+    map.setLayoutProperty('green-spaces-fill', 'visibility', visibility);
+    map.setLayoutProperty('green-spaces-outline', 'visibility', visibility);
+  }, [greenSpacesVisible]);
+
   // Toggle commute isochrone layers and fetch data when enabled
   useEffect(() => {
     const map = mapRef.current as {
@@ -875,6 +924,9 @@ export function MapView() {
       case 'air':
         setAirQualityVisible((v) => !v);
         break;
+      case 'green':
+        setGreenSpacesVisible((v) => !v);
+        break;
     }
   }
 
@@ -928,6 +980,7 @@ export function MapView() {
           quartiereVisible={quartiereVisible}
           noiseVisible={noiseVisible}
           airQualityVisible={airQualityVisible}
+          greenSpacesVisible={greenSpacesVisible}
           activeMetric={activeMetric}
           onToggle={handleLayerToggle}
           onMetricChange={setActiveMetric}

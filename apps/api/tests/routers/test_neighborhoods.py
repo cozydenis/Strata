@@ -92,6 +92,16 @@ class TestGetQuartierProfile:
         assert data["quartier_name"] == "Hochschulen"
         assert data["population"]["total"] is None
 
+    def test_response_has_green_fields(self, client):
+        data = client.get("/neighborhoods/11/profile").json()
+        assert data["green_share_pct"] == pytest.approx(12.06)
+        assert data["green_m2_per_capita"] == pytest.approx(34.4)
+
+    def test_green_fields_null_when_absent(self, client):
+        data = client.get("/neighborhoods/12/profile").json()
+        assert data["green_share_pct"] is None
+        assert data["green_m2_per_capita"] is None
+
     def test_geojson_cached_after_first_load(self, client, fixture_geojson_data, tmp_path):
         """Second call should use cached data, not reload the file."""
         client.get("/neighborhoods/11/profile")

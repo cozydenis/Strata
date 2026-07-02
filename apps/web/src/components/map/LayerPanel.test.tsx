@@ -8,6 +8,7 @@ const defaultProps = {
   quartiereVisible: false,
   noiseVisible: false,
   airQualityVisible: false,
+  greenSpacesVisible: false,
   activeMetric: 'population_density',
   onToggle: vi.fn(),
   onMetricChange: vi.fn(),
@@ -60,6 +61,33 @@ describe('LayerPanel', () => {
       screen.getByTestId('toggle-air').querySelector('input[type="checkbox"]')!,
     );
     expect(onToggle).toHaveBeenCalledWith('air');
+  });
+
+  it('renders a green-spaces toggle labelled "Green spaces"', () => {
+    render(<LayerPanel {...defaultProps} />);
+    expect(screen.getByTestId('toggle-green')).toBeTruthy();
+    expect(screen.getByText('Green spaces')).toBeTruthy();
+  });
+
+  it('green-spaces checkbox is off by default', () => {
+    render(<LayerPanel {...defaultProps} />);
+    const cb = screen.getByTestId('toggle-green').querySelector('input[type="checkbox"]') as HTMLInputElement;
+    expect(cb.checked).toBe(false);
+  });
+
+  it('green-spaces checkbox reflects greenSpacesVisible=true', () => {
+    render(<LayerPanel {...defaultProps} greenSpacesVisible={true} />);
+    const cb = screen.getByTestId('toggle-green').querySelector('input[type="checkbox"]') as HTMLInputElement;
+    expect(cb.checked).toBe(true);
+  });
+
+  it('calls onToggle with "green" when green-spaces checkbox clicked', () => {
+    const onToggle = vi.fn();
+    render(<LayerPanel {...defaultProps} onToggle={onToggle} />);
+    fireEvent.click(
+      screen.getByTestId('toggle-green').querySelector('input[type="checkbox"]')!,
+    );
+    expect(onToggle).toHaveBeenCalledWith('green');
   });
 
   it('buildings checkbox reflects buildingsVisible=true', () => {
