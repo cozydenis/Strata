@@ -27,8 +27,8 @@ Update this file when phases shift. Claude Code reads it every session via CLAUD
 | Photos stored | 565+ |
 | Quartiere with profiles | 34 |
 | Noise data points | 1,071,340 |
-| Backend tests | 746 |
-| Frontend tests | 386 |
+| Backend tests | 753 |
+| Frontend tests | 388 |
 
 ---
 
@@ -66,7 +66,7 @@ The layer that answers "where should I live?" Four dimensions.
 |-----------|--------|-------------|-------|
 | **Demographics** (age, origin, gender) | 🟢 Done | Statistik Stadt Zürich CSV | — |
 | **Population density** | 🟢 Done | Derived from demographics + Quartier area | — |
-| **Venue typology** (cafés, nightlife, culture) | ⚪ Planned | OSM Overpass API or Google Places | #TBD |
+| **Venue typology** (cafés, nightlife, culture) | 🟢 v1 done — clubs/culture/live-music categories in amenities pipeline + profile grid (data after next --amenities refetch) | #6 |
 | **Vibe / character profiles** | 🟢 Done — quartile-based explainable tags + summary | — |
 
 #### Practical Dimension

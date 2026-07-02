@@ -109,7 +109,10 @@ describe('QuartierProfile amenities', () => {
     pharmacies: 4,
     schools: 6,
     fitness: 5,
-    total: 90,
+    clubs: 3,
+    culture: 7,
+    music_venues: 2,
+    total: 102,
     per_km2: 18.4,
   };
 
@@ -119,6 +122,35 @@ describe('QuartierProfile amenities', () => {
     expect(screen.getByText('Groceries')).toBeTruthy();
     expect(screen.getByText('21')).toBeTruthy();
     expect(screen.getByText('Bars & pubs')).toBeTruthy();
+  });
+
+  it('renders the cultural/nightlife venue categories', () => {
+    render(<QuartierProfile profile={{ ...fullProfile, amenities }} />);
+    expect(screen.getByText('Clubs')).toBeTruthy();
+    expect(screen.getByText('Culture')).toBeTruthy();
+    expect(screen.getByText('Live music')).toBeTruthy();
+    expect(screen.getByText('7')).toBeTruthy();
+  });
+
+  it('tolerates data missing the new venue keys by rendering 0', () => {
+    // Simulates cached data generated before the venue categories existed
+    // (a refetch is required to populate them). Labels must still render.
+    const legacy = {
+      groceries: 8,
+      cafes: 21,
+      restaurants: 34,
+      bars: 12,
+      pharmacies: 4,
+      schools: 6,
+      fitness: 5,
+      total: 90,
+      per_km2: 18.4,
+    };
+    render(<QuartierProfile profile={{ ...fullProfile, amenities: legacy }} />);
+    expect(screen.getByText('Clubs')).toBeTruthy();
+    expect(screen.getByText('Live music')).toBeTruthy();
+    // three venue categories all fall back to 0
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(3);
   });
 
   it('renders amenity density per km2', () => {

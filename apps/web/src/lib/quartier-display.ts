@@ -13,4 +13,7 @@ export const AMENITY_LABELS: { key: keyof QuartierAmenities; label: string }[] =
   { key: 'pharmacies', label: 'Pharmacies' },
   { key: 'schools', label: 'Schools' },
   { key: 'fitness', label: 'Fitness' },
+  { key: 'clubs', label: 'Clubs' },
+  { key: 'culture', label: 'Culture' },
+  { key: 'music_venues', label: 'Live music' },
 ];

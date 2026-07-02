@@ -71,6 +71,12 @@ export interface QuartierAmenities {
   pharmacies: number;
   schools: number;
   fitness: number;
+  // Cultural/nightlife venue group (issue #6). Optional because data generated
+  // before these categories existed lacks them until an `--amenities` refetch;
+  // the UI treats an absent key as 0.
+  clubs?: number;
+  culture?: number;
+  music_venues?: number;
   total: number;
   per_km2: number | null;
 }
