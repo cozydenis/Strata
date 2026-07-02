@@ -67,7 +67,7 @@ function AmenitiesSection({ amenities }: { amenities: QuartierAmenities }) {
         {AMENITY_LABELS.map(({ key, label }) => (
           <div key={key} className="flex items-baseline justify-between py-[3px]">
             <dt className="text-2xs text-strata-cream/50">{label}</dt>
-            <dd className="strata-data text-xs-11 text-strata-cream">{amenities[key]}</dd>
+            <dd className="strata-data text-xs-11 text-strata-cream">{amenities[key] ?? 0}</dd>
           </div>
         ))}
       </dl>

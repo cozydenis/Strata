@@ -57,6 +57,22 @@ OVERPASS_RESPONSE = {
         },
         # node without tags — skipped
         {"type": "node", "id": 6, "lat": 47.35, "lon": 8.50},
+        # nightclub node — cultural/nightlife venue group (issue #6)
+        {
+            "type": "node",
+            "id": 7,
+            "lat": 47.40,
+            "lon": 8.55,
+            "tags": {"amenity": "nightclub", "name": "Club X"},
+        },
+        # museum node — culture category via the tourism tag key
+        {
+            "type": "node",
+            "id": 8,
+            "lat": 47.41,
+            "lon": 8.56,
+            "tags": {"tourism": "museum", "name": "Kunsthaus"},
+        },
     ],
 }
 
@@ -80,9 +96,21 @@ class TestParseOverpassAmenities:
         pharmacy = next(p for p in points if p.category == "pharmacies")
         assert pharmacy.name is None
 
+    def test_parses_nightclub_node(self):
+        points = parse_overpass_amenities(OVERPASS_RESPONSE)
+        club = next(p for p in points if p.category == "clubs")
+        assert club.name == "Club X"
+        assert club.lat == pytest.approx(47.40)
+
+    def test_parses_tourism_museum_as_culture(self):
+        points = parse_overpass_amenities(OVERPASS_RESPONSE)
+        museum = next(p for p in points if p.category == "culture")
+        assert museum.name == "Kunsthaus"
+        assert museum.lon == pytest.approx(8.56)
+
     def test_irrelevant_and_invalid_elements_skipped(self):
         points = parse_overpass_amenities(OVERPASS_RESPONSE)
-        assert len(points) == 3  # cafe, supermarket, pharmacy
+        assert len(points) == 5  # cafe, supermarket, pharmacy, nightclub, museum
 
     def test_empty_response(self):
         assert parse_overpass_amenities({"elements": []}) == []
@@ -115,13 +143,31 @@ class TestCategorizeTags:
         assert categorize_tags({"leisure": "fitness_centre"}) == "fitness"
         assert categorize_tags({"leisure": "sports_centre"}) == "fitness"
 
+    def test_clubs(self):
+        assert categorize_tags({"amenity": "nightclub"}) == "clubs"
+
+    def test_culture_amenity_values(self):
+        assert categorize_tags({"amenity": "theatre"}) == "culture"
+        assert categorize_tags({"amenity": "cinema"}) == "culture"
+        assert categorize_tags({"amenity": "arts_centre"}) == "culture"
+
+    def test_culture_tourism_values(self):
+        assert categorize_tags({"tourism": "museum"}) == "culture"
+        assert categorize_tags({"tourism": "gallery"}) == "culture"
+
+    def test_music_venues(self):
+        assert categorize_tags({"amenity": "music_venue"}) == "music_venues"
+        assert categorize_tags({"amenity": "concert_hall"}) == "music_venues"
+
     def test_unknown_returns_none(self):
         assert categorize_tags({"amenity": "parking"}) is None
+        assert categorize_tags({"tourism": "hotel"}) is None
         assert categorize_tags({}) is None
 
     def test_all_categories_registered(self):
         assert set(AMENITY_CATEGORIES) == {
             "groceries", "cafes", "restaurants", "bars", "pharmacies", "schools", "fitness",
+            "clubs", "culture", "music_venues",
         }
 
 
@@ -219,9 +265,19 @@ class TestBuildOverpassQuery:
         from strata_api.pipeline.neighborhoods.amenities import build_overpass_query
 
         query = build_overpass_query()
-        for _key, values in AMENITY_CATEGORIES.values():
-            for value in values:
-                assert value in query, f"{value} missing from Overpass query"
+        for rules in AMENITY_CATEGORIES.values():
+            for _key, values in rules:
+                for value in values:
+                    assert value in query, f"{value} missing from Overpass query"
+
+    def test_query_includes_tourism_and_venue_tags(self):
+        from strata_api.pipeline.neighborhoods.amenities import build_overpass_query
+
+        query = build_overpass_query()
+        assert 'node["tourism"' in query
+        assert "nightclub" in query
+        assert "music_venue" in query
+        assert "museum" in query
 
     def test_query_has_node_and_way_clauses(self):
         from strata_api.pipeline.neighborhoods.amenities import build_overpass_query

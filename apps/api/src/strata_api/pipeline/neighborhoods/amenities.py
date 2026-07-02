@@ -1,7 +1,9 @@
 """OSM amenities for the walkability layer — Overpass fetch, categorize, count per Quartier.
 
 Data source: OpenStreetMap via the public Overpass API. Elements are matched to
-seven amenity categories relevant to "where should I live?" and assigned to
+amenity categories relevant to "where should I live?" — an everyday-convenience
+group (groceries, cafes, restaurants, bars, pharmacies, schools, fitness) and a
+cultural/nightlife venue group (clubs, culture, music_venues) — and assigned to
 statistical Quartiere by point-in-polygon against the WFS boundaries.
 """
 from __future__ import annotations
@@ -25,15 +27,27 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 # Stadt Zürich bounding box (south, west, north, east)
 ZURICH_BBOX = (47.30, 8.43, 47.45, 8.65)
 
-# category -> (tag key, accepted values)
-AMENITY_CATEGORIES: dict[str, tuple[str, frozenset[str]]] = {
-    "groceries": ("shop", frozenset({"supermarket", "convenience", "greengrocer"})),
-    "cafes": ("amenity", frozenset({"cafe"})),
-    "restaurants": ("amenity", frozenset({"restaurant", "fast_food"})),
-    "bars": ("amenity", frozenset({"bar", "pub"})),
-    "pharmacies": ("amenity", frozenset({"pharmacy"})),
-    "schools": ("amenity", frozenset({"school", "kindergarten"})),
-    "fitness": ("leisure", frozenset({"fitness_centre", "sports_centre"})),
+# category -> one or more (tag key, accepted values) rules. Most categories are
+# driven by a single tag key, but some (e.g. "culture") span several keys — a
+# tag matches the category if ANY rule matches.
+AMENITY_CATEGORIES: dict[str, tuple[tuple[str, frozenset[str]], ...]] = {
+    "groceries": (("shop", frozenset({"supermarket", "convenience", "greengrocer"})),),
+    "cafes": (("amenity", frozenset({"cafe"})),),
+    "restaurants": (("amenity", frozenset({"restaurant", "fast_food"})),),
+    "bars": (("amenity", frozenset({"bar", "pub"})),),
+    "pharmacies": (("amenity", frozenset({"pharmacy"})),),
+    "schools": (("amenity", frozenset({"school", "kindergarten"})),),
+    "fitness": (("leisure", frozenset({"fitness_centre", "sports_centre"})),),
+    # Cultural / nightlife venue group (issue #6) — captures the cultural
+    # character of a neighborhood. NOTE: these categories only appear in the
+    # generated data after an `--amenities` refetch, because the cached
+    # amenities_raw.json only contains tags from previously-run queries.
+    "clubs": (("amenity", frozenset({"nightclub"})),),
+    "culture": (
+        ("amenity", frozenset({"theatre", "cinema", "arts_centre"})),
+        ("tourism", frozenset({"museum", "gallery"})),
+    ),
+    "music_venues": (("amenity", frozenset({"music_venue", "concert_hall"})),),
 }
 
 
@@ -48,9 +62,10 @@ class AmenityPoint(BaseModel, frozen=True):
 
 def categorize_tags(tags: dict) -> str | None:
     """Map an OSM tag dict to one of AMENITY_CATEGORIES, or None if irrelevant."""
-    for category, (key, values) in AMENITY_CATEGORIES.items():
-        if tags.get(key) in values:
-            return category
+    for category, rules in AMENITY_CATEGORIES.items():
+        for key, values in rules:
+            if tags.get(key) in values:
+                return category
     return None
 
 
@@ -59,8 +74,9 @@ def build_overpass_query(bbox: tuple[float, float, float, float] = ZURICH_BBOX) 
     bbox_str = ",".join(str(v) for v in bbox)
     # Several categories share a tag key (amenity) — union their values per key
     merged: dict[str, set[str]] = {}
-    for key, values in AMENITY_CATEGORIES.values():
-        merged.setdefault(key, set()).update(values)
+    for rules in AMENITY_CATEGORIES.values():
+        for key, values in rules:
+            merged.setdefault(key, set()).update(values)
 
     clauses = []
     for key, values in merged.items():
