@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ListingSummary } from '@/lib/api';
 import { mediaUrl } from '@/lib/api';
 import { RentAnalysisBadge } from '@/components/listings/RentAnalysisBadge';
+import { InitialRentBadge } from '@/components/listings/InitialRentBadge';
 
 interface Props {
   listings: ListingSummary[];
@@ -207,6 +208,7 @@ export function ListingCards({ listings }: Props) {
               {l.description && <TruncatedDescription text={l.description} />}
 
               <RentAnalysisBadge listingId={l.id} />
+              <InitialRentBadge listingId={l.id} />
 
               <div className="mt-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-3">

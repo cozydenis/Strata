@@ -186,3 +186,57 @@ describe('generateHerabsetzung', () => {
     await expect(generateHerabsetzung(42, payload)).rejects.toThrow('offline');
   });
 });
+
+const OR270 = {
+  article: 'OR Art. 270 (Anfechtung des Anfangsmietzinses)',
+  deadline_days: 30,
+  deadline_note: 'within 30 days of taking over the flat',
+  conditions: ['personal or family hardship', 'local housing shortage'],
+  assessment_method: 'Quartierüblichkeit',
+  schlichtungsbehoerde: 'Schlichtungsbehörde in Mietsachen',
+  disclaimer: 'Indicative analysis, not legal advice.',
+};
+
+const ABOVE_MARKET = {
+  listing_id: 42,
+  verdict: 'above_market',
+  target_chf_m2: 32.4,
+  median_chf_m2: 26.1,
+  p25: 24.0,
+  p75: 30.0,
+  comparable_count: 14,
+  explanation: 'Asking CHF 32.4/m² vs. quartier median CHF 26.1/m².',
+  or270: OR270,
+};
+
+describe('fetchInitialRentCheck', () => {
+  it('fetches from the correct URL and parses the check', async () => {
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000';
+    const { fetchInitialRentCheck } = await import('./api');
+
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ABOVE_MARKET });
+
+    const result = await fetchInitialRentCheck(42);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8000/legal/listings/42/initial-rent-check'
+    );
+    expect(result.verdict).toBe('above_market');
+    expect(result.or270.deadline_days).toBe(30);
+  });
+
+  it('throws on non-OK responses', async () => {
+    process.env.NEXT_PUBLIC_API_URL = '';
+    const { fetchInitialRentCheck } = await import('./api');
+
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
+    await expect(fetchInitialRentCheck(999)).rejects.toThrow('404');
+  });
+
+  it('throws on an unexpected response shape', async () => {
+    process.env.NEXT_PUBLIC_API_URL = '';
+    const { fetchInitialRentCheck } = await import('./api');
+
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ nope: true }) });
+    await expect(fetchInitialRentCheck(42)).rejects.toThrow('missing verdict');
+  });
+});

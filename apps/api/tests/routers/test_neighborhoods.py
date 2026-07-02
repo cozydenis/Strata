@@ -102,6 +102,21 @@ class TestGetQuartierProfile:
         assert data["green_share_pct"] is None
         assert data["green_m2_per_capita"] is None
 
+    def test_response_has_rent_fields(self, client):
+        data = client.get("/neighborhoods/11/profile").json()
+        assert data["rent_median_chf_m2"] == pytest.approx(31.5)
+        assert data["rent_listing_count"] == 14
+        assert data["rent_trend"] == [
+            {"month": "2026-05", "median_chf_m2": 30.8, "n": 11},
+            {"month": "2026-06", "median_chf_m2": 31.5, "n": 14},
+        ]
+
+    def test_rent_fields_null_when_absent(self, client):
+        data = client.get("/neighborhoods/12/profile").json()
+        assert data["rent_median_chf_m2"] is None
+        assert data["rent_listing_count"] is None
+        assert data["rent_trend"] is None
+
     def test_geojson_cached_after_first_load(self, client, fixture_geojson_data, tmp_path):
         """Second call should use cached data, not reload the file."""
         client.get("/neighborhoods/11/profile")

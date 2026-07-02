@@ -104,6 +104,15 @@ export interface QuartierProfile {
   construction?: QuartierConstruction | null;
   green_share_pct?: number | null;
   green_m2_per_capita?: number | null;
+  rent_median_chf_m2?: number | null;
+  rent_listing_count?: number | null;
+  rent_trend?: RentTrendPoint[] | null;
+}
+
+export interface RentTrendPoint {
+  month: string; // "YYYY-MM"
+  median_chf_m2: number;
+  n: number;
 }
 
 export type CommuteDestination = 'hb' | 'eth' | 'airport' | 'technopark';
@@ -382,4 +391,51 @@ export async function generateHerabsetzung(
 
   const data = (await res.json()) as HerabsetzungLetter;
   return { status: 'ok', data };
+}
+
+// ── Initial-rent check (OR Art. 270 / Quartierüblichkeit) ───────────────────────
+
+export type InitialRentVerdict =
+  | 'within_range'
+  | 'above_market'
+  | 'clearly_above_market'
+  | 'insufficient_data';
+
+export interface Or270Info {
+  article: string;
+  deadline_days: number;
+  deadline_note: string;
+  conditions: string[];
+  assessment_method: string;
+  schlichtungsbehoerde: string;
+  disclaimer: string;
+}
+
+export interface InitialRentCheck {
+  listing_id: number;
+  verdict: InitialRentVerdict;
+  target_chf_m2: number | null;
+  median_chf_m2: number | null;
+  p25: number | null;
+  p75: number | null;
+  comparable_count: number;
+  explanation: string;
+  or270: Or270Info;
+}
+
+/** Fetch the Quartierüblichkeit comparison for a listing's asking rent. */
+export async function fetchInitialRentCheck(listingId: number): Promise<InitialRentCheck> {
+  const res = await fetch(`${BASE_URL}/legal/listings/${listingId}/initial-rent-check`);
+  if (!res.ok) {
+    throw new Error(`${res.status}`);
+  }
+  const data: unknown = await res.json();
+  if (
+    typeof data !== 'object' ||
+    data === null ||
+    typeof (data as Record<string, unknown>).verdict !== 'string'
+  ) {
+    throw new Error('Unexpected response shape: missing verdict');
+  }
+  return data as InitialRentCheck;
 }

@@ -1,10 +1,12 @@
 import { BarChart } from './BarChart';
+import { Sparkline } from './Sparkline';
 import type {
   QuartierAmenities,
   QuartierConstruction,
   QuartierPopulation,
   QuartierProfile as QuartierProfileData,
   QuartierVibe,
+  RentTrendPoint,
 } from '@/lib/api';
 
 function ConstructionSection({ construction }: { construction: QuartierConstruction }) {
@@ -94,6 +96,41 @@ function GreenSection({ sharePct, m2PerCapita }: { sharePct: number | null; m2Pe
   );
 }
 
+function RentSection({
+  medianChfM2,
+  listingCount,
+  trend,
+}: {
+  medianChfM2: number;
+  listingCount: number | null;
+  trend: RentTrendPoint[];
+}) {
+  const showSparkline = trend.length >= 2;
+  return (
+    <div className="strata-rule mt-3 pt-3" data-testid="rent-section">
+      <p className="strata-panel-title mb-2">Asking rent</p>
+      <dl>
+        <StatRow label="Median asking rent">
+          {`CHF ${medianChfM2.toFixed(2)}/m²`}
+          {listingCount !== null && (
+            <span className="ml-1 text-2xs text-strata-cream/40">({listingCount} listings)</span>
+          )}
+        </StatRow>
+      </dl>
+      {showSparkline && (
+        <div
+          data-testid="rent-sparkline"
+          className="mt-1.5 flex items-center gap-2 text-strata-amber/80"
+        >
+          <span className="text-2xs text-strata-cream/40">{trend[0].month}</span>
+          <Sparkline values={trend.map((point) => point.median_chf_m2)} label="Asking-rent trend" />
+          <span className="text-2xs text-strata-cream/40">{trend[trend.length - 1].month}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export interface QuartierMatch {
   score: number | null;
   strong: string[];
@@ -177,11 +214,16 @@ export function QuartierProfile({ profile, onClose, onCompare, match }: Quartier
     construction,
     green_share_pct,
     green_m2_per_capita,
+    rent_median_chf_m2,
+    rent_listing_count,
+    rent_trend,
   } = profile;
 
   const greenShare = green_share_pct ?? null;
   const greenPerCapita = green_m2_per_capita ?? null;
   const hasGreen = greenShare !== null || greenPerCapita !== null;
+
+  const rentMedian = rent_median_chf_m2 ?? null;
 
   return (
     <div className="strata-panel w-72 p-4">
@@ -260,6 +302,14 @@ export function QuartierProfile({ profile, onClose, onCompare, match }: Quartier
       )}
 
       {hasGreen && <GreenSection sharePct={greenShare} m2PerCapita={greenPerCapita} />}
+
+      {rentMedian !== null && (
+        <RentSection
+          medianChfM2={rentMedian}
+          listingCount={rent_listing_count ?? null}
+          trend={rent_trend ?? []}
+        />
+      )}
 
       {onCompare && (
         <button

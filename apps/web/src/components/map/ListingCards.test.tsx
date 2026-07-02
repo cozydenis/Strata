@@ -8,13 +8,15 @@ vi.mock('@/lib/api', async (importOriginal) => {
     ...actual,
     fetchRentAnalysis: vi.fn(),
     generateHerabsetzung: vi.fn(),
+    fetchInitialRentCheck: vi.fn(),
   };
 });
 
 import { ListingCards } from './ListingCards';
-import { fetchRentAnalysis } from '@/lib/api';
+import { fetchRentAnalysis, fetchInitialRentCheck } from '@/lib/api';
 
 const mockFetchRentAnalysis = vi.mocked(fetchRentAnalysis);
+const mockFetchInitialRentCheck = vi.mocked(fetchInitialRentCheck);
 
 const REDUCTION: RentAnalysis = {
   listing_id: 1,
@@ -34,6 +36,27 @@ beforeEach(() => {
   // assertions are unaffected.
   mockFetchRentAnalysis.mockReset();
   mockFetchRentAnalysis.mockResolvedValue({ ...REDUCTION, basis: 'unknown', direction: null });
+  // Default: within range, so the initial-rent badge renders nothing.
+  mockFetchInitialRentCheck.mockReset();
+  mockFetchInitialRentCheck.mockResolvedValue({
+    listing_id: 1,
+    verdict: 'within_range',
+    target_chf_m2: 25.0,
+    median_chf_m2: 26.1,
+    p25: 24.0,
+    p75: 30.0,
+    comparable_count: 14,
+    explanation: 'within range',
+    or270: {
+      article: 'OR Art. 270',
+      deadline_days: 30,
+      deadline_note: 'within 30 days',
+      conditions: [],
+      assessment_method: 'Quartierüblichkeit',
+      schlichtungsbehoerde: 'Schlichtungsbehörde',
+      disclaimer: 'not legal advice',
+    },
+  });
 });
 
 const listing: ListingSummary = {
@@ -194,6 +217,32 @@ describe('ListingCards', () => {
     });
     expect(mockFetchRentAnalysis).toHaveBeenCalledWith(1);
     expect(mockFetchRentAnalysis).toHaveBeenCalledWith(2);
+  });
+
+  it('renders an InitialRentBadge when the asking rent is above market', async () => {
+    mockFetchInitialRentCheck.mockResolvedValue({
+      listing_id: 1,
+      verdict: 'above_market',
+      target_chf_m2: 32.4,
+      median_chf_m2: 26.1,
+      p25: 24.0,
+      p75: 30.0,
+      comparable_count: 14,
+      explanation: 'above',
+      or270: {
+        article: 'OR Art. 270',
+        deadline_days: 30,
+        deadline_note: 'within 30 days',
+        conditions: [],
+        assessment_method: 'Quartierüblichkeit',
+        schlichtungsbehoerde: 'Schlichtungsbehörde',
+        disclaimer: 'not legal advice',
+      },
+    });
+    render(<ListingCards listings={[listing]} />);
+    await waitFor(() => {
+      expect(screen.getByTestId('initial-rent-badge')).toBeTruthy();
+    });
   });
 
   it('image thumbnails have object-cover class', () => {

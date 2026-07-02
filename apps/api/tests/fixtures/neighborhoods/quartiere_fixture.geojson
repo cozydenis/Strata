@@ -43,7 +43,21 @@
     "age_45_64_pct": 25.4,
     "age_65plus_pct": 15.5,
     "green_share_pct": 12.06,
-    "green_m2_per_capita": 34.4
+    "green_m2_per_capita": 34.4,
+    "rent_median_chf_m2": 31.5,
+    "rent_listing_count": 14,
+    "rent_trend": [
+     {
+      "month": "2026-05",
+      "median_chf_m2": 30.8,
+      "n": 11
+     },
+     {
+      "month": "2026-06",
+      "median_chf_m2": 31.5,
+      "n": 14
+     }
+    ]
    }
   },
   {
