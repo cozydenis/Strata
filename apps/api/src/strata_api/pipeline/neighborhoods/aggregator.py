@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from strata_api.pipeline.neighborhoods.demographics_parser import QuartierDemographics
     from strata_api.pipeline.neighborhoods.quartier_parser import QuartierRecord
+    from strata_api.pipeline.neighborhoods.rent_trends import RentStats
 
 # Lazy import: only used when otp_base_url is provided
 _compute_commute: object = None  # populated on first use
@@ -100,6 +101,17 @@ def _green_props(metrics: dict | None) -> dict:
     return {key: metrics.get(key) for key in _GREEN_KEYS}
 
 
+def _rent_props(stats: RentStats | None) -> dict:
+    """Flatten RentStats (see rent_trends.py) into properties, or None each when absent."""
+    if stats is None:
+        return {"rent_median_chf_m2": None, "rent_listing_count": None, "rent_trend": None}
+    return {
+        "rent_median_chf_m2": stats.median_chf_m2,
+        "rent_listing_count": stats.listing_count,
+        "rent_trend": list(stats.trend),
+    }
+
+
 def aggregate_quartier_geojson(
     quartier_records: dict[int, QuartierRecord],
     demographics: dict[int, QuartierDemographics],
@@ -107,6 +119,7 @@ def aggregate_quartier_geojson(
     amenities: dict[int, dict[str, int]] | None = None,
     construction: dict[int, dict] | None = None,
     green: dict[int, dict] | None = None,
+    rents: dict[int, RentStats] | None = None,
 ) -> dict:
     """Produce an enriched GeoJSON FeatureCollection.
 
@@ -151,11 +164,12 @@ def aggregate_quartier_geojson(
         amenity_p = _amenity_props(amenities.get(qid) if amenities is not None else None, rec.area_km2)
         construction_p = {"construction": construction.get(qid) if construction is not None else None}
         green_p = _green_props(green.get(qid) if green is not None else None)
+        rent_p = _rent_props(rents.get(qid) if rents is not None else None)
 
         features.append({
             "type": "Feature",
             "geometry": rec.geometry,
-            "properties": {**base_props, **demo_p, **commute_p, **amenity_p, **construction_p, **green_p},
+            "properties": {**base_props, **demo_p, **commute_p, **amenity_p, **construction_p, **green_p, **rent_p},
         })
 
     # Vibe profiles need the full city distribution — computed as a second pass

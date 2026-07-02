@@ -36,6 +36,7 @@ def run_neighborhood_pipeline(
     api_data_dir: Path | None = None,
     fetch_amenities: bool = False,
     fetch_green: bool = False,
+    include_rents: bool = False,
     skip_noise: bool = False,
 ) -> dict:
     """Orchestrate the neighborhood intelligence pipeline.
@@ -158,9 +159,27 @@ def run_neighborhood_pipeline(
         green_area_count = sum(1 for m in green_metrics.values() if m["green_area_m2"] > 0)
         logger.info("Parsed %d green polygons; %d quartiere have green area", len(green_areas), green_area_count)
 
+    # ── Rent trends (reads the listings DB; only when asked) ────────────────
+    rent_stats = None
+    if include_rents:
+        import datetime
+
+        from strata_api.db.session import get_engine
+        from strata_api.pipeline.neighborhoods.rent_trends import compute_rent_stats, load_listing_observations
+
+        try:
+            observations = load_listing_observations(get_engine())
+            rent_stats = compute_rent_stats(observations, quartier_records, now=datetime.datetime.utcnow())
+            with_rents = sum(1 for s in rent_stats.values() if s.median_chf_m2 is not None)
+            logger.info("Computed rent stats from %d listings; %d quartiere have medians", len(observations), with_rents)
+        except Exception:
+            logger.exception("Rent-trends step failed; continuing without rent properties")
+            rent_stats = None
+
     logger.info("Aggregating into GeoJSON...")
     geojson = aggregate_quartier_geojson(
-        quartier_records, demographics, amenities=amenity_counts, construction=construction, green=green_metrics
+        quartier_records, demographics, amenities=amenity_counts, construction=construction, green=green_metrics,
+        rents=rent_stats,
     )
 
     quartiere_path = output_dir / "quartiere.geojson"
@@ -195,4 +214,7 @@ def run_neighborhood_pipeline(
         "construction_quartiere": len(construction),
         "green_areas": green_area_count,
         "green_polygons": len(green_geojson["features"]) if green_geojson is not None else None,
+        "rent_quartiere": (
+            sum(1 for s in rent_stats.values() if s.median_chf_m2 is not None) if rent_stats is not None else None
+        ),
     }

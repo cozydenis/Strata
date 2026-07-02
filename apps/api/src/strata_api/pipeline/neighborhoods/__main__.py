@@ -1,7 +1,7 @@
 """CLI entry point for the neighborhood intelligence pipeline.
 
 Usage:
-    uv run python -m strata_api.pipeline.neighborhoods [--amenities] [--green]
+    uv run python -m strata_api.pipeline.neighborhoods [--amenities] [--green] [--rents]
 
 Writes quartiere.geojson + noise.geojson + green_spaces.geojson to
 apps/web/public/data and copies quartiere.geojson to apps/api/data/neighborhoods
@@ -10,6 +10,8 @@ for the API router.
 amenities_raw.json in the output dir is reused if present).
 --green fetches OSM green space from Overpass (otherwise a cached
 green_raw.json in the output dir is reused if present).
+--rents computes per-quartier asking-rent statistics from the listings DB
+(requires DATABASE_URL to point at a populated database).
 """
 from __future__ import annotations
 
@@ -31,6 +33,7 @@ def main() -> None:
     parser.add_argument("--api-data", type=Path, default=DEFAULT_API_DATA_DIR, help="API data directory")
     parser.add_argument("--amenities", action="store_true", help="Fetch OSM amenities from Overpass")
     parser.add_argument("--green", action="store_true", help="Fetch OSM green space from Overpass")
+    parser.add_argument("--rents", action="store_true", help="Compute per-quartier rent stats from the listings DB")
     parser.add_argument("--skip-noise", action="store_true", help="Skip the slow noise cadastre download")
     args = parser.parse_args()
 
@@ -40,6 +43,7 @@ def main() -> None:
         api_data_dir=args.api_data,
         fetch_amenities=args.amenities,
         fetch_green=args.green,
+        include_rents=args.rents,
         skip_noise=args.skip_noise,
     )
     logging.getLogger(__name__).info("Pipeline complete: %s", stats)
